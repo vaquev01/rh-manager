@@ -39,6 +39,26 @@ import {
 } from "@/lib/types";
 
 const STORAGE_KEY = "people-ops-state-v1";
+const STORAGE_KEYS_COMPAT = [STORAGE_KEY, "people-ops-state"];
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return Boolean(value) && typeof value === "object" && !Array.isArray(value);
+}
+
+function isValidAppState(value: unknown): value is AppState {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.version === "number" &&
+    typeof value.updatedAt === "string" &&
+    Array.isArray(value.people) &&
+    Array.isArray(value.roles) &&
+    Array.isArray(value.companies) &&
+    Array.isArray(value.units) &&
+    Array.isArray(value.teams) &&
+    Array.isArray(value.auditLogs) &&
+    isRecord(value.permissions)
+  );
+}
 
 type AdditionalInput = {
   tipo: AdditionalDay["tipo"];
@@ -356,19 +376,28 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [filters, setFiltersState] = useState<ViewFilters>({});
 
   useEffect(() => {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return;
-    }
+    const raw = STORAGE_KEYS_COMPAT.map((key) => window.localStorage.getItem(key)).find(
+      (value) => value
+    );
+    if (!raw) return;
+
     try {
-      const parsed = JSON.parse(raw) as AppState;
-      setState(parsed);
+      const parsed = JSON.parse(raw) as unknown;
+      if (isValidAppState(parsed)) {
+        setState(parsed);
+        return;
+      }
     } catch {
-      setState(createInitialState());
+      // ignore
     }
+
+    setState(createInitialState());
   }, []);
 
   useEffect(() => {
+    if (!isValidAppState(state)) {
+      return;
+    }
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   }, [state]);
 

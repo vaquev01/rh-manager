@@ -262,6 +262,12 @@ a {
   background: linear-gradient(90deg, #0f766e, #14b8a6);
 }
 
+ .kpi-grid {
+   display: grid;
+   gap: 12px;
+   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+ }
+
 /* ── Person card ── */
 .person-card {
   transition: box-shadow 0.2s ease, transform 0.15s ease;
@@ -547,3 +553,16 @@ html.dark ::-webkit-scrollbar-thumb {
 html.dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(148, 163, 184, 0.4);
 }
+
+ @media (prefers-reduced-motion: reduce) {
+   .person-card,
+   .modal-overlay,
+   .modal-panel,
+   .toast-enter,
+   .page-enter,
+   .progress-bar-fill,
+   .spinner {
+     animation: none !important;
+     transition: none !important;
+   }
+ }

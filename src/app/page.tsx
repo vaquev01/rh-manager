@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Calendar,
@@ -114,15 +114,97 @@ export default function DashboardPage() {
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [searchName, setSearchName] = useState("");
 
+  const modalPanelRef = useRef<HTMLDivElement | null>(null);
+  const lastActiveElementRef = useRef<HTMLElement | null>(null);
+
+  const closePersonDetails = useCallback(() => {
+    setSelectedPersonId(null);
+    window.setTimeout(() => {
+      lastActiveElementRef.current?.focus();
+    }, 0);
+  }, []);
+
+  const openPersonDetails = useCallback(
+    (event: MouseEvent<HTMLButtonElement>, personId: string) => {
+      lastActiveElementRef.current = event.currentTarget;
+      setSelectedPersonId(personId);
+    },
+    []
+  );
+
   useEffect(() => {
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setSelectedPersonId(null);
-    };
-    if (selectedPersonId) {
-      document.addEventListener("keydown", handleEsc);
-      return () => document.removeEventListener("keydown", handleEsc);
+    if (!selectedPersonId) {
+      return;
     }
-  }, [selectedPersonId]);
+
+    const panel = modalPanelRef.current;
+    if (panel) {
+      const initialFocus = panel.querySelector<HTMLElement>("[data-modal-initial-focus]");
+      (initialFocus ?? panel).focus();
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closePersonDetails();
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const currentPanel = modalPanelRef.current;
+      if (!currentPanel) {
+        return;
+      }
+
+      const focusable = Array.from(
+        currentPanel.querySelectorAll<HTMLElement>(
+          'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((item) => !item.hasAttribute("disabled") && item.tabIndex !== -1);
+
+      if (focusable.length === 0) {
+        event.preventDefault();
+        currentPanel.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      const isInside = Boolean(active && currentPanel.contains(active));
+
+      if (event.shiftKey) {
+        if (!isInside || active === first) {
+          event.preventDefault();
+          last.focus();
+        }
+        return;
+      }
+
+      if (!isInside) {
+        event.preventDefault();
+        first.focus();
+        return;
+      }
+
+      if (active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [closePersonDetails, selectedPersonId]);
 
   const togglePersonExpanded = (personId: string) => {
     setExpandedPersonIds((previous) => {
@@ -208,7 +290,7 @@ export default function DashboardPage() {
   return (
     <div className="page-enter grid gap-4 lg:grid-cols-[1.8fr,1fr]">
       <section className="space-y-4">
-        <div style={{ display: "grid", gap: "12px", gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))" }}>
+        <div className="kpi-grid">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-danger">
             <div className="flex items-center gap-2">
               <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-50">
@@ -350,7 +432,10 @@ export default function DashboardPage() {
                           </div>
                           <div className="flex items-center gap-1.5">
                             <div className={`semaphore ${person.performance.dia.toLowerCase()}`} title={`Performance ${PERFORMANCE_LABEL[person.performance.dia]}`} />
-                            <button className="button ghost px-2 py-1 text-[11px]" onClick={() => setSelectedPersonId(person.id)}>
+                            <button
+                              className="button ghost px-2 py-1 text-[11px]"
+                              onClick={(event) => openPersonDetails(event, person.id)}
+                            >
                               Detalhes
                             </button>
                           </div>
@@ -1136,18 +1221,30 @@ export default function DashboardPage() {
           className="modal-overlay fixed inset-0 z-50 flex items-center justify-end bg-slate-900/40 p-3"
           onClick={(event) => {
             if (event.target === event.currentTarget) {
-              setSelectedPersonId(null);
+              closePersonDetails();
             }
           }}
         >
-          <div className="modal-panel h-full w-full max-w-2xl overflow-auto rounded-2xl bg-white p-5 shadow-2xl">
+          <div
+            ref={modalPanelRef}
+            className="modal-panel h-full w-full max-w-2xl overflow-auto rounded-2xl bg-white p-5 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={`person-detail-title-${selectedPerson.id}`}
+            tabIndex={-1}
+          >
             <div className="flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-teal-50 text-base font-bold text-teal-700">
                   {selectedPerson.nome.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800">{selectedPerson.nome}</h3>
+                  <h3
+                    id={`person-detail-title-${selectedPerson.id}`}
+                    className="text-lg font-semibold text-slate-800"
+                  >
+                    {selectedPerson.nome}
+                  </h3>
                   <p className="text-xs text-slate-400">
                     {rolesById[selectedPerson.cargoId]?.nome ?? "Cargo"} · {TYPE_LABEL[selectedPerson.type]}
                   </p>
@@ -1155,8 +1252,9 @@ export default function DashboardPage() {
               </div>
               <button
                 className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
-                onClick={() => setSelectedPersonId(null)}
+                onClick={closePersonDetails}
                 aria-label="Fechar painel"
+                data-modal-initial-focus
               >
                 <X className="h-4 w-4" />
               </button>
