@@ -34,6 +34,7 @@ import {
   Person,
   RecruitmentStage,
   RecruitmentVaga,
+  Shift,
   TrainingCompletion,
   UserRole
 } from "@/lib/types";
@@ -158,6 +159,15 @@ interface AppStateContextValue {
   ) => void;
   updatePaymentRule: (ruleId: string, patch: Partial<PaymentRule>) => void;
   updateAdditionalType: (typeId: string, patch: Partial<AdditionalTypeConfig>) => void;
+  assignPersonToSchedule: (
+    personId: string,
+    date: string,
+    unitId: string,
+    roleId: string,
+    turns: Shift[]
+  ) => void;
+  removeFromSchedule: (scheduleId: string) => void;
+  updateCoverageTarget: (unitId: string, cargoId: string, minimo: number) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -1985,6 +1995,103 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     [filters]
   );
 
+  const assignPersonToSchedule = useCallback(
+    (personId: string, targetDate: string, unitId: string, roleId: string, turns: Shift[]) => {
+      setState((previous) => {
+        const exists = previous.schedules.find(
+          (s) => s.date === targetDate && s.personId === personId
+        );
+        if (exists) {
+          const after = { ...exists, unitId, roleId, turns };
+          const schedules = previous.schedules.map((s) =>
+            s.id === exists.id ? after : s
+          );
+          const audit = createAuditEntry({
+            acao: "ATUALIZAR_ESCALA",
+            before: exists,
+            after,
+            unitId
+          });
+          return appendAudit({ ...previous, schedules }, audit);
+        }
+        const newSchedule = {
+          id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          date: targetDate,
+          personId,
+          unidadeId: unitId,
+          roleId,
+          turns
+        };
+        const audit = createAuditEntry({
+          acao: "CRIAR_ESCALA",
+          after: newSchedule,
+          unitId
+        });
+        return appendAudit(
+          { ...previous, schedules: [...previous.schedules, newSchedule] },
+          audit
+        );
+      });
+    },
+    []
+  );
+
+  const removeFromSchedule = useCallback((scheduleId: string) => {
+    setState((previous) => {
+      const target = previous.schedules.find((s) => s.id === scheduleId);
+      if (!target) return previous;
+      const audit = createAuditEntry({
+        acao: "REMOVER_ESCALA",
+        before: target,
+        unitId: target.unidadeId
+      });
+      return appendAudit(
+        { ...previous, schedules: previous.schedules.filter((s) => s.id !== scheduleId) },
+        audit
+      );
+    });
+  }, []);
+
+  const updateCoverageTarget = useCallback(
+    (unitId: string, cargoId: string, minimo: number) => {
+      setState((previous) => {
+        const idx = previous.coverageTargets.findIndex(
+          (t) => t.unitId === unitId && t.cargoId === cargoId
+        );
+        if (idx >= 0) {
+          const before = previous.coverageTargets[idx];
+          const after = { ...before, minimoHoje: minimo };
+          const coverageTargets = previous.coverageTargets.map((t, i) =>
+            i === idx ? after : t
+          );
+          const audit = createAuditEntry({
+            acao: "ATUALIZAR_COBERTURA",
+            before,
+            after,
+            unitId
+          });
+          return appendAudit({ ...previous, coverageTargets }, audit);
+        }
+        const newTarget = {
+          id: `cv-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          unitId,
+          cargoId,
+          minimoHoje: minimo
+        };
+        const audit = createAuditEntry({
+          acao: "CRIAR_COBERTURA",
+          after: newTarget,
+          unitId
+        });
+        return appendAudit(
+          { ...previous, coverageTargets: [...previous.coverageTargets, newTarget] },
+          audit
+        );
+      });
+    },
+    []
+  );
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -2027,10 +2134,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updatePdiProgress,
       setPermission,
       updatePaymentRule,
-      updateAdditionalType
+      updateAdditionalType,
+      assignPersonToSchedule,
+      removeFromSchedule,
+      updateCoverageTarget
     }),
     [
       addIndividualAdditional,
+      assignPersonToSchedule,
       chargeDelayedRecruitmentManagers,
       checkPermission,
       closePaymentsDay,
@@ -2068,7 +2179,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       upsertTemplate,
       upsertWebhook,
       validateHours,
-      sendFlashTraining
+      sendFlashTraining,
+      removeFromSchedule,
+      updateCoverageTarget
     ]
   );
 

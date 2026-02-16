@@ -127,6 +127,7 @@ export interface ScheduleDay {
   personId: string;
   turns: Shift[];
   unidadeId: string;
+  roleId?: string;
 }
 
 export interface HoursDay {

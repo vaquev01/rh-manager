@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 
 import { useAppState } from "@/components/state-provider";
+import { ScheduleBuilder } from "@/components/schedule-builder";
 import { useToast } from "@/components/toast";
 import { asDateLabel } from "@/lib/date";
 import { asHours, money, percent } from "@/lib/format";
@@ -114,6 +115,7 @@ export default function DashboardPage() {
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [searchName, setSearchName] = useState("");
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
+  const [dashboardTab, setDashboardTab] = useState<"operacao" | "escala">("operacao");
 
   const modalPanelRef = useRef<HTMLDivElement | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
@@ -313,7 +315,28 @@ export default function DashboardPage() {
   const { toast } = useToast();
 
   return (
-    <div className="page-enter grid gap-4 lg:grid-cols-[1.8fr,1fr]">
+    <div className="page-enter space-y-4">
+      <div className="flex items-center gap-1 rounded-xl bg-slate-100 p-1 w-fit">
+        <button
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${dashboardTab === "operacao" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          onClick={() => setDashboardTab("operacao")}
+        >
+          <Users className="mr-1.5 inline h-4 w-4" />
+          Operacao do dia
+        </button>
+        <button
+          className={`rounded-lg px-4 py-2 text-sm font-medium transition ${dashboardTab === "escala" ? "bg-white text-slate-800 shadow-sm" : "text-slate-500 hover:text-slate-700"}`}
+          onClick={() => setDashboardTab("escala")}
+        >
+          <Calendar className="mr-1.5 inline h-4 w-4" />
+          Planejador de escala
+        </button>
+      </div>
+
+      {dashboardTab === "escala" ? (
+        <ScheduleBuilder />
+      ) : (
+      <div className="grid gap-4 lg:grid-cols-[1.8fr,1fr]">
       <section className="space-y-4">
         <div className="kpi-grid">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-danger">
@@ -1474,6 +1497,8 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+      )}
+    </div>
       )}
     </div>
   );
