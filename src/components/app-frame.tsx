@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun } from "lucide-react";
 
+import { Select } from "@/components/ui/select";
 import { ROLE_LABEL } from "@/lib/constants";
 import { useAppState } from "@/components/state-provider";
 
@@ -140,11 +141,10 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-all duration-200 ${
-                    active
+                  className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-all duration-200 ${active
                       ? "border-emerald-600 bg-emerald-50 font-medium text-emerald-700 shadow-sm"
                       : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:shadow-sm"
-                  }`}
+                    }`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
@@ -166,8 +166,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Empresa
-              <select
-                className="select mt-1"
+              <Select
+                className="mt-1"
                 value={filters.companyId ?? ""}
                 onChange={(event) =>
                   setFilters({
@@ -183,13 +183,13 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                     {company.nome}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Unidade
-              <select
-                className="select mt-1"
+              <Select
+                className="mt-1"
                 value={filters.unitId ?? ""}
                 onChange={(event) =>
                   setFilters({
@@ -204,13 +204,13 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                     {unit.nome}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Time
-              <select
-                className="select mt-1"
+              <Select
+                className="mt-1"
                 value={filters.teamId ?? ""}
                 onChange={(event) =>
                   setFilters({
@@ -224,13 +224,13 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                     {team.nome}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Cargo
-              <select
-                className="select mt-1"
+              <Select
+                className="mt-1"
                 value={filters.cargoId ?? ""}
                 onChange={(event) =>
                   setFilters({
@@ -244,7 +244,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                     {role.nome}
                   </option>
                 ))}
-              </select>
+              </Select>
             </label>
 
             <div className="flex items-end">
