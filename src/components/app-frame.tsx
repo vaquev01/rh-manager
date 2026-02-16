@@ -40,6 +40,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const [dark, setDark] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -105,10 +106,21 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
               <span className="badge badge-ok">Perfil: {ROLE_LABEL[actor.role]}</span>
               <span className="badge badge-warn">Fechamento: {paymentContext.locked ? "Travado" : "Aberto"}</span>
-              <button className="button ghost inline-flex items-center gap-2" onClick={resetState}>
-                <RotateCcw className="h-4 w-4" />
-                Reset demo
-              </button>
+              {!showResetConfirm ? (
+                <button className="button ghost inline-flex items-center gap-2" onClick={() => setShowResetConfirm(true)}>
+                  <RotateCcw className="h-4 w-4" />
+                  Reset demo
+                </button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button className="button danger inline-flex items-center gap-1 px-2 py-1 text-xs" onClick={() => { resetState(); setShowResetConfirm(false); }}>
+                    Confirmar reset
+                  </button>
+                  <button className="button ghost px-2 py-1 text-xs" onClick={() => setShowResetConfirm(false)}>
+                    Cancelar
+                  </button>
+                </div>
+              )}
               <button
                 className="button ghost inline-flex items-center justify-center p-2"
                 onClick={toggleDark}

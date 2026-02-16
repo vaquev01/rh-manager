@@ -113,6 +113,7 @@ export default function DashboardPage() {
   const [reopenReason, setReopenReason] = useState("");
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [searchName, setSearchName] = useState("");
+  const [quickFilter, setQuickFilter] = useState<string | null>(null);
 
   const modalPanelRef = useRef<HTMLDivElement | null>(null);
   const lastActiveElementRef = useRef<HTMLElement | null>(null);
@@ -238,12 +239,32 @@ export default function DashboardPage() {
   );
 
   const grouped = useMemo(() => {
-    if (!searchName.trim()) return groupedRaw;
-    const q = searchName.trim().toLowerCase();
-    return groupedRaw
-      .map((g) => ({ ...g, people: g.people.filter((p) => p.nome.toLowerCase().includes(q)) }))
-      .filter((g) => g.people.length > 0);
-  }, [groupedRaw, searchName]);
+    let filtered = groupedRaw;
+
+    if (searchName.trim()) {
+      const q = searchName.trim().toLowerCase();
+      filtered = filtered
+        .map((g) => ({ ...g, people: g.people.filter((p) => p.nome.toLowerCase().includes(q)) }))
+        .filter((g) => g.people.length > 0);
+    }
+
+    if (quickFilter) {
+      const predicate = (p: Person) => {
+        switch (quickFilter) {
+          case "sem-pix": return !p.pixKey;
+          case "docs-pendentes": return docsBadge(state, p.id) !== "OK";
+          case "freelas": return p.type === "FREELA";
+          case "performance-critica": return p.performance.dia === "VERMELHO";
+          default: return true;
+        }
+      };
+      filtered = filtered
+        .map((g) => ({ ...g, people: g.people.filter(predicate) }))
+        .filter((g) => g.people.length > 0);
+    }
+
+    return filtered;
+  }, [groupedRaw, searchName, quickFilter, state]);
 
   const totalPeopleCount = useMemo(
     () => grouped.reduce((acc, g) => acc + g.people.length, 0),
@@ -284,6 +305,10 @@ export default function DashboardPage() {
   const canEditPayRule = checkPermission("EDITAR_REMUNERACAO_REGRA");
   const canClose = checkPermission("FECHAR_PAGAMENTOS_DIA");
   const canReopen = checkPermission("REABRIR_PAGAMENTOS_DIA");
+
+  const validatedCount = paymentContext.lines.filter((l) => l.validadoHoras).length;
+  const totalLines = paymentContext.lines.length;
+  const closingProgress = totalLines > 0 ? validatedCount / totalLines : 0;
 
   const { toast } = useToast();
 
@@ -349,6 +374,32 @@ export default function DashboardPage() {
             <p className="mt-3 text-2xl font-bold text-slate-800">{money(highlights.custoEstimado)}</p>
             <p className="mt-1 text-xs text-slate-400">{MODE_LABEL[paymentContext.config.mode]}</p>
           </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-slate-400">Filtro rapido:</span>
+          {[
+            { key: "sem-pix", label: `Sem PIX (${highlights.semPixEscalados.length})`, color: "badge-danger" },
+            { key: "docs-pendentes", label: `Docs pendentes (${highlights.docsCriticosPendentes})`, color: "badge-danger" },
+            { key: "freelas", label: "Freelas", color: "badge-warn" },
+            { key: "performance-critica", label: "Performance critica", color: "badge-danger" }
+          ].map((chip) => (
+            <button
+              key={chip.key}
+              className={`badge cursor-pointer transition ${quickFilter === chip.key ? "ring-2 ring-teal-500 ring-offset-1" : chip.color} hover:opacity-80`}
+              onClick={() => setQuickFilter(quickFilter === chip.key ? null : chip.key)}
+            >
+              {chip.label}
+            </button>
+          ))}
+          {quickFilter && (
+            <button
+              className="text-xs text-slate-400 underline hover:text-slate-600"
+              onClick={() => setQuickFilter(null)}
+            >
+              Limpar
+            </button>
+          )}
         </div>
 
         {highlights.buracosEscala.length > 0 && (
@@ -631,6 +682,24 @@ export default function DashboardPage() {
               <p className="text-[11px] text-slate-400">total geral</p>
             </div>
           </div>
+
+          {totalLines > 0 && (
+            <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-2.5">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-medium text-slate-600">Progresso do fechamento</span>
+                <span className="font-semibold text-slate-700">{validatedCount}/{totalLines} validados</span>
+              </div>
+              <div className="progress-bar mt-1.5">
+                <div
+                  className="progress-bar-fill"
+                  style={{ width: `${Math.round(closingProgress * 100)}%`, background: closingProgress >= 1 ? '#10b981' : closingProgress >= 0.5 ? '#3b82f6' : '#f59e0b' }}
+                />
+              </div>
+              {paymentContext.locked && (
+                <p className="mt-1 text-[11px] font-medium text-emerald-600">Dia fechado com sucesso</p>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             <div className="grid grid-cols-2 gap-2">

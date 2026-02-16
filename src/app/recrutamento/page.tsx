@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlarmClock, AlertTriangle, ClipboardList, Inbox, MessageSquareWarning, TimerReset } from "lucide-react";
+import { AlarmClock, AlertTriangle, CheckCircle2, ClipboardList, Clock3, Inbox, MessageSquareWarning, TimerReset, Users } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 
@@ -123,9 +123,53 @@ export default function RecrutamentoPage() {
     [vagasView]
   );
 
+  const totalVagas = vagasView.length;
+  const noPrazoCount = vagasView.filter((i) => !i.travada && i.delayedStages.length === 0).length;
+  const atrasadasCount = vagasView.filter((i) => i.delayedStages.length > 0).length;
+  const slaMedio = totalVagas > 0 ? Math.round(vagasView.reduce((s, i) => s + i.slaDiasAberta, 0) / totalVagas) : 0;
+
   return (
     <div className="page-enter grid gap-4 xl:grid-cols-[1.35fr,1fr]">
       <section className="space-y-4">
+        <div className="kpi-grid">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-info">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50">
+                <Users className="h-4 w-4 text-blue-500" />
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Vagas abertas</span>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-slate-800">{totalVagas}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-success">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">No prazo</span>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-slate-800">{noPrazoCount}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-danger">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-red-50">
+                <AlertTriangle className="h-4 w-4 text-red-500" />
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">Atrasadas</span>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-slate-800">{atrasadasCount}</p>
+          </div>
+          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm kpi-card kpi-accent">
+            <div className="flex items-center gap-2">
+              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50">
+                <Clock3 className="h-4 w-4 text-teal-600" />
+              </span>
+              <span className="text-xs font-medium uppercase tracking-wide text-slate-500">SLA medio</span>
+            </div>
+            <p className="mt-3 text-2xl font-bold text-slate-800">{slaMedio} dias</p>
+          </div>
+        </div>
+
         <div className="panel p-4">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-800">Vagas abertas + checklist padrão</h2>
@@ -221,10 +265,11 @@ export default function RecrutamentoPage() {
 
             <div className="space-y-2">
               {selectedVaga.vaga.checklist.map((stage) => (
-                <article key={stage.id} className="rounded-xl border border-slate-200 bg-white p-3">
+                <article key={stage.id} className={`rounded-xl border p-3 ${stage.status === "CONCLUIDA" ? "border-emerald-200 bg-emerald-50/40" : "border-slate-200 bg-white"}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-semibold text-slate-700">{stage.nome}</p>
+                    <div className="flex items-center gap-2">
+                      {stage.status === "CONCLUIDA" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+                      <p className={`text-sm font-semibold ${stage.status === "CONCLUIDA" ? "text-emerald-700 line-through" : "text-slate-700"}`}>{stage.nome}</p>
                       <p className="text-xs text-slate-500">
                         Dono: {stage.ownerRole} · Evidencia minima: {stage.evidenciaMinima}
                       </p>

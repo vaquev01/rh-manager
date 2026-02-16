@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { BookMarked, Brain, Inbox, Rocket, Target } from "lucide-react";
+import { AlertTriangle, BookMarked, Brain, CheckCircle2, Clock3, Inbox, Rocket, Target } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 
@@ -11,6 +11,7 @@ import { CompetencyRole } from "@/lib/types";
 export default function DesenvolvimentoPage() {
   const {
     state,
+    date,
     filters,
     updateTrainingCompletion,
     sendFlashTraining,
@@ -142,6 +143,20 @@ export default function DesenvolvimentoPage() {
   const visiblePdiItems = useMemo(() => {
     return state.pdiItems.filter((item) => filteredPersonIds.has(item.personId));
   }, [state.pdiItems, filteredPersonIds]);
+
+  const onboardingByPerson = useMemo(() => {
+    const map = new Map<string, { total: number; done: number; late: number }>();
+    onboardingRows.forEach((entry) => {
+      if (!entry) return;
+      const key = entry.person.id;
+      const prev = map.get(key) ?? { total: 0, done: 0, late: 0 };
+      prev.total += 1;
+      if (entry.progress.status === "CONCLUIDO") prev.done += 1;
+      if (entry.progress.status === "ATRASADO") prev.late += 1;
+      map.set(key, prev);
+    });
+    return map;
+  }, [onboardingRows]);
 
   return (
     <div className="page-enter space-y-4">
@@ -275,13 +290,33 @@ export default function DesenvolvimentoPage() {
                 return null;
               }
               const { progress, item, person, role } = entry;
+              const personStats = onboardingByPerson.get(person.id);
+              const progressPct = personStats && personStats.total > 0 ? personStats.done / personStats.total : 0;
               return (
-              <li key={progress.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                <p className="font-semibold text-slate-700">{person?.nome ?? progress.personId}</p>
-                <p>
+              <li key={progress.id} className={`rounded-xl border p-3 ${progress.status === "CONCLUIDO" ? "border-emerald-200 bg-emerald-50/40" : progress.status === "ATRASADO" ? "border-red-200 bg-red-50/30" : "border-slate-200 bg-white"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-slate-700">{person?.nome ?? progress.personId}</p>
+                  <div className="flex items-center gap-2">
+                    {progress.status === "CONCLUIDO" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                    {progress.status === "ATRASADO" && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+                    {progress.status === "PENDENTE" && <Clock3 className="h-3.5 w-3.5 text-slate-400" />}
+                    <span className={`badge ${progress.status === "CONCLUIDO" ? "badge-ok" : progress.status === "ATRASADO" ? "badge-danger" : "badge-info"}`}>
+                      {progress.status === "CONCLUIDO" ? "Concluido" : progress.status === "ATRASADO" ? "Atrasado" : "Pendente"}
+                    </span>
+                  </div>
+                </div>
+                {personStats && (
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <div className="progress-bar flex-1">
+                      <div className="progress-bar-fill" style={{ width: `${Math.round(progressPct * 100)}%`, background: progressPct >= 1 ? '#10b981' : progressPct >= 0.5 ? '#3b82f6' : '#f59e0b' }} />
+                    </div>
+                    <span className="text-[11px] text-slate-400">{personStats.done}/{personStats.total}</span>
+                  </div>
+                )}
+                <p className="mt-1 text-xs text-slate-500">
                   Cargo: {role?.nome ?? "-"} · Marco: D+{item?.marcoDia ?? "?"} · Owner: {item?.ownerRole}
                 </p>
-                <p>Tarefa: {item?.titulo ?? "Item onboarding"}</p>
+                <p className="text-xs text-slate-500">Tarefa: {item?.titulo ?? "Item onboarding"}</p>
 
                 <div className="mt-2 grid gap-2 md:grid-cols-2">
                   <select
@@ -326,9 +361,16 @@ export default function DesenvolvimentoPage() {
           {visiblePdiItems.map((item) => {
             const person = personById[item.personId];
             const manager = personById[item.responsavelPersonId];
+            const pdiAtrasado = item.prazo < date;
+            const pdiConcluido = item.evolucao.trim().length > 20;
             return (
-              <article key={item.id} className="rounded-xl border border-slate-200 bg-white p-3 text-sm">
-                <p className="font-semibold text-slate-700">{person?.nome ?? item.personId}</p>
+              <article key={item.id} className={`rounded-xl border p-3 text-sm ${pdiConcluido ? "border-emerald-200 bg-emerald-50/40" : pdiAtrasado ? "border-red-200 bg-red-50/30" : "border-slate-200 bg-white"}`}>
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-semibold text-slate-700">{person?.nome ?? item.personId}</p>
+                  <span className={`badge ${pdiConcluido ? "badge-ok" : pdiAtrasado ? "badge-danger" : "badge-info"}`}>
+                    {pdiConcluido ? "Evoluindo" : pdiAtrasado ? "Atrasado" : "No prazo"}
+                  </span>
+                </div>
                 <p className="text-xs text-slate-500">Responsavel: {manager?.nome ?? item.responsavelPersonId}</p>
                 <p className="mt-2 text-slate-600">Lacuna: {item.lacuna}</p>
                 <p className="text-slate-600">Acao: {item.acao}</p>

@@ -134,6 +134,18 @@ export default function ComunicadosPage() {
     ? state.communicationTemplates.find((template) => template.id === selectedTemplateId)
     : undefined;
 
+  const recipientPreviewCount = useMemo(() => {
+    return state.people.filter((person) => {
+      if (segmentacao.companyId && person.companyId !== segmentacao.companyId) return false;
+      if (segmentacao.unitId && person.unitId !== segmentacao.unitId) return false;
+      if (segmentacao.teamId && person.teamId !== segmentacao.teamId) return false;
+      if (segmentacao.cargoId && person.cargoId !== segmentacao.cargoId) return false;
+      if (segmentacao.tipo && person.type !== segmentacao.tipo) return false;
+      if (segmentacao.status && person.status !== segmentacao.status) return false;
+      return true;
+    }).length;
+  }, [state.people, segmentacao]);
+
   return (
     <div className="page-enter grid gap-4 xl:grid-cols-[1.2fr,1fr]">
       <section className="space-y-4">
@@ -275,7 +287,7 @@ export default function ComunicadosPage() {
               }}
             >
               <Send className="mr-1 inline h-3.5 w-3.5" />
-              Disparar manual
+              Disparar para {recipientPreviewCount} pessoa(s)
             </button>
 
             <button
@@ -474,19 +486,31 @@ export default function ComunicadosPage() {
             {lastAutomationResult.destinatarios} destinatario(s)
           </p>
           <div className="mt-2 grid gap-2 md:grid-cols-2">
-            {state.automationRules.map((rule) => (
+            {state.automationRules.map((rule) => {
+              const eventLabel: Record<string, string> = {
+                DOC_PENDENTE: "Documento pendente",
+                PIX_AUSENTE: "Chave PIX ausente",
+                ANIVERSARIO: "Aniversario do colaborador",
+                FERIAS_PROXIMAS: "Ferias proximas",
+                TREINAMENTO_VENCIDO: "Treinamento vencido"
+              };
+              return (
               <label
                 key={rule.id}
                 className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700"
               >
-                <span>{rule.evento}</span>
+                <div>
+                  <span className="font-medium">{eventLabel[rule.evento] ?? rule.evento}</span>
+                  <span className="ml-2 text-[11px] text-slate-400">{rule.evento}</span>
+                </div>
                 <input
                   type="checkbox"
                   checked={rule.ativo}
                   onChange={(event) => toggleAutomationRule(rule.evento, event.target.checked)}
                 />
               </label>
-            ))}
+              );
+            })}
           </div>
         </div>
       </section>
@@ -500,9 +524,14 @@ export default function ComunicadosPage() {
           <ul className="max-h-80 space-y-2 overflow-auto text-xs text-slate-600">
             {campaignsWithDetails.map(({ campaign, recipients }) => (
               <li key={campaign.id} className="rounded-lg border border-slate-200 bg-white p-2">
-                <p className="font-semibold text-slate-700">Campanha {campaign.id}</p>
+                <p className="font-semibold text-slate-700">
+                  {campaign.gatilho || "Disparo manual"}
+                  <span className="ml-2 text-[11px] font-normal text-slate-400">
+                    {new Date(campaign.criadoEm).toLocaleString("pt-BR")}
+                  </span>
+                </p>
                 <p>
-                  Trigger: {campaign.gatilho || "MANUAL"} · Destinatarios: {recipients.length}
+                  Destinatarios: {recipients.length}
                 </p>
                 <p>
                   Status: {recipients.filter((log) => log.status === "ENVIADO").length} enviado(s),{" "}
