@@ -404,7 +404,7 @@ export default function ConfiguracoesPage() {
                             {entry.actorName} ({entry.actorRole})
                           </p>
 
-                          {entry.before && entry.after && (
+                          {!!entry.before && !!entry.after && (
                             <div className="mt-2 text-[10px] font-mono bg-slate-900 rounded-lg p-3 overflow-x-auto">
                               <div className="grid grid-cols-2 gap-4">
                                 <div className="text-red-300">
