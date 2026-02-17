@@ -7,7 +7,20 @@ import { Sheet } from "@/components/ui/sheet";
 import { asHours, money } from "@/lib/format";
 import { personHistory } from "@/lib/selectors";
 import { Person } from "@/lib/types";
-import { ArrowLeft, Clock3, CreditCard, Info, Trash2 } from "lucide-react";
+import {
+    ArrowLeft,
+    Briefcase,
+    Calendar,
+    Clock3,
+    CreditCard,
+    Info,
+    Mail,
+    MapPin,
+    Phone,
+    Trash2,
+    User,
+    UserCircle
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 const STATUS_LABEL: Record<Person["status"], string> = {
@@ -80,175 +93,222 @@ export function PersonDetailsSheet() {
     return (
         <Sheet open={!!selectedPersonId} onOpenChange={(open) => !open && close()}>
             <div className="flex flex-col h-full bg-slate-50/50">
-                {/* Header */}
-                <div className="bg-white px-6 py-6 border-b shadow-sm">
-                    <div className="flex items-start gap-4">
-                        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 text-2xl font-bold text-primary ring-4 ring-white shadow-sm">
-                            {selectedPerson.nome.charAt(0)}
+                {/* Header with Cover */}
+                <div className="relative bg-white border-b shadow-sm z-10">
+                    <div className="absolute top-0 left-0 right-0 h-24 bg-gradient-to-r from-blue-600 to-indigo-700 opacity-90" />
+
+                    <div className="relative px-6 pt-6 pb-6 mt-8 flex items-end gap-5">
+                        <div className="relative shrink-0">
+                            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-white text-3xl font-bold text-primary ring-4 ring-white shadow-lg overflow-hidden">
+                                {selectedPerson.fotoUrl ? (
+                                    <img src={selectedPerson.fotoUrl} alt={selectedPerson.nome} className="h-full w-full object-cover" />
+                                ) : (
+                                    <span className="bg-gradient-to-br from-slate-100 to-slate-200 w-full h-full flex items-center justify-center text-slate-400">
+                                        {selectedPerson.nome.charAt(0)}
+                                    </span>
+                                )}
+                            </div>
+                            <div className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-2 border-white ${selectedPerson.status === 'ATIVO' ? 'bg-emerald-500' : 'bg-amber-500'}`} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                            <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 truncate">
+
+                        <div className="flex-1 min-w-0 pb-1">
+                            <h2 className="text-2xl font-bold leading-tight tracking-tight text-white mb-1 truncate drop-shadow-sm">
                                 {selectedPerson.nome}
                             </h2>
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                <Badge variant="outline" className="text-[10px] bg-slate-50">{roleName}</Badge>
-                                <Badge
-                                    variant={selectedPerson.type === 'FIXO' ? 'default' : 'secondary'}
-                                    className="text-[10px]"
-                                >
+                            <div className="flex flex-wrap items-center gap-2">
+                                <Badge variant="secondary" className="bg-white/90 text-slate-800 hover:bg-white shadow-sm border-0 font-medium">
+                                    <Briefcase className="w-3 h-3 mr-1.5 text-slate-500" />
+                                    {roleName}
+                                </Badge>
+                                <Badge variant="secondary" className="bg-white/80 text-slate-700 hover:bg-white border-0">
                                     {TYPE_LABEL[selectedPerson.type]}
                                 </Badge>
-                                <Badge
-                                    variant={selectedPerson.status === 'ATIVO' ? 'ok' : 'warn'}
-                                    className="text-[10px]"
-                                >
-                                    {STATUS_LABEL[selectedPerson.status]}
-                                </Badge>
+                                {teamName && (
+                                    <Badge variant="outline" className="text-white border-white/40 bg-white/10 backdrop-blur-sm">
+                                        {teamName}
+                                    </Badge>
+                                )}
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon" onClick={close} className="-mt-1 -mr-2">
-                            <ArrowLeft className="h-5 w-5 text-slate-400" />
+
+                        <Button
+                            variant="secondary"
+                            size="icon"
+                            onClick={close}
+                            className="absolute top-0 right-4 -mt-2 bg-white/20 hover:bg-white/30 text-white border-0 backdrop-blur-md transition-all rounded-full h-8 w-8"
+                        >
+                            <ArrowLeft className="h-4 w-4" />
                         </Button>
                     </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto p-6 space-y-8">
+                {/* Main Content */}
+                <div className="flex-1 overflow-y-auto p-6 space-y-6">
 
-                    {/* Quick Actions / Status */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-white p-3 rounded-xl border shadow-sm">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Status</label>
+                    {/* Configurações Rápidas */}
+                    <section className="grid grid-cols-2 gap-4">
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 group">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                Status
+                            </label>
                             <Select
                                 value={selectedPerson.status}
                                 disabled={paymentContext.locked || !canEditStatus}
                                 onChange={(e) => updatePersonData(selectedPerson.id, { status: e.target.value as any }, "AJUSTAR_STATUS_PESSOA")}
-                                className="h-8 text-xs"
+                                className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
                             >
                                 {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                             </Select>
                         </div>
-                        <div className="bg-white p-3 rounded-xl border shadow-sm">
-                            <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">Tipo Contrato</label>
+                        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 group">
+                            <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                                <Briefcase className="h-3 w-3" />
+                                Contrato
+                            </label>
                             <Select
                                 value={selectedPerson.type}
                                 disabled={paymentContext.locked || !canEditPayRule}
                                 onChange={(e) => updatePersonData(selectedPerson.id, { type: e.target.value as any }, "AJUSTAR_TIPO_PESSOA")}
-                                className="h-8 text-xs"
+                                className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
                             >
                                 <option value="FIXO">Fixo</option>
                                 <option value="FREELA">Freela</option>
                             </Select>
                         </div>
-                    </div>
+                    </section>
 
-                    {/* Main Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                            Dados Cadastrais
-                        </h3>
-
-                        <div className="grid gap-4 bg-white p-4 rounded-xl border shadow-sm">
-                            <div>
-                                <label className="text-xs font-medium text-slate-500 mb-1.5 block">Nome Completo</label>
-                                <Input
-                                    value={selectedPerson.nome}
-                                    onChange={(e) => updatePersonData(selectedPerson.id, { nome: e.target.value }, "ALTERAR_NOME")}
-                                    className="bg-slate-50/50"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
+                    <div className="grid lg:grid-cols-2 gap-6">
+                        {/* Dados Profissionais */}
+                        <section className="space-y-4">
+                            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <UserCircle className="h-4 w-4 text-primary" />
+                                Dados Profissionais
+                            </h3>
+                            <div className="space-y-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Equipe</label>
-                                    <Select
-                                        value={selectedPerson.teamId}
-                                        disabled={paymentContext.locked}
-                                        onChange={(e) => updatePersonData(selectedPerson.id, { teamId: e.target.value }, "ALTERAR_EQUIPE")}
-                                        className="h-9"
-                                    >
-                                        {state.teams.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
-                                    </Select>
+                                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Nome Completo</label>
+                                    <Input
+                                        value={selectedPerson.nome}
+                                        onChange={(e) => updatePersonData(selectedPerson.id, { nome: e.target.value }, "ALTERAR_NOME")}
+                                        className="bg-slate-50/50 hover:bg-white focus:bg-white transition-colors border-slate-200"
+                                    />
                                 </div>
-                                <div>
-                                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Cargo</label>
-                                    <Select
-                                        value={selectedPerson.cargoId}
-                                        disabled={paymentContext.locked}
-                                        onChange={(e) => updatePersonData(selectedPerson.id, { cargoId: e.target.value }, "ALTERAR_CARGO")}
-                                        className="h-9"
-                                    >
-                                        {state.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
-                                    </Select>
+                                <div className="grid grid-cols-1 gap-4">
+                                    <div>
+                                        <label className="text-xs font-medium text-slate-500 mb-1.5 block">Cargo / Função</label>
+                                        <Select
+                                            value={selectedPerson.cargoId}
+                                            disabled={paymentContext.locked}
+                                            onChange={(e) => updatePersonData(selectedPerson.id, { cargoId: e.target.value }, "ALTERAR_CARGO")}
+                                            className="h-9 border-slate-200"
+                                        >
+                                            {state.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-medium text-slate-500 mb-1.5 block">Equipe</label>
+                                        <Select
+                                            value={selectedPerson.teamId}
+                                            disabled={paymentContext.locked}
+                                            onChange={(e) => updatePersonData(selectedPerson.id, { teamId: e.target.value }, "ALTERAR_EQUIPE")}
+                                            className="h-9 border-slate-200"
+                                        >
+                                            {state.teams.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                                        </Select>
+                                    </div>
                                 </div>
                             </div>
+                        </section>
 
-                            <div className="grid grid-cols-2 gap-4">
+                        {/* Contato & Pagamento */}
+                        <section className="space-y-4">
+                            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                                <CreditCard className="h-4 w-4 text-emerald-600" />
+                                Contato & Pagamento
+                            </h3>
+                            <div className="space-y-4 bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Telefone</label>
+                                    <label className="text-xs font-medium text-slate-500 mb-1.5 flex items-center gap-1.5">
+                                        <Phone className="h-3 w-3" /> Telefone / WhatsApp
+                                    </label>
                                     <Input
                                         value={selectedPerson.contatoTelefone || ""}
                                         disabled={paymentContext.locked}
                                         onChange={(e) => updatePersonData(selectedPerson.id, { contatoTelefone: e.target.value }, "ALTERAR_TELEFONE")}
                                         placeholder="(00) 00000-0000"
+                                        className="font-mono text-sm border-slate-200"
                                     />
                                 </div>
                                 <div>
-                                    <label className="text-xs font-medium text-slate-500 mb-1.5 block">Chave PIX</label>
+                                    <label className="text-xs font-medium text-slate-500 mb-1.5 flex items-center gap-1.5">
+                                        <span className="font-bold text-emerald-600">$</span> Chave PIX
+                                    </label>
                                     <Input
                                         value={selectedPerson.pixKey || ""}
                                         disabled={!checkPermission("EDITAR_PIX")}
                                         onChange={(e) => updatePersonData(selectedPerson.id, { pixKey: e.target.value }, "ATUALIZAR_PIX_PESSOA")}
-                                        placeholder="CPF/Email..."
+                                        placeholder="CPF, Email ou Aleatória"
+                                        className="font-mono text-sm border-slate-200"
                                     />
                                 </div>
                             </div>
-                        </div>
+                        </section>
                     </div>
 
-                    {/* Escala Info */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
-                            Preferencias de Escala
+                    {/* Preferencias de Escala */}
+                    <section className="space-y-4">
+                        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2 pb-2 border-b border-slate-100">
+                            <Clock3 className="h-4 w-4 text-blue-500" />
+                            Preferências de Escala
                         </h3>
-                        <div className="grid gap-4 bg-white p-4 rounded-xl border shadow-sm">
-                            <div>
-                                <label className="text-xs font-medium text-slate-500 mb-1.5 block">Tempo de Intervalo</label>
-                                <Input
-                                    value={localIntervalo}
-                                    onChange={(e) => setLocalIntervalo(e.target.value)}
-                                    onBlur={handleIntervaloBlur}
-                                    placeholder="Ex: 1h, 30min..."
-                                    className="bg-slate-50/50"
-                                />
-                                <p className="text-[10px] text-muted-foreground mt-1">Tempo de descanso padrão para escalas longas.</p>
+                        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200">
+                            <div className="max-w-xs">
+                                <label className="text-xs font-medium text-slate-500 mb-1.5 block">Intervalo Padrão</label>
+                                <div className="flex items-center gap-2">
+                                    <Input
+                                        value={localIntervalo}
+                                        onChange={(e) => setLocalIntervalo(e.target.value)}
+                                        onBlur={handleIntervaloBlur}
+                                        placeholder="Ex: 1h"
+                                        className="bg-slate-50 border-slate-200 focus:bg-white transition-all w-32 font-medium"
+                                    />
+                                    <p className="text-xs text-muted-foreground">de descanso em escalas longas.</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                    </section>
 
                     {/* Apontamento do Dia */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">Apontamento do dia</h3>
+                    <section className="space-y-4 pt-4 border-t border-slate-200/60">
+                        <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                            <Calendar className="h-4 w-4 text-purple-600" />
+                            Apontamento do dia
+                        </h3>
 
-                        <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
+                        <div className="rounded-xl border border-purple-100 bg-purple-50/30 p-5 space-y-4 hover:border-purple-200 transition-colors">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Horas Trabalhadas</label>
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        step={0.25}
-                                        className="bg-white"
-                                        disabled={paymentContext.locked}
-                                        value={hoursDraft}
-                                        onChange={(e) => setHoursDraft(e.target.value)}
-                                    />
+                                    <label className="text-xs font-medium text-slate-600 mb-1.5 block">Horas Trabalhadas</label>
+                                    <div className="relative">
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            step={0.25}
+                                            className="bg-white border-purple-100 focus:border-purple-400 focus:ring-purple-400/20 pl-3"
+                                            disabled={paymentContext.locked}
+                                            value={hoursDraft}
+                                            onChange={(e) => setHoursDraft(e.target.value)}
+                                        />
+                                        <span className="absolute right-3 top-2.5 text-xs text-purple-400 font-medium">h</span>
+                                    </div>
                                 </div>
                                 <div>
-                                    <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Motivo / Obs</label>
+                                    <label className="text-xs font-medium text-slate-600 mb-1.5 block">Motivo / Obs</label>
                                     <Input
                                         placeholder="Opcional"
-                                        className="bg-white"
+                                        className="bg-white border-purple-100 focus:border-purple-400 focus:ring-purple-400/20"
                                         disabled={paymentContext.locked}
                                         value={reasonDraft}
                                         onChange={(e) => setReasonDraft(e.target.value)}
@@ -257,28 +317,31 @@ export function PersonDetailsSheet() {
                             </div>
 
                             {line?.overrideFlag && (
-                                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
-                                    <Info className="h-3.5 w-3.5" />
-                                    <span>Override manual ativo</span>
+                                <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2.5 rounded-lg border border-amber-100">
+                                    <Info className="h-4 w-4 shrink-0" />
+                                    <span className="font-medium">Horário modificado manualmente</span>
                                 </div>
                             )}
 
                             <Button
                                 size="sm"
-                                className="w-full"
+                                className="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium"
                                 disabled={paymentContext.locked}
                                 onClick={handleSaveHours}
                             >
                                 Confirmar Apontamento
                             </Button>
                         </div>
-                    </div>
+                    </section>
 
                     {/* Historico Financeiro */}
                     {history && (
-                        <div className="space-y-4">
-                            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">Historico Financeiro</h3>
-                            <div className="rounded-xl border overflow-hidden">
+                        <section className="space-y-4 pt-4 border-t border-slate-200/60">
+                            <h3 className="text-sm font-semibold text-slate-900 flex items-center gap-2">
+                                <CreditCard className="h-4 w-4 text-emerald-600" />
+                                Histórico Financeiro
+                            </h3>
+                            <div className="rounded-xl border border-slate-200 overflow-hidden shadow-sm">
                                 <table className="w-full text-xs">
                                     <thead className="bg-slate-50 text-slate-500 font-medium border-b">
                                         <tr>
@@ -303,7 +366,7 @@ export function PersonDetailsSheet() {
                                     </tbody>
                                 </table>
                             </div>
-                        </div>
+                        </section>
                     )}
 
                     <div className="pt-8 border-t">

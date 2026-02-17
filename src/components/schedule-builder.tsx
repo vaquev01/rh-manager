@@ -307,43 +307,48 @@ export function ScheduleBuilder() {
   return (
     <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
       {/* ── LEFT: People Pool ── */}
-      <Card className="flex w-full lg:w-[280px] shrink-0 flex-col h-full border-slate-200">
-        <div className="border-b px-4 py-3 bg-muted/30">
-          <h3 className="flex items-center gap-2 text-sm font-semibold">
+      <Card className="flex w-full lg:w-[280px] shrink-0 flex-col h-full border-slate-200 bg-slate-50/50 shadow-none">
+        <div className="px-4 py-4">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
             <Users className="h-4 w-4 text-primary" />
-            Equipe disponivel
+            Equipe Disponível
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-0.5">
-            Arraste para o quadro ao lado
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Arraste os cartões para a escala
           </p>
         </div>
 
-        {/* Type Filter */}
-        <div className="px-3 py-2 bg-slate-50 border-b flex gap-1">
-          <Button
-            variant={selectedType === "ALL" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedType("ALL")}
-            className="flex-1 h-7 text-[10px]"
-          >
-            Todos
-          </Button>
-          <Button
-            variant={selectedType === "FIXO" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedType("FIXO")}
-            className="flex-1 h-7 text-[10px]"
-          >
-            Fixo
-          </Button>
-          <Button
-            variant={selectedType === "FREELA" ? "secondary" : "ghost"}
-            size="sm"
-            onClick={() => setSelectedType("FREELA")}
-            className="flex-1 h-7 text-[10px]"
-          >
-            Freela
-          </Button>
+        {/* Type Filter - Segmented Control */}
+        <div className="px-4 pb-4">
+          <div className="flex bg-slate-200/50 p-1 rounded-lg">
+            <button
+              onClick={() => setSelectedType("ALL")}
+              className={cn(
+                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                selectedType === "ALL" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Todos
+            </button>
+            <button
+              onClick={() => setSelectedType("FIXO")}
+              className={cn(
+                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                selectedType === "FIXO" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Fixo
+            </button>
+            <button
+              onClick={() => setSelectedType("FREELA")}
+              className={cn(
+                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                selectedType === "FREELA" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+              )}
+            >
+              Freela
+            </button>
+          </div>
         </div>
 
         {/* Shift selector */}
@@ -371,16 +376,15 @@ export function ScheduleBuilder() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-3">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <div className="px-4 pb-2">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
             <Input
               type="text"
-              className="h-9 pl-8 text-xs bg-muted/20"
-              placeholder="Buscar pessoa..."
+              className="h-9 pl-9 text-xs bg-white border-slate-200 focus:border-primary/50 focus:ring-primary/20 transition-all shadow-sm"
+              placeholder="Buscar por nome ou cargo..."
               value={searchPool}
               onChange={(e) => setSearchPool(e.target.value)}
-              aria-label="Buscar pessoa"
             />
           </div>
         </div>
@@ -404,33 +408,42 @@ export function ScheduleBuilder() {
                   onDragStart={(e) => handlePoolDragStart(e, person.id)}
                   onDragEnd={handleDragEnd}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg border bg-card px-3 py-2 shadow-sm transition-all hover:shadow-md hover:border-primary/50 cursor-grab active:cursor-grabbing",
-                    isBeingDragged && "opacity-50 ring-2 ring-primary ring-offset-2"
+                    "group relative flex items-center gap-3 rounded-xl border bg-white px-3 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing",
+                    isBeingDragged && "opacity-40 ring-2 ring-primary ring-offset-2 scale-95"
                   )}
                 >
-                  <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground/50" />
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                  {/* Hover Indicator */}
+                  <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                     {person.nome.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                   </div>
-                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
-                    <div className="truncate">
-                      <p className="truncate text-xs font-medium text-foreground">{person.nome}</p>
-                      <p className="truncate text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Badge variant="outline" className="h-3.5 px-1 text-[8px]">{person.type.charAt(0)}</Badge>
+
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-xs font-semibold text-slate-700">{person.nome}</p>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <Badge variant="secondary" className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0">
                         {personRole?.nome ?? "?"}
-                      </p>
+                      </Badge>
+                      <span className={cn(
+                        "text-[9px] font-bold px-1 rounded",
+                        person.type === 'FIXO' ? "text-blue-600 bg-blue-50" : "text-amber-600 bg-amber-50"
+                      )}>
+                        {person.type.charAt(0)}
+                      </span>
                     </div>
                   </div>
+
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-slate-100"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPersonId(person.id);
                     }}
                   >
-                    <Edit2 className="h-3 w-3 text-muted-foreground" />
+                    <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-primary" />
                   </Button>
                 </div>
               );
@@ -639,16 +652,23 @@ export function ScheduleBuilder() {
                           <td
                             key={d}
                             className={cn(
-                              "schedule-grid-cell px-2 py-2 align-top border-r last:border-r-0 transition-all duration-200",
+                              "schedule-grid-cell px-2 py-2 align-top border-r last:border-r-0 transition-all duration-300 relative",
                               cellBg,
-                              isDropTarget && "bg-primary/10 ring-2 ring-inset ring-primary/50",
-                              isDragging && !isDropTarget && "bg-slate-50/50"
+                              isDropTarget && "bg-primary/5 ring-inset ring-2 ring-primary/30 z-10",
+                              isDragging && !isDropTarget && "bg-slate-50/80 grayscale-[0.5]"
                             )}
                             onDragOver={(e) => handleCellDragOver(e, { date: d, roleId: role.id })}
                             onDragLeave={handleCellDragLeave}
                             onDrop={(e) => handleCellDrop(e, { date: d, roleId: role.id })}
                           >
-                            <div className="space-y-1.5 min-h-[60px]">
+                            {/* Drop Target Indicator */}
+                            {isDropTarget && (
+                              <div className="absolute inset-2 border-2 border-dashed border-primary/40 rounded-lg flex items-center justify-center bg-white/50 backdrop-blur-[1px] pointer-events-none animate-in fade-in zoom-in duration-200">
+                                <Plus className="h-6 w-6 text-primary" />
+                              </div>
+                            )}
+
+                            <div className="space-y-2 min-h-[60px]">
                               {/* Assigned people chips */}
                               {assigned.map((sched) => {
                                 const person = peopleById[sched.personId];
@@ -660,34 +680,38 @@ export function ScheduleBuilder() {
                                     onDragStart={(e) => handleChipDragStart(e, sched.id, sched.personId)}
                                     onDragEnd={handleDragEnd}
                                     className={cn(
-                                      "group flex items-center gap-2 rounded-md border bg-white px-2 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/40 cursor-grab active:cursor-grabbing pr-1",
-                                      isMe && "opacity-40 scale-95"
+                                      "group flex items-center gap-2 rounded-lg border bg-white pl-2 pr-1 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing",
+                                      isMe && "opacity-30 scale-95 grayscale"
                                     )}
                                   >
-                                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[9px] font-bold text-primary">
+                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-[9px] font-bold text-slate-600 border border-white shadow-sm">
                                       {(person?.nome ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                     </div>
+
                                     <div className="min-w-0 flex-1">
-                                      <p className="truncate text-[11px] font-medium text-foreground leading-tight">
-                                        {person?.nome ?? sched.personId}
-                                      </p>
+                                      <div className="flex items-center justify-between">
+                                        <p className="truncate text-[10px] font-semibold text-slate-700 leading-tight">
+                                          {person?.nome ?? sched.personId}
+                                        </p>
+                                      </div>
                                       {sched.turns[0] && (
-                                        <p className="flex items-center gap-1 text-[9px] text-muted-foreground mt-0.5">
+                                        <p className="flex items-center gap-1 text-[9px] text-slate-400 mt-0.5">
                                           <Clock className="h-2.5 w-2.5" />
                                           {sched.turns[0].inicio}–{sched.turns[0].fim}
                                         </p>
                                       )}
                                     </div>
+
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-5 w-5 opacity-0 group-hover:opacity-100 -mr-1"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 -mr-0.5 rounded-full hover:bg-slate-100"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (person) setSelectedPersonId(person.id);
                                       }}
                                     >
-                                      <Edit2 className="h-3 w-3 text-muted-foreground" />
+                                      <Edit2 className="h-3 w-3 text-slate-400 hover:text-primary" />
                                     </Button>
                                   </div>
                                 );
@@ -739,7 +763,11 @@ export function ScheduleBuilder() {
                       Adicionar Cargo
                     </Button>
                   </td>
-                  <td colSpan={7} className="bg-slate-50/50"></td>
+                  <td colSpan={7} className="bg-slate-50/30 border-b-0 p-2">
+                    <div className="flex items-center justify-center h-full text-xs text-muted-foreground/40 border-dashed border border-slate-200 rounded-lg mx-2">
+                      +
+                    </div>
+                  </td>
                 </tr>
               </tbody>
             </table>
