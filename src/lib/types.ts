@@ -110,6 +110,7 @@ export interface Person {
   pixKey?: string;
   paymentRuleId?: string;
   performance: PersonPerformance;
+  intervalo?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -241,11 +242,11 @@ export interface CommunicationCampaign {
     status?: PersonStatus;
   };
   gatilho?:
-    | "DOC_PENDENTE"
-    | "ONBOARDING_ATRASADO"
-    | "TREINAMENTO_VENCIDO"
-    | "MUDANCA_ESCALA"
-    | "RECRUTAMENTO_ATRASADO";
+  | "DOC_PENDENTE"
+  | "ONBOARDING_ATRASADO"
+  | "TREINAMENTO_VENCIDO"
+  | "MUDANCA_ESCALA"
+  | "RECRUTAMENTO_ATRASADO";
   criadoPor: string;
   criadoEm: string;
 }
@@ -262,11 +263,11 @@ export interface CommunicationLog {
 export interface AutomationRule {
   id: string;
   evento:
-    | "DOC_PENDENTE"
-    | "ONBOARDING_ATRASADO"
-    | "TREINAMENTO_VENCIDO"
-    | "MUDANCA_ESCALA"
-    | "RECRUTAMENTO_ATRASADO";
+  | "DOC_PENDENTE"
+  | "ONBOARDING_ATRASADO"
+  | "TREINAMENTO_VENCIDO"
+  | "MUDANCA_ESCALA"
+  | "RECRUTAMENTO_ATRASADO";
   ativo: boolean;
   templateId?: string;
 }

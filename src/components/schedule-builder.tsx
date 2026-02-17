@@ -11,12 +11,16 @@ import {
   Search,
   Trash2,
   User,
-  Users
+  Users,
+  Edit2,
+  Plus,
+  X
 } from "lucide-react";
 
 import { useAppState } from "@/components/state-provider";
 import { useToast } from "@/components/toast";
 import { cn } from "@/lib/utils";
+import { PersonType } from "@/lib/types";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -74,12 +78,16 @@ export function ScheduleBuilder() {
     filters,
     assignPersonToSchedule,
     removeFromSchedule,
-    updateCoverageTarget
+    updateCoverageTarget,
+    setSelectedPersonId,
+    addRole,
+    removeRole
   } = useAppState();
   const { toast } = useToast();
 
   const [weekOffset, setWeekOffset] = useState(0);
   const [selectedShiftIdx, setSelectedShiftIdx] = useState(2);
+  const [selectedType, setSelectedType] = useState<PersonType | "ALL">("ALL");
   const [searchPool, setSearchPool] = useState("");
   const [draggingPersonId, setDraggingPersonId] = useState<string | null>(null);
   const [dragOverTarget, setDragOverTarget] = useState<DropTarget | null>(null);
@@ -153,6 +161,7 @@ export function ScheduleBuilder() {
   const poolPeople = useMemo(() => {
     let pool = allAvailablePeople;
     if (activeUnit) pool = pool.filter((p) => p.unitId === activeUnit.id || p.companyId === activeUnit.companyId);
+    if (selectedType !== "ALL") pool = pool.filter((p) => p.type === selectedType);
     if (searchPool.trim()) {
       const q = searchPool.toLowerCase();
       pool = pool.filter(
@@ -162,7 +171,7 @@ export function ScheduleBuilder() {
       );
     }
     return pool;
-  }, [allAvailablePeople, activeUnit, searchPool, rolesById]);
+  }, [allAvailablePeople, activeUnit, selectedType, searchPool, rolesById]);
 
   const selectedShift = SHIFTS[selectedShiftIdx];
 
@@ -309,6 +318,34 @@ export function ScheduleBuilder() {
           </p>
         </div>
 
+        {/* Type Filter */}
+        <div className="px-3 py-2 bg-slate-50 border-b flex gap-1">
+          <Button
+            variant={selectedType === "ALL" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedType("ALL")}
+            className="flex-1 h-7 text-[10px]"
+          >
+            Todos
+          </Button>
+          <Button
+            variant={selectedType === "FIXO" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedType("FIXO")}
+            className="flex-1 h-7 text-[10px]"
+          >
+            Fixo
+          </Button>
+          <Button
+            variant={selectedType === "FREELA" ? "secondary" : "ghost"}
+            size="sm"
+            onClick={() => setSelectedType("FREELA")}
+            className="flex-1 h-7 text-[10px]"
+          >
+            Freela
+          </Button>
+        </div>
+
         {/* Shift selector */}
         <div className="border-b px-3 py-3 bg-muted/10">
           <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
@@ -375,12 +412,26 @@ export function ScheduleBuilder() {
                   <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
                     {person.nome.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                   </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-xs font-medium text-foreground">{person.nome}</p>
-                    <p className="truncate text-[10px] text-muted-foreground">
-                      {personRole?.nome ?? "?"} · {person.type}
-                    </p>
+                  <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                    <div className="truncate">
+                      <p className="truncate text-xs font-medium text-foreground">{person.nome}</p>
+                      <p className="truncate text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Badge variant="outline" className="h-3.5 px-1 text-[8px]">{person.type.charAt(0)}</Badge>
+                        {personRole?.nome ?? "?"}
+                      </p>
+                    </div>
                   </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 opacity-0 group-hover:opacity-100"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedPersonId(person.id);
+                    }}
+                  >
+                    <Edit2 className="h-3 w-3 text-muted-foreground" />
+                  </Button>
                 </div>
               );
             })}
@@ -514,7 +565,19 @@ export function ScheduleBuilder() {
                       <td className="sticky left-0 z-10 bg-white px-4 py-4 align-top border-r group-hover:bg-slate-50/30">
                         <div className="flex flex-col gap-2">
                           <div>
-                            <p className="font-semibold text-foreground text-sm">{role.nome}</p>
+                            <p className="font-semibold text-foreground text-sm flex items-center gap-2 group/role">
+                              {role.nome}
+                              <button
+                                className="opacity-0 group-hover/role:opacity-100 hover:text-red-500 transition-opacity"
+                                onClick={() => {
+                                  if (confirm(`Remover cargo ${role.nome}?`)) {
+                                    removeRole(role.id);
+                                  }
+                                }}
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </p>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wide">{role.familia} · {role.nivel}</p>
                           </div>
 
@@ -597,7 +660,7 @@ export function ScheduleBuilder() {
                                     onDragStart={(e) => handleChipDragStart(e, sched.id, sched.personId)}
                                     onDragEnd={handleDragEnd}
                                     className={cn(
-                                      "group flex items-center gap-2 rounded-md border bg-white px-2 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/40 cursor-grab active:cursor-grabbing",
+                                      "group flex items-center gap-2 rounded-md border bg-white px-2 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/40 cursor-grab active:cursor-grabbing pr-1",
                                       isMe && "opacity-40 scale-95"
                                     )}
                                   >
@@ -615,6 +678,17 @@ export function ScheduleBuilder() {
                                         </p>
                                       )}
                                     </div>
+                                    <Button
+                                      size="icon"
+                                      variant="ghost"
+                                      className="h-5 w-5 opacity-0 group-hover:opacity-100 -mr-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (person) setSelectedPersonId(person.id);
+                                      }}
+                                    >
+                                      <Edit2 className="h-3 w-3 text-muted-foreground" />
+                                    </Button>
                                   </div>
                                 );
                               })}
@@ -648,6 +722,25 @@ export function ScheduleBuilder() {
                     </tr>
                   );
                 })}
+
+                {/* Add Role Row */}
+                <tr>
+                  <td className="sticky left-0 z-10 bg-white px-4 py-3 border-r border-b-0">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full border-dashed text-xs h-8"
+                      onClick={() => {
+                        const nome = prompt("Nome do novo cargo:");
+                        if (nome) addRole(nome);
+                      }}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-2" />
+                      Adicionar Cargo
+                    </Button>
+                  </td>
+                  <td colSpan={7} className="bg-slate-50/50"></td>
+                </tr>
               </tbody>
             </table>
           </div>

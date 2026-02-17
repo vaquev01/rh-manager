@@ -36,7 +36,8 @@ import {
   RecruitmentVaga,
   Shift,
   TrainingCompletion,
-  UserRole
+  UserRole,
+  Role
 } from "@/lib/types";
 
 const STORAGE_KEY = "people-ops-state-v1";
@@ -168,6 +169,10 @@ interface AppStateContextValue {
   ) => void;
   removeFromSchedule: (scheduleId: string) => void;
   updateCoverageTarget: (unitId: string, cargoId: string, minimo: number) => void;
+  selectedPersonId: string | null;
+  setSelectedPersonId: (id: string | null) => void;
+  addRole: (nome: string, familia?: string, nivel?: string) => void;
+  removeRole: (id: string) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -384,6 +389,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AppState>(() => createInitialState());
   const [date, setDate] = useState<string>(TODAY);
   const [filters, setFiltersState] = useState<ViewFilters>({});
+  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
 
   useEffect(() => {
     const raw = STORAGE_KEYS_COMPAT.map((key) => window.localStorage.getItem(key)).find(
@@ -729,9 +735,9 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         const paymentPanelConfigs = updatePanelConfig(previous, date, {
           additionalGlobal: value
             ? {
-                ...value,
-                valor: Math.abs(value.valor)
-              }
+              ...value,
+              valor: Math.abs(value.valor)
+            }
             : undefined
         });
         const audit = createAuditEntry({
@@ -2092,6 +2098,59 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     []
   );
 
+  const addRole = useCallback((nome: string, familia: string = "OPERACAO", nivel: string = "JUNIOR") => {
+    setState((previous) => {
+      const newRole: Role = {
+        id: `role-${Date.now()}`,
+        nome,
+        familia,
+        nivel,
+        defaultType: "FIXO",
+        defaultPaymentRuleId: "rule-padrao"
+      };
+
+      const audit = createAuditEntry({
+        acao: "CRIAR_CARGO",
+        before: undefined,
+        after: newRole,
+        companyId: filters.companyId,
+        unitId: filters.unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          roles: [...previous.roles, newRole]
+        },
+        audit
+      );
+    });
+  }, [filters]);
+
+  const removeRole = useCallback((roleId: string) => {
+    setState((previous) => {
+      const role = previous.roles.find((r) => r.id === roleId);
+      if (!role) return previous;
+
+      const roles = previous.roles.filter((r) => r.id !== roleId);
+      const audit = createAuditEntry({
+        acao: "REMOVER_CARGO",
+        before: role,
+        after: undefined,
+        companyId: filters.companyId,
+        unitId: filters.unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          roles
+        },
+        audit
+      );
+    });
+  }, [filters]);
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -2137,7 +2196,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateAdditionalType,
       assignPersonToSchedule,
       removeFromSchedule,
-      updateCoverageTarget
+      updateCoverageTarget,
+      selectedPersonId,
+      setSelectedPersonId,
+      addRole,
+      removeRole
     }),
     [
       addIndividualAdditional,

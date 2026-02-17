@@ -17,7 +17,8 @@ import {
   UserRound,
   Users,
   Search,
-  MoreVertical
+  MoreVertical,
+  Share2
 } from "lucide-react";
 
 import { useAppState } from "@/components/state-provider";
@@ -43,6 +44,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { Dialog } from "@/components/ui/dialog";
+import { PersonDetailsSheet } from "@/components/person-details-sheet";
 
 const STATUS_LABEL: Record<Person["status"], string> = {
   ATIVO: "Ativo",
@@ -108,15 +110,9 @@ export default function DashboardPage() {
     reopenPaymentsDay,
     downloadPixCsv,
     downloadDayStatementCsv,
-    downloadMonthlyPersonReportCsv
+    downloadMonthlyPersonReportCsv,
+    setSelectedPersonId
   } = useAppState();
-
-  const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
-  const [hoursDrafts, setHoursDrafts] = useState<Record<string, string>>({});
-  const [hoursReasonDrafts, setHoursReasonDrafts] = useState<Record<string, string>>({});
-  const [individualAdditionalDrafts, setIndividualAdditionalDrafts] = useState<
-    Record<string, AdditionalDraft>
-  >({});
 
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [reopenReason, setReopenReason] = useState("");
@@ -124,14 +120,6 @@ export default function DashboardPage() {
   const [searchName, setSearchName] = useState("");
   const [quickFilter, setQuickFilter] = useState<string | null>(null);
   const [dashboardTab, setDashboardTab] = useState<"operacao" | "escala">("operacao");
-
-  const closePersonDetails = useCallback(() => {
-    setSelectedPersonId(null);
-  }, []);
-
-  const openPersonDetails = useCallback((personId: string) => {
-    setSelectedPersonId(personId);
-  }, []);
 
   const [globalAdditionalDraft, setGlobalAdditionalDraft] = useState<{
     tipo: AdditionalDay["tipo"];
@@ -190,13 +178,7 @@ export default function DashboardPage() {
     [state, filters, date]
   );
 
-  const selectedPerson = selectedPersonId
-    ? state.people.find((person) => person.id === selectedPersonId)
-    : undefined;
-
-  const selectedHistory = selectedPerson
-    ? personHistory(state, selectedPerson.id)
-    : undefined;
+  /* Removed local selectedPerson/History logic as it's now handled in PersonDetailsSheet */
 
   const additionalTypes = state.additionalTypes.filter((type) => type.ativo);
 
@@ -214,6 +196,23 @@ export default function DashboardPage() {
     () => Object.fromEntries(paymentContext.lines.map((line) => [line.person.id, line])),
     [paymentContext.lines]
   );
+
+  const copyScheduleSummary = () => {
+    const header = `*Escala Detalhada - ${asDateLabel(date)}* \n\n`;
+    const body = grouped.map(group => {
+      const peopleList = group.people.map(p => {
+        const line = lineByPersonId[p.id];
+        const schedule = line?.schedule;
+        const shiftLabel = schedule ? schedule.turns.map(t => `${t.inicio}-${t.fim}`).join(' e ') : 'Sem horário';
+        return `• ${p.nome} (${shiftLabel})`;
+      }).join('\n');
+      return `*${group.teamLabel} - ${group.roleLabel}*\n${peopleList}`;
+    }).join('\n\n');
+
+    const text = header + body;
+    navigator.clipboard.writeText(text);
+    toast("Escala copiada!", "success");
+  };
 
   const canEditStatus = checkPermission("EDITAR_STATUS");
   const canEditPayRule = checkPermission("EDITAR_REMUNERACAO_REGRA");
@@ -377,6 +376,15 @@ export default function DashboardPage() {
                   <p className="text-sm text-muted-foreground">Agrupado por lider / time / cargo · {totalPeopleCount} pessoa(s)</p>
                 </div>
                 <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-9 gap-2 hidden sm:flex"
+                    onClick={copyScheduleSummary}
+                  >
+                    <Share2 className="h-3.5 w-3.5" />
+                    Enviar Escala
+                  </Button>
                   <div className="relative">
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input
@@ -434,7 +442,7 @@ export default function DashboardPage() {
                                     <p className="mt-1 text-xs text-muted-foreground">{group.roleLabel}</p>
                                   </div>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openPersonDetails(person.id)}>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSelectedPersonId(person.id)}>
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </div>
@@ -694,150 +702,7 @@ export default function DashboardPage() {
             </Card>
           </aside>
 
-          {/* Details Sheet - Replacing the old modal */}
-          <Sheet open={!!selectedPersonId} onOpenChange={(open) => !open && closePersonDetails()}>
-            {selectedPerson && (
-              <div className="flex flex-col h-full">
-                <div className="flex items-start gap-4 pb-6 mb-6 border-b">
-                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xl font-bold text-primary">
-                    {selectedPerson.nome.charAt(0)}
-                  </div>
-                  <div>
-                    <h2 className="text-2xl font-bold leading-tight tracking-tight text-slate-900">{selectedPerson.nome}</h2>
-                    <p className="text-sm text-muted-foreground">{rolesById[selectedPerson.cargoId]?.nome} · {TYPE_LABEL[selectedPerson.type]}</p>
-                    <div className="flex gap-2 mt-3">
-                      <Badge variant="outline">{STATUS_LABEL[selectedPerson.status]}</Badge>
-                      <Badge variant={docsBadge(state, selectedPerson.id) === "OK" ? "ok" : "danger"}>DOC {docsBadge(state, selectedPerson.id)}</Badge>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex-1 overflow-y-auto pr-2 space-y-8">
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">Configuracoes</h3>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Status</label>
-                        <Select
-                          value={selectedPerson.status}
-                          disabled={paymentContext.locked || !canEditStatus}
-                          onChange={(e) => updatePersonData(selectedPerson.id, { status: e.target.value as any }, "AJUSTAR_STATUS_PESSOA")}
-                        >
-                          {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-                        </Select>
-                      </div>
-                      <div>
-                        <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Tipo</label>
-                        <Select
-                          value={selectedPerson.type}
-                          disabled={paymentContext.locked || !canEditPayRule}
-                          onChange={(e) => updatePersonData(selectedPerson.id, { type: e.target.value as any }, "AJUSTAR_TIPO_PESSOA")}
-                        >
-                          <option value="FIXO">Fixo</option>
-                          <option value="FREELA">Freela</option>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-slate-500">Chave PIX</label>
-                      <Input
-                        value={selectedPerson.pixKey || ""}
-                        disabled={!checkPermission("EDITAR_PIX")}
-                        onChange={(e) => updatePersonData(selectedPerson.id, { pixKey: e.target.value }, "ATUALIZAR_PIX_PESSOA")}
-                        placeholder="Email, CPF ou Aleatoria"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">Apontamento do dia</h3>
-
-                    <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Horas Trabalhadas</label>
-                          <Input
-                            type="number"
-                            min={0}
-                            step={0.25}
-                            className="bg-white"
-                            disabled={paymentContext.locked}
-                            value={hoursDrafts[selectedPerson.id] ?? lineByPersonId[selectedPerson.id]?.hours ?? 0}
-                            onChange={(e) => setHoursDrafts(prev => ({ ...prev, [selectedPerson.id]: e.target.value }))}
-                          />
-                        </div>
-                        <div>
-                          <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Motivo / Obs</label>
-                          <Input
-                            placeholder="Opcional"
-                            className="bg-white"
-                            disabled={paymentContext.locked}
-                            value={hoursReasonDrafts[selectedPerson.id] ?? ""}
-                            onChange={(e) => setHoursReasonDrafts(prev => ({ ...prev, [selectedPerson.id]: e.target.value }))}
-                          />
-                        </div>
-                      </div>
-
-                      {lineByPersonId[selectedPerson.id]?.overrideFlag && (
-                        <div className="flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded border border-amber-100">
-                          <Info className="h-3.5 w-3.5" />
-                          <span>Override manual ativo</span>
-                        </div>
-                      )}
-
-                      <Button
-                        size="sm"
-                        className="w-full"
-                        disabled={paymentContext.locked}
-                        onClick={() => handleUpsertHours(selectedPerson.id, Number(hoursDrafts[selectedPerson.id] ?? 0), hoursReasonDrafts[selectedPerson.id])}
-                      >
-                        Confirmar Apontamento
-                      </Button>
-                    </div>
-                  </div>
-
-                  {selectedHistory && (
-                    <div className="space-y-4">
-                      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground border-b pb-2">Historico Financeiro</h3>
-                      <div className="rounded-xl border overflow-hidden">
-                        <table className="w-full text-xs">
-                          <thead className="bg-slate-50 text-slate-500 font-medium border-b">
-                            <tr>
-                              <th className="px-3 py-2 text-left">Data</th>
-                              <th className="px-3 py-2 text-right">Horas</th>
-                              <th className="px-3 py-2 text-right">Total</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y">
-                            {selectedHistory.paymentItems.slice(0, 5).map(item => (
-                              <tr key={item.id} className="hover:bg-slate-50/50">
-                                <td className="px-3 py-2">{item.date}</td>
-                                <td className="px-3 py-2 text-right text-muted-foreground">{asHours(item.horasSnapshot)}</td>
-                                <td className="px-3 py-2 text-right font-medium">{money(item.total)}</td>
-                              </tr>
-                            ))}
-                            {selectedHistory.paymentItems.length === 0 && (
-                              <tr>
-                                <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">Sem historico recente</td>
-                              </tr>
-                            )}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4 border-t mt-auto">
-                  <Button variant="outline" className="w-full" onClick={() => closePersonDetails()}>
-                    Fechar
-                  </Button>
-                </div>
-              </div>
-            )}
-          </Sheet>
+          <PersonDetailsSheet />
 
         </div>
       )}
