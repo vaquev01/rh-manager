@@ -2,7 +2,13 @@ import { useAppState } from "@/components/state-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { asHours, money } from "@/lib/format";
 import { personHistory } from "@/lib/selectors";
@@ -155,11 +161,17 @@ export function PersonDetailsSheet() {
                             </label>
                             <Select
                                 value={selectedPerson.status}
-                                disabled={paymentContext.locked || !canEditStatus}
-                                onChange={(e) => updatePersonData(selectedPerson.id, { status: e.target.value as any }, "AJUSTAR_STATUS_PESSOA")}
-                                className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
+                                onValueChange={(val) => updatePersonData(selectedPerson.id, { status: val as any }, "AJUSTAR_STATUS_PESSOA")}
                             >
-                                {Object.entries(STATUS_LABEL).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                                <SelectTrigger
+                                    disabled={paymentContext.locked || !canEditStatus}
+                                    className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(STATUS_LABEL).map(([v, l]) => <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                                </SelectContent>
                             </Select>
                         </div>
                         <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-200 group">
@@ -169,12 +181,18 @@ export function PersonDetailsSheet() {
                             </label>
                             <Select
                                 value={selectedPerson.type}
-                                disabled={paymentContext.locked || !canEditPayRule}
-                                onChange={(e) => updatePersonData(selectedPerson.id, { type: e.target.value as any }, "AJUSTAR_TIPO_PESSOA")}
-                                className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
+                                onValueChange={(val) => updatePersonData(selectedPerson.id, { type: val as any }, "AJUSTAR_TIPO_PESSOA")}
                             >
-                                <option value="FIXO">Fixo</option>
-                                <option value="FREELA">Freela</option>
+                                <SelectTrigger
+                                    disabled={paymentContext.locked || !canEditPayRule}
+                                    className="h-9 text-sm font-medium border-slate-200 focus:border-primary focus:ring-primary/20"
+                                >
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="FIXO">Fixo</SelectItem>
+                                    <SelectItem value="FREELA">Freela</SelectItem>
+                                </SelectContent>
                             </Select>
                         </div>
                     </section>
@@ -200,22 +218,28 @@ export function PersonDetailsSheet() {
                                         <label className="text-xs font-medium text-slate-500 mb-1.5 block">Cargo / Função</label>
                                         <Select
                                             value={selectedPerson.cargoId}
-                                            disabled={paymentContext.locked}
-                                            onChange={(e) => updatePersonData(selectedPerson.id, { cargoId: e.target.value }, "ALTERAR_CARGO")}
-                                            className="h-9 border-slate-200"
+                                            onValueChange={(val) => updatePersonData(selectedPerson.id, { cargoId: val }, "ALTERAR_CARGO")}
                                         >
-                                            {state.roles.map(r => <option key={r.id} value={r.id}>{r.nome}</option>)}
+                                            <SelectTrigger disabled={paymentContext.locked} className="h-9 border-slate-200">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {state.roles.map(r => <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>)}
+                                            </SelectContent>
                                         </Select>
                                     </div>
                                     <div>
                                         <label className="text-xs font-medium text-slate-500 mb-1.5 block">Equipe</label>
                                         <Select
                                             value={selectedPerson.teamId}
-                                            disabled={paymentContext.locked}
-                                            onChange={(e) => updatePersonData(selectedPerson.id, { teamId: e.target.value }, "ALTERAR_EQUIPE")}
-                                            className="h-9 border-slate-200"
+                                            onValueChange={(val) => updatePersonData(selectedPerson.id, { teamId: val }, "ALTERAR_EQUIPE")}
                                         >
-                                            {state.teams.map(t => <option key={t.id} value={t.id}>{t.nome}</option>)}
+                                            <SelectTrigger disabled={paymentContext.locked} className="h-9 border-slate-200">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {state.teams.map(t => <SelectItem key={t.id} value={t.id}>{t.nome}</SelectItem>)}
+                                            </SelectContent>
                                         </Select>
                                     </div>
                                 </div>

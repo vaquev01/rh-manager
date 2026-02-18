@@ -11,7 +11,13 @@ import { percent } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 
@@ -354,17 +360,21 @@ export default function RecrutamentoPage() {
                         <div>
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1 block">Status</label>
                           <Select
-                            className={`h-8 text-xs ${isCompleted ? "bg-emerald-50/50 border-emerald-100 text-emerald-700" : ""}`}
                             value={stage.status}
-                            onChange={(event) =>
+                            onValueChange={(val) =>
                               updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
-                                status: event.target.value as "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA"
+                                status: val as "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA"
                               })
                             }
                           >
-                            <option value="PENDENTE">Pendente</option>
-                            <option value="EM_ANDAMENTO">Em andamento</option>
-                            <option value="CONCLUIDA">Concluída</option>
+                            <SelectTrigger className={`h-8 text-xs ${isCompleted ? "bg-emerald-50/50 border-emerald-100 text-emerald-700" : ""}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="PENDENTE">Pendente</SelectItem>
+                              <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
+                              <SelectItem value="CONCLUIDA">Concluída</SelectItem>
+                            </SelectContent>
                           </Select>
                         </div>
 

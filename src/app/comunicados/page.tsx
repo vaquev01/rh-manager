@@ -9,7 +9,13 @@ import { useAppState } from "@/components/state-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
@@ -173,10 +179,8 @@ export default function ComunicadosPage() {
               <label className="text-xs text-slate-500">
                 Selecionar template
                 <Select
-                  className="mt-1"
                   value={selectedTemplateId}
-                  onChange={(event) => {
-                    const value = event.target.value;
+                  onValueChange={(value) => {
                     setSelectedTemplateId(value);
                     const template = state.communicationTemplates.find((item) => item.id === value);
                     if (template) {
@@ -185,12 +189,17 @@ export default function ComunicadosPage() {
                     }
                   }}
                 >
-                  <option value="">Sem template</option>
-                  {templates.map((template) => (
-                    <option key={template.id} value={template.id}>
-                      {template.nome}
-                    </option>
-                  ))}
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Sem template" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="NO_TEMPLATE">Sem template</SelectItem>
+                    {templates.map((template) => (
+                      <SelectItem key={template.id} value={template.id}>
+                        {template.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </label>
 
@@ -332,119 +341,136 @@ export default function ComunicadosPage() {
               <label className="text-xs text-slate-500">
                 Empresa
                 <Select
-                  className="mt-1"
                   value={segmentacao.companyId ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      companyId: event.target.value || undefined,
+                      companyId: val === "ALL" ? undefined : val,
                       unitId: undefined,
                       teamId: undefined
                     }))
                   }
                 >
-                  <option value="">Todas</option>
-                  {state.companies.map((company) => (
-                    <option key={company.id} value={company.id}>
-                      {company.nome}
-                    </option>
-                  ))}
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todas</SelectItem>
+                    {state.companies.map((company) => (
+                      <SelectItem key={company.id} value={company.id}>
+                        {company.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </label>
 
               <label className="text-xs text-slate-500">
                 Unidade
                 <Select
-                  className="mt-1"
                   value={segmentacao.unitId ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      unitId: event.target.value || undefined,
+                      unitId: val === "ALL" ? undefined : val,
                       teamId: undefined
                     }))
                   }
                 >
-                  <option value="">Todas</option>
-                  {unitOptions.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.nome}
-                    </option>
-                  ))}
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todas" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todas</SelectItem>
+                    {unitOptions.map((unit) => (
+                      <SelectItem key={unit.id} value={unit.id}>
+                        {unit.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </label>
 
               <label className="text-xs text-slate-500">
                 Time
                 <Select
-                  className="mt-1"
                   value={segmentacao.teamId ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      teamId: event.target.value || undefined
+                      teamId: val === "ALL" ? undefined : val
                     }))
                   }
                 >
-                  <option value="">Todos</option>
-                  {teamOptions.map((team) => (
-                    <option key={team.id} value={team.id}>
-                      {team.nome}
-                    </option>
-                  ))}
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todos</SelectItem>
+                    {teamOptions.map((team) => (
+                      <SelectItem key={team.id} value={team.id}>
+                        {team.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </label>
 
               <label className="text-xs text-slate-500">
                 Cargo
                 <Select
-                  className="mt-1"
                   value={segmentacao.cargoId ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      cargoId: event.target.value || undefined
+                      cargoId: val === "ALL" ? undefined : val
                     }))
                   }
                 >
-                  <option value="">Todos</option>
-                  {state.roles.map((role) => (
-                    <option key={role.id} value={role.id}>
-                      {role.nome}
-                    </option>
-                  ))}
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todos</SelectItem>
+                    {state.roles.map((role) => (
+                      <SelectItem key={role.id} value={role.id}>
+                        {role.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
                 </Select>
               </label>
 
               <label className="text-xs text-slate-500">
                 Tipo
                 <Select
-                  className="mt-1"
                   value={segmentacao.tipo ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      tipo: (event.target.value || undefined) as "FIXO" | "FREELA" | undefined
+                      tipo: (val === "ALL" ? undefined : val) as "FIXO" | "FREELA" | undefined
                     }))
                   }
                 >
-                  <option value="">Todos</option>
-                  <option value="FIXO">Fixo</option>
-                  <option value="FREELA">Freela</option>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL">Todos</SelectItem>
+                    <SelectItem value="FIXO">Fixo</SelectItem>
+                    <SelectItem value="FREELA">Freela</SelectItem>
+                  </SelectContent>
                 </Select>
               </label>
 
               <label className="text-xs text-slate-500">
                 Status
                 <Select
-                  className="mt-1"
                   value={segmentacao.status ?? ""}
-                  onChange={(event) =>
+                  onValueChange={(val) =>
                     setSegmentacao((previous) => ({
                       ...previous,
-                      status: (
-                        event.target.value || undefined
-                      ) as
+                      status: (val || undefined) as
                         | "ATIVO"
                         | "FERIAS"
                         | "AFASTADO"
@@ -453,11 +479,16 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <option value="">Todos</option>
-                  <option value="ATIVO">Ativo</option>
-                  <option value="FERIAS">Ferias</option>
-                  <option value="AFASTADO">Afastado</option>
-                  <option value="OFF_HOJE">Off hoje</option>
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="Todos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ALL_STATUS">Todos</SelectItem>
+                    <SelectItem value="ATIVO">Ativo</SelectItem>
+                    <SelectItem value="FERIAS">Ferias</SelectItem>
+                    <SelectItem value="AFASTADO">Afastado</SelectItem>
+                    <SelectItem value="OFF_HOJE">Off hoje</SelectItem>
+                  </SelectContent>
                 </Select>
               </label>
             </div>

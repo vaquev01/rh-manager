@@ -41,7 +41,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Sheet } from "@/components/ui/sheet";
 import { Dialog } from "@/components/ui/dialog";
 import { PersonDetailsSheet } from "@/components/person-details-sheet";
@@ -560,14 +566,17 @@ export default function DashboardPage() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Fonte de Horas</label>
                     <Select
-                      className="h-8 mt-1"
-                      disabled={paymentContext.locked}
                       value={paymentContext.config.fonteHoras}
-                      onChange={(e) => setHoursSource(e.target.value as any)}
+                      onValueChange={(val) => setHoursSource(val as any)}
                     >
-                      {Object.entries(HOURS_SOURCE_LABEL).map(([v, l]) => (
-                        <option key={v} value={v}>{l}</option>
-                      ))}
+                      <SelectTrigger className="h-8 mt-1" disabled={paymentContext.locked}>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(HOURS_SOURCE_LABEL).map(([v, l]) => (
+                          <SelectItem key={v} value={v}>{l}</SelectItem>
+                        ))}
+                      </SelectContent>
                     </Select>
                   </div>
 
@@ -575,12 +584,15 @@ export default function DashboardPage() {
                     <label className="text-xs font-medium text-muted-foreground">Adicional Global</label>
                     <div className="grid grid-cols-2 gap-2">
                       <Select
-                        className="h-8"
                         value={globalAdditionalDraft.tipo}
-                        disabled={paymentContext.locked}
-                        onChange={(e) => setGlobalAdditionalDraft(p => ({ ...p, tipo: e.target.value as any }))}
+                        onValueChange={(val) => setGlobalAdditionalDraft(p => ({ ...p, tipo: val as any }))}
                       >
-                        {additionalTypes.map(t => <option key={t.id} value={t.nome}>{t.nome}</option>)}
+                        <SelectTrigger className="h-8" disabled={paymentContext.locked}>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {additionalTypes.map(t => <SelectItem key={t.id} value={t.nome}>{t.nome}</SelectItem>)}
+                        </SelectContent>
                       </Select>
                       <Input
                         type="number"

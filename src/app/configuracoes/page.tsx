@@ -9,7 +9,13 @@ import { PermissionAction, Team, Unit } from "@/lib/types";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip } from "@/components/ui/tooltip";
@@ -270,17 +276,21 @@ export default function ConfiguracoesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Select
-                          className="h-8 text-xs border-slate-200"
                           value={rule.type}
-                          onChange={(event) =>
+                          onValueChange={(val) =>
                             updatePaymentRule(rule.id, {
-                              type: event.target.value as "VALOR_HORA" | "DIARIA" | "TURNO"
+                              type: val as "VALOR_HORA" | "DIARIA" | "TURNO"
                             })
                           }
                         >
-                          <option value="VALOR_HORA">Valor hora</option>
-                          <option value="DIARIA">Diaria</option>
-                          <option value="TURNO">Turno</option>
+                          <SelectTrigger className="h-8 text-xs border-slate-200">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="VALOR_HORA">Valor hora</SelectItem>
+                            <SelectItem value="DIARIA">Diaria</SelectItem>
+                            <SelectItem value="TURNO">Turno</SelectItem>
+                          </SelectContent>
                         </Select>
                       </td>
                       <td className="px-4 py-3">

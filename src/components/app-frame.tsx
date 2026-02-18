@@ -5,7 +5,13 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun } from "lucide-react";
 
-import { Select } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ROLE_LABEL } from "@/lib/constants";
 import { useAppState } from "@/components/state-provider";
 
@@ -142,8 +148,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-all duration-200 ${active
-                      ? "border-emerald-600 bg-emerald-50 font-medium text-emerald-700 shadow-sm"
-                      : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:shadow-sm"
+                    ? "border-emerald-600 bg-emerald-50 font-medium text-emerald-700 shadow-sm"
+                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:shadow-sm"
                     }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -167,83 +173,99 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Empresa
               <Select
-                className="mt-1"
                 value={filters.companyId ?? ""}
-                onChange={(event) =>
+                onValueChange={(val) =>
                   setFilters({
-                    companyId: event.target.value || undefined,
+                    companyId: val || undefined,
                     unitId: undefined,
                     teamId: undefined
                   })
                 }
               >
-                <option value="">Todas</option>
-                {companyOptions.map((company) => (
-                  <option key={company.id} value={company.id}>
-                    {company.nome}
-                  </option>
-                ))}
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_COMPANIES">Todas</SelectItem>
+                  {companyOptions.map((company) => (
+                    <SelectItem key={company.id} value={company.id}>
+                      {company.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Unidade
               <Select
-                className="mt-1"
                 value={filters.unitId ?? ""}
-                onChange={(event) =>
+                onValueChange={(val) =>
                   setFilters({
-                    unitId: event.target.value || undefined,
+                    unitId: val || undefined,
                     teamId: undefined
                   })
                 }
               >
-                <option value="">Todas</option>
-                {unitOptions.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.nome}
-                  </option>
-                ))}
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_UNITS">Todas</SelectItem>
+                  {unitOptions.map((unit) => (
+                    <SelectItem key={unit.id} value={unit.id}>
+                      {unit.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Time
               <Select
-                className="mt-1"
                 value={filters.teamId ?? ""}
-                onChange={(event) =>
+                onValueChange={(val) =>
                   setFilters({
-                    teamId: event.target.value || undefined
+                    teamId: val || undefined
                   })
                 }
               >
-                <option value="">Todos</option>
-                {teamOptions.map((team) => (
-                  <option key={team.id} value={team.id}>
-                    {team.nome}
-                  </option>
-                ))}
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_TEAMS">Todos</SelectItem>
+                  {teamOptions.map((team) => (
+                    <SelectItem key={team.id} value={team.id}>
+                      {team.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </label>
 
             <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
               Cargo
               <Select
-                className="mt-1"
                 value={filters.cargoId ?? ""}
-                onChange={(event) =>
+                onValueChange={(val) =>
                   setFilters({
-                    cargoId: event.target.value || undefined
+                    cargoId: val || undefined
                   })
                 }
               >
-                <option value="">Todos</option>
-                {state.roles.map((role) => (
-                  <option key={role.id} value={role.id}>
-                    {role.nome}
-                  </option>
-                ))}
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder="Todos" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="ALL_ROLES">Todos</SelectItem>
+                  {state.roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.nome}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
               </Select>
             </label>
 
