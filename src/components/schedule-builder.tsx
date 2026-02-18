@@ -34,11 +34,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { AlertDialog } from "@/components/ui/alert-dialog";
 
 const DAY_NAMES_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const DAY_NAMES_LONG = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
@@ -298,6 +294,8 @@ export function ScheduleBuilder() {
     e.dataTransfer.dropEffect = "copy";
   }
 
+  const [replConfirm, setReplConfirm] = useState<{ from: string; to: string } | null>(null);
+
   function handleDayDrop(e: DragEvent, toDay: string) {
     e.preventDefault();
     setTargetDay(null);
@@ -310,10 +308,7 @@ export function ScheduleBuilder() {
       const fromDay = payload.date;
       if (fromDay === toDay) return;
 
-      if (confirm(`Copiar escala de ${dayNameShort(fromDay)} para ${dayNameShort(toDay)}? Isso substituira a escala existente.`)) {
-        duplicateDaySchedule(fromDay, toDay, activeUnit.id);
-        toast(`Escala de ${dayNameShort(fromDay)} copiada para ${dayNameShort(toDay)}`, "success");
-      }
+      setReplConfirm({ from: fromDay, to: toDay });
     } catch { }
   }
 
@@ -472,40 +467,25 @@ export function ScheduleBuilder() {
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-xs font-semibold text-slate-700">{person.nome}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Badge
-                            variant="secondary"
-                            className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0 hover:bg-slate-200 cursor-pointer transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            {personRole?.nome ?? "?"}
-                          </Badge>
-                        </PopoverTrigger>
-                        <PopoverContent className="p-2 w-48" align="start">
-                          <div className="space-y-2">
-                            <h4 className="font-medium text-xs text-muted-foreground">Alterar Cargo</h4>
-                            <Select
-                              value={person.cargoId}
-                              onValueChange={(val) => {
-                                updatePersonData(person.id, { cargoId: val }, "ALTERAR_CARGO_RAPIDO");
-                                toast("Cargo atualizado", "success");
-                              }}
-                            >
-                              <SelectTrigger className="h-8 text-xs w-full">
-                                <span className="block truncate">
-                                  {state.roles.find(r => r.id === person.cargoId)?.nome || "Selecione..."}
-                                </span>
-                              </SelectTrigger>
-                              <SelectContent>
-                                {state.roles.map(r => (
-                                  <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </PopoverContent>
-                      </Popover>
+                      <Select
+                        value={person.cargoId}
+                        onValueChange={(val) => {
+                          updatePersonData(person.id, { cargoId: val }, "ALTERAR_CARGO_RAPIDO");
+                          toast("Cargo atualizado", "success");
+                        }}
+                      >
+                        <SelectTrigger
+                          className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0 hover:bg-slate-200 cursor-pointer transition-colors w-auto gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <span>{personRole?.nome ?? "?"}</span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          {state.roles.map(r => (
+                            <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
 
                       <span className={cn(
                         "text-[9px] font-bold px-1.5 py-0.5 rounded-md border",
@@ -870,6 +850,21 @@ export function ScheduleBuilder() {
           </div>
         </Card>
       </div>
-    </div>
+
+
+      <AlertDialog
+        open={!!replConfirm}
+        onOpenChange={(open) => !open && setReplConfirm(null)}
+        title="Duplicar Escala"
+        description={`Tem certeza que deseja copiar a escala de ${replConfirm ? dayNameLong(replConfirm.from) : ""} para ${replConfirm ? dayNameLong(replConfirm.to) : ""}? Isso substituirá toda a escala existente no dia de destino.`}
+        confirmUnsafe
+        onConfirm={() => {
+          if (replConfirm && activeUnit) {
+            duplicateDaySchedule(replConfirm.from, replConfirm.to, activeUnit.id);
+            toast(`Escala copiada com sucesso`, "success");
+          }
+        }}
+      />
+    </div >
   );
 }
