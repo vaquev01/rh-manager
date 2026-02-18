@@ -27,6 +27,18 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 const DAY_NAMES_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sab"];
 const DAY_NAMES_LONG = ["Domingo", "Segunda", "Terca", "Quarta", "Quinta", "Sexta", "Sabado"];
@@ -81,7 +93,9 @@ export function ScheduleBuilder() {
     updateCoverageTarget,
     setSelectedPersonId,
     addRole,
-    removeRole
+    removeRole,
+    duplicateDaySchedule,
+    updatePersonData
   } = useAppState();
   const { toast } = useToast();
 
@@ -100,6 +114,8 @@ export function ScheduleBuilder() {
   const trashRef = useRef<HTMLDivElement>(null);
   const [trashOver, setTrashOver] = useState(false);
   const [draggingScheduleId, setDraggingScheduleId] = useState<string | null>(null);
+  const [draggingDay, setDraggingDay] = useState<string | null>(null);
+  const [targetDay, setTargetDay] = useState<string | null>(null);
 
   const referenceDate = useMemo(() => addDays(date, weekOffset * 7), [date, weekOffset]);
   const weekDates = useMemo(() => getWeekDates(referenceDate), [referenceDate]);
@@ -267,6 +283,40 @@ export function ScheduleBuilder() {
     handleDragEnd();
   }
 
+  // ── Day Drag Handlers ──
+  function handleDayDragStart(e: DragEvent, dayDate: string) {
+    if (draggingScheduleId || draggingPersonId) return; // prevent conflict
+    e.dataTransfer.setData(MIME, JSON.stringify({ type: "day", date: dayDate }));
+    e.dataTransfer.effectAllowed = "copy";
+    setDraggingDay(dayDate);
+  }
+
+  function handleDayDragOver(e: DragEvent, dayDate: string) {
+    e.preventDefault();
+    if (!draggingDay || draggingDay === dayDate) return;
+    setTargetDay(dayDate);
+    e.dataTransfer.dropEffect = "copy";
+  }
+
+  function handleDayDrop(e: DragEvent, toDay: string) {
+    e.preventDefault();
+    setTargetDay(null);
+    setDraggingDay(null);
+
+    try {
+      const payload = JSON.parse(e.dataTransfer.getData(MIME));
+      if (payload.type !== "day" || !activeUnit) return;
+
+      const fromDay = payload.date;
+      if (fromDay === toDay) return;
+
+      if (confirm(`Copiar escala de ${dayNameShort(fromDay)} para ${dayNameShort(toDay)}? Isso substituira a escala existente.`)) {
+        duplicateDaySchedule(fromDay, toDay, activeUnit.id);
+        toast(`Escala de ${dayNameShort(fromDay)} copiada para ${dayNameShort(toDay)}`, "success");
+      }
+    } catch { }
+  }
+
   function handleSaveCoverage() {
     if (!editingCoverage) return;
     const val = parseInt(coverageInput, 10);
@@ -422,14 +472,48 @@ export function ScheduleBuilder() {
                   <div className="flex-1 min-w-0">
                     <p className="truncate text-xs font-semibold text-slate-700">{person.nome}</p>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="secondary" className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0">
-                        {personRole?.nome ?? "?"}
-                      </Badge>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Badge
+                            variant="secondary"
+                            className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0 hover:bg-slate-200 cursor-pointer transition-colors"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {personRole?.nome ?? "?"}
+                          </Badge>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-2 w-48" align="start">
+                          <div className="space-y-2">
+                            <h4 className="font-medium text-xs text-muted-foreground">Alterar Cargo</h4>
+                            <Select
+                              value={person.cargoId}
+                              onValueChange={(val) => {
+                                updatePersonData(person.id, { cargoId: val }, "ALTERAR_CARGO_RAPIDO");
+                                toast("Cargo atualizado", "success");
+                              }}
+                            >
+                              <SelectTrigger className="h-8 text-xs w-full">
+                                <span className="block truncate">
+                                  {state.roles.find(r => r.id === person.cargoId)?.nome || "Selecione..."}
+                                </span>
+                              </SelectTrigger>
+                              <SelectContent>
+                                {state.roles.map(r => (
+                                  <SelectItem key={r.id} value={r.id}>{r.nome}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+
                       <span className={cn(
-                        "text-[9px] font-bold px-1 rounded",
-                        person.type === 'FIXO' ? "text-blue-600 bg-blue-50" : "text-amber-600 bg-amber-50"
+                        "text-[9px] font-bold px-1.5 py-0.5 rounded-md border",
+                        person.type === 'FIXO'
+                          ? "text-blue-700 bg-blue-50 border-blue-100"
+                          : "text-amber-700 bg-amber-50 border-amber-100"
                       )}>
-                        {person.type.charAt(0)}
+                        {person.type === 'FIXO' ? 'Fixo' : 'Freela'}
                       </span>
                     </div>
                   </div>
@@ -551,16 +635,28 @@ export function ScheduleBuilder() {
                     return (
                       <th
                         key={d}
+                        draggable
+                        onDragStart={(e) => handleDayDragStart(e, d)}
+                        onDragOver={(e) => handleDayDragOver(e, d)}
+                        onDrop={(e) => handleDayDrop(e, d)}
+                        onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "px-2 py-3 text-center min-w-[160px] border-r last:border-r-0 transition-colors",
-                          isToday ? "bg-primary/5" : "bg-white"
+                          "px-2 py-3 text-center min-w-[160px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-slate-50 relative",
+                          isToday ? "bg-primary/5" : "bg-white",
+                          draggingDay === d && "opacity-50 dashed-border",
+                          targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
                         )}
                       >
-                        <div className={cn("text-[10px] uppercase tracking-wider font-semibold mb-0.5", isToday ? "text-primary" : "text-muted-foreground")}>
+                        <div className={cn("text-[10px] uppercase tracking-wider font-semibold mb-0.5 pointer-events-none", isToday ? "text-primary" : "text-muted-foreground")}>
                           {dayNameLong(d)}
                         </div>
-                        <div className={cn("text-sm", isToday ? "font-bold text-primary" : "font-medium text-foreground")}>
+                        <div className={cn("text-sm pointer-events-none", isToday ? "font-bold text-primary" : "font-medium text-foreground")}>
                           {shortDate(d)}
+                        </div>
+
+                        {/* Drag Handle Indicator */}
+                        <div className="absolute top-1/2 left-2 -translate-y-1/2 opacity-0 hover:opacity-100 cursor-grab">
+                          <GripVertical className="h-4 w-4 text-slate-300" />
                         </div>
                       </th>
                     );

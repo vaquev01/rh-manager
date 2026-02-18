@@ -169,6 +169,7 @@ interface AppStateContextValue {
   ) => void;
   removeFromSchedule: (scheduleId: string) => void;
   updateCoverageTarget: (unitId: string, cargoId: string, minimo: number) => void;
+  duplicateDaySchedule: (fromDay: string, toDay: string, unitId: string) => void;
   selectedPersonId: string | null;
   setSelectedPersonId: (id: string | null) => void;
   addRole: (nome: string, familia?: string, nivel?: string) => void;
@@ -2151,6 +2152,44 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, [filters]);
 
+  const duplicateDaySchedule = useCallback((fromDay: string, toDay: string, unitId: string) => {
+    setState((previous) => {
+      // 1. Find schedules to copy
+      const sourceSchedules = previous.schedules.filter(
+        (s) => s.date === fromDay && s.unidadeId === unitId
+      );
+
+      if (sourceSchedules.length === 0) return previous;
+
+      // 2. Remove existing schedules on target day
+      const schedulesWithoutTarget = previous.schedules.filter(
+        (s) => !(s.date === toDay && s.unidadeId === unitId)
+      );
+
+      // 3. Create new schedules
+      const newSchedules = sourceSchedules.map((source) => ({
+        ...source,
+        id: `sc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        date: toDay
+      }));
+
+      const audit = createAuditEntry({
+        acao: "DUPLICAR_DIA_ESCALA",
+        before: { from: fromDay, count: sourceSchedules.length },
+        after: { to: toDay, unitId },
+        unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          schedules: [...schedulesWithoutTarget, ...newSchedules]
+        },
+        audit
+      );
+    });
+  }, []);
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -2197,6 +2236,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       assignPersonToSchedule,
       removeFromSchedule,
       updateCoverageTarget,
+      duplicateDaySchedule,
       selectedPersonId,
       setSelectedPersonId,
       addRole,
@@ -2243,8 +2283,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       upsertWebhook,
       validateHours,
       sendFlashTraining,
+      sendFlashTraining,
       removeFromSchedule,
-      updateCoverageTarget
+      updateCoverageTarget,
+      duplicateDaySchedule
     ]
   );
 
