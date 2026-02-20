@@ -79,6 +79,12 @@ export default function LandingPage() {
                     </div>
                     <div className="flex items-center gap-3">
                         <Link
+                            href="/pricing"
+                            className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-3 py-1.5"
+                        >
+                            Planos
+                        </Link>
+                        <Link
                             href="/login"
                             className="text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors px-3 py-1.5"
                         >
@@ -240,14 +246,21 @@ export default function LandingPage() {
 
             {/* ─── FOOTER ─────────────────────────────────── */}
             <footer className="border-t border-slate-100 bg-slate-50">
-                <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-2">
-                        <div className="h-6 w-6 rounded bg-[hsl(173,80%,40%)] flex items-center justify-center">
-                            <span className="text-white font-black text-[10px]">B</span>
+                <div className="max-w-6xl mx-auto px-6 py-8">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded bg-[hsl(173,80%,40%)] flex items-center justify-center">
+                                <span className="text-white font-black text-[10px]">B</span>
+                            </div>
+                            <span className="text-sm font-bold text-slate-700">B People</span>
                         </div>
-                        <span className="text-sm font-bold text-slate-700">B People</span>
+                        <div className="flex items-center gap-4">
+                            <Link href="/pricing" className="text-xs text-slate-500 hover:text-[hsl(173,80%,40%)] transition-colors">Planos</Link>
+                            <Link href="/terms" className="text-xs text-slate-500 hover:text-[hsl(173,80%,40%)] transition-colors">Termos de Uso</Link>
+                            <Link href="/privacy" className="text-xs text-slate-500 hover:text-[hsl(173,80%,40%)] transition-colors">Privacidade</Link>
+                        </div>
                     </div>
-                    <p className="text-xs text-slate-400">© {new Date().getFullYear()} B People. Todos os direitos reservados.</p>
+                    <p className="text-[10px] text-slate-400 text-center mt-4">© {new Date().getFullYear()} B People. Todos os direitos reservados. LGPD Compliant.</p>
                 </div>
             </footer>
         </div>

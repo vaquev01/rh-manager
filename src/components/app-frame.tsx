@@ -15,6 +15,7 @@ import {
 import { ROLE_LABEL } from "@/lib/constants";
 import { useAppState } from "@/components/state-provider";
 import { useAuth } from "@/components/auth-context";
+import { NotificationCenter } from "@/components/notification-center";
 
 const NAV_ITEMS = [
   {
@@ -149,6 +150,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               >
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
+              <NotificationCenter />
               <button
                 className="button ghost inline-flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
                 onClick={() => { logout(); window.location.href = "/landing"; }}
