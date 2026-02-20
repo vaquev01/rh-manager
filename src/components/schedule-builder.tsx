@@ -352,7 +352,7 @@ export function ScheduleBuilder() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── LEFT: People Pool ── */}
-      <Card className="flex w-full lg:w-[230px] xl:w-[260px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
+      <Card className="flex w-full lg:w-[180px] xl:w-[220px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
         <div className="px-3 py-2">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1 mt-0.5">
             <Users className="h-3.5 w-3.5 text-primary" />
@@ -780,7 +780,7 @@ export function ScheduleBuilder() {
 
                                     <div className="min-w-0 flex-1">
                                       <div className="flex flex-col pr-1 gap-0.5 min-w-0">
-                                        <p className="truncate text-[10px] font-semibold text-foreground/90 leading-tight">
+                                        <p className="text-[10px] font-semibold text-foreground/90 leading-tight whitespace-normal break-words">
                                           {person?.nome ?? sched.personId}
                                         </p>
                                         {person?.type && (
