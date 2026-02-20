@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun } from "lucide-react";
+import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users } from "lucide-react";
 
 import {
   Select,
@@ -20,6 +20,11 @@ const NAV_ITEMS = [
     href: "/",
     label: "Dashboard",
     icon: LayoutGrid
+  },
+  {
+    href: "/equipe",
+    label: "Equipe",
+    icon: Users
   },
   {
     href: "/comunicados",

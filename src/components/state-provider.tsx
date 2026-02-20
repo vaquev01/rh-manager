@@ -37,7 +37,8 @@ import {
   Shift,
   TrainingCompletion,
   UserRole,
-  Role
+  Role,
+  PersonDocument
 } from "@/lib/types";
 
 const STORAGE_KEY = "people-ops-state-v1";
@@ -174,6 +175,9 @@ interface AppStateContextValue {
   setSelectedPersonId: (id: string | null) => void;
   addRole: (nome: string, familia?: string, nivel?: string) => void;
   removeRole: (id: string) => void;
+  addPerson: (person: Omit<Person, "id" | "createdAt" | "updatedAt">) => void;
+  upsertDocument: (doc: Omit<PersonDocument, "id"> & { id?: string }) => void;
+  removeDocument: (docId: string) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -2190,6 +2194,101 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addPerson = useCallback((personInfo: Omit<Person, "id" | "createdAt" | "updatedAt">) => {
+    setState((previous) => {
+      const newPerson: Person = {
+        ...personInfo,
+        id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        createdAt: nowIso(),
+        updatedAt: nowIso(),
+      };
+
+      const audit = createAuditEntry({
+        acao: "CRIAR_PESSOA",
+        before: undefined,
+        after: newPerson,
+        companyId: personInfo.companyId,
+        unitId: personInfo.unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          people: [...previous.people, newPerson]
+        },
+        audit
+      );
+    });
+  }, []);
+
+  const upsertDocument = useCallback((docInfo: Omit<PersonDocument, "id"> & { id?: string }) => {
+    setState((previous) => {
+      const person = previous.people.find((p) => p.id === docInfo.personId);
+
+      let documents = [...previous.documents];
+      let newDoc: PersonDocument;
+
+      if (docInfo.id) {
+        const idx = documents.findIndex(d => d.id === docInfo.id);
+        if (idx >= 0) {
+          newDoc = { ...documents[idx], ...docInfo } as PersonDocument;
+          documents[idx] = newDoc;
+        } else {
+          newDoc = { ...docInfo, id: docInfo.id } as PersonDocument;
+          documents.push(newDoc);
+        }
+      } else {
+        newDoc = {
+          ...docInfo,
+          id: `doc-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        } as PersonDocument;
+        documents.push(newDoc);
+      }
+
+      const audit = createAuditEntry({
+        acao: docInfo.id ? "ATUALIZAR_DOCUMENTO" : "CRIAR_DOCUMENTO",
+        before: docInfo.id ? previous.documents.find(d => d.id === docInfo.id) : undefined,
+        after: newDoc,
+        companyId: person?.companyId,
+        unitId: person?.unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          documents
+        },
+        audit
+      );
+    });
+  }, []);
+
+  const removeDocument = useCallback((docId: string) => {
+    setState((previous) => {
+      const doc = previous.documents.find((d) => d.id === docId);
+      if (!doc) return previous;
+
+      const person = previous.people.find((p) => p.id === doc.personId);
+
+      const documents = previous.documents.filter((d) => d.id !== docId);
+      const audit = createAuditEntry({
+        acao: "REMOVER_DOCUMENTO",
+        before: doc,
+        after: undefined,
+        companyId: person?.companyId,
+        unitId: person?.unitId
+      });
+
+      return appendAudit(
+        {
+          ...previous,
+          documents
+        },
+        audit
+      );
+    });
+  }, []);
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -2240,7 +2339,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       selectedPersonId,
       setSelectedPersonId,
       addRole,
-      removeRole
+      removeRole,
+      addPerson,
+      upsertDocument,
+      removeDocument
     }),
     [
       addIndividualAdditional,
@@ -2280,13 +2382,17 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateTrainingCompletion,
       upsertHours,
       upsertTemplate,
-      upsertWebhook,
       validateHours,
-      sendFlashTraining,
       sendFlashTraining,
       removeFromSchedule,
       updateCoverageTarget,
-      duplicateDaySchedule
+      duplicateDaySchedule,
+      selectedPersonId,
+      addRole,
+      removeRole,
+      addPerson,
+      upsertDocument,
+      removeDocument
     ]
   );
 

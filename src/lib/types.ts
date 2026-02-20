@@ -86,6 +86,7 @@ export interface PersonDocument {
   status: "OK" | "PENDENTE";
   validade?: string;
   criticidade: "BAIXA" | "MEDIA" | "ALTA";
+  fileData?: string; // Base64 data for persistence
 }
 
 export interface PersonPerformance {
