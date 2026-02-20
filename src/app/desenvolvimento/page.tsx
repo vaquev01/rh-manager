@@ -161,7 +161,7 @@ export default function DesenvolvimentoPage() {
   return (
     <div className="page-enter space-y-4">
       <section className="panel p-4">
-        <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-slate-800">
+        <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-foreground">
           <Brain className="h-5 w-5" />
           Matriz de competencias por cargo
         </h2>
@@ -170,24 +170,24 @@ export default function DesenvolvimentoPage() {
           {visibleRoles.map((role) => {
             const competencies = competenciesByRole.get(role.id) ?? [];
             return (
-              <article key={role.id} className="rounded-xl border border-slate-200 bg-white p-3">
-                <p className="text-sm font-semibold text-slate-700">
+              <article key={role.id} className="rounded-xl border border-border bg-background p-3">
+                <p className="text-sm font-semibold text-foreground/90">
                   {role.nome} · {role.nivel}
                 </p>
-                <p className="text-xs text-slate-500">Familia: {role.familia}</p>
+                <p className="text-xs text-muted-foreground">Familia: {role.familia}</p>
 
-                <ul className="mt-2 space-y-2 text-xs text-slate-600">
+                <ul className="mt-2 space-y-2 text-xs text-muted-foreground/90">
                   {competencies.map((competency) => (
-                    <li key={competency.id} className="rounded-lg border border-slate-200 bg-slate-50 p-2">
-                      <p className="font-semibold text-slate-700">{competency.competencia}</p>
+                    <li key={competency.id} className="rounded-lg border border-border bg-muted/50 p-2">
+                      <p className="font-semibold text-foreground/90">{competency.competencia}</p>
                       <p>Peso: {competency.peso}</p>
                       <p>Criterio observavel: {competency.criterioObservavel}</p>
                     </li>
                   ))}
                   {competencies.length === 0 && (
-                    <li className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-slate-200 py-4 text-center">
-                      <Inbox className="h-5 w-5 text-slate-300" />
-                      <p className="text-xs text-slate-400">Sem competências cadastradas.</p>
+                    <li className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-border py-4 text-center">
+                      <Inbox className="h-5 w-5 text-muted-foreground/40" />
+                      <p className="text-xs text-muted-foreground/70">Sem competências cadastradas.</p>
                     </li>
                   )}
                 </ul>
@@ -200,11 +200,11 @@ export default function DesenvolvimentoPage() {
       <section className="grid gap-4 xl:grid-cols-[1.2fr,1fr]">
         <div className="panel p-4">
           <div className="mb-3 flex items-center justify-between">
-            <h3 className="inline-flex items-center gap-2 text-base font-semibold text-slate-800">
+            <h3 className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
               <BookMarked className="h-4 w-4" />
               Treinamentos por cargo e pessoa
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Treinamento relampago enviado para <strong>{flashRecipients}</strong> pessoa(s)
             </p>
           </div>
@@ -228,7 +228,7 @@ export default function DesenvolvimentoPage() {
           <div className="max-h-[420px] overflow-auto">
             <table className="table-zebra min-w-full text-left text-xs">
               <thead>
-                <tr className="border-b border-slate-200">
+                <tr className="border-b border-border">
                   <th scope="col" className="px-2 py-2">Pessoa</th>
                   <th scope="col" className="px-2 py-2">Treinamento</th>
                   <th scope="col" className="px-2 py-2">Cargo</th>
@@ -244,13 +244,13 @@ export default function DesenvolvimentoPage() {
                   }
                   const { completion, training, person } = entry;
                   return (
-                  <tr key={completion.id} className="border-b border-slate-100">
-                    <td className="px-2 py-2 text-slate-700">{person?.nome ?? completion.personId}</td>
-                    <td className="px-2 py-2 text-slate-700">{training?.nome ?? completion.trainingId}</td>
-                    <td className="px-2 py-2 text-slate-700">
+                  <tr key={completion.id} className="border-b border-border/50">
+                    <td className="px-2 py-2 text-foreground/90">{person?.nome ?? completion.personId}</td>
+                    <td className="px-2 py-2 text-foreground/90">{training?.nome ?? completion.trainingId}</td>
+                    <td className="px-2 py-2 text-foreground/90">
                       {training ? roleById[training.cargoId]?.nome : "-"}
                     </td>
-                    <td className="px-2 py-2 text-slate-700">
+                    <td className="px-2 py-2 text-foreground/90">
                       {training?.obrigatorio ? "Sim" : "Recomendado"}
                     </td>
                     <td className="px-2 py-2">
@@ -269,7 +269,7 @@ export default function DesenvolvimentoPage() {
                         <option value="VENCIDO">Vencido</option>
                       </select>
                     </td>
-                    <td className="px-2 py-2 text-slate-700">{completion.concluidoEm ?? "-"}</td>
+                    <td className="px-2 py-2 text-foreground/90">{completion.concluidoEm ?? "-"}</td>
                   </tr>
                   );
                 })}
@@ -279,12 +279,12 @@ export default function DesenvolvimentoPage() {
         </div>
 
         <div className="panel p-4">
-          <h3 className="inline-flex items-center gap-2 text-base font-semibold text-slate-800">
+          <h3 className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
             <Rocket className="h-4 w-4" />
             Onboarding por cargo (1/7/14/30/60/90)
           </h3>
 
-          <ul className="mt-3 max-h-[420px] space-y-2 overflow-auto text-xs text-slate-600">
+          <ul className="mt-3 max-h-[420px] space-y-2 overflow-auto text-xs text-muted-foreground/90">
             {onboardingRows.map((entry) => {
               if (!entry) {
                 return null;
@@ -293,13 +293,13 @@ export default function DesenvolvimentoPage() {
               const personStats = onboardingByPerson.get(person.id);
               const progressPct = personStats && personStats.total > 0 ? personStats.done / personStats.total : 0;
               return (
-              <li key={progress.id} className={`rounded-xl border p-3 ${progress.status === "CONCLUIDO" ? "border-emerald-200 bg-emerald-50/40" : progress.status === "ATRASADO" ? "border-red-200 bg-red-50/30" : "border-slate-200 bg-white"}`}>
+              <li key={progress.id} className={`rounded-xl border p-3 ${progress.status === "CONCLUIDO" ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20/40" : progress.status === "ATRASADO" ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20/30 dark:bg-red-900/10" : "border-border bg-background"}`}>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-slate-700">{person?.nome ?? progress.personId}</p>
+                  <p className="font-semibold text-foreground/90">{person?.nome ?? progress.personId}</p>
                   <div className="flex items-center gap-2">
                     {progress.status === "CONCLUIDO" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
                     {progress.status === "ATRASADO" && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-                    {progress.status === "PENDENTE" && <Clock3 className="h-3.5 w-3.5 text-slate-400" />}
+                    {progress.status === "PENDENTE" && <Clock3 className="h-3.5 w-3.5 text-muted-foreground/70" />}
                     <span className={`badge ${progress.status === "CONCLUIDO" ? "badge-ok" : progress.status === "ATRASADO" ? "badge-danger" : "badge-info"}`}>
                       {progress.status === "CONCLUIDO" ? "Concluido" : progress.status === "ATRASADO" ? "Atrasado" : "Pendente"}
                     </span>
@@ -310,13 +310,13 @@ export default function DesenvolvimentoPage() {
                     <div className="progress-bar flex-1">
                       <div className="progress-bar-fill" style={{ width: `${Math.round(progressPct * 100)}%`, background: progressPct >= 1 ? '#10b981' : progressPct >= 0.5 ? '#3b82f6' : '#f59e0b' }} />
                     </div>
-                    <span className="text-[11px] text-slate-400">{personStats.done}/{personStats.total}</span>
+                    <span className="text-[11px] text-muted-foreground/70">{personStats.done}/{personStats.total}</span>
                   </div>
                 )}
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-muted-foreground">
                   Cargo: {role?.nome ?? "-"} · Marco: D+{item?.marcoDia ?? "?"} · Owner: {item?.ownerRole}
                 </p>
-                <p className="text-xs text-slate-500">Tarefa: {item?.titulo ?? "Item onboarding"}</p>
+                <p className="text-xs text-muted-foreground">Tarefa: {item?.titulo ?? "Item onboarding"}</p>
 
                 <div className="mt-2 grid gap-2 md:grid-cols-2">
                   <select
@@ -352,7 +352,7 @@ export default function DesenvolvimentoPage() {
       </section>
 
       <section className="panel p-4">
-        <h3 className="inline-flex items-center gap-2 text-base font-semibold text-slate-800">
+        <h3 className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
           <Target className="h-4 w-4" />
           PDI individual (lacuna → acao → prazo → responsavel)
         </h3>
@@ -364,19 +364,19 @@ export default function DesenvolvimentoPage() {
             const pdiAtrasado = item.prazo < date;
             const pdiConcluido = item.evolucao.trim().length > 20;
             return (
-              <article key={item.id} className={`rounded-xl border p-3 text-sm ${pdiConcluido ? "border-emerald-200 bg-emerald-50/40" : pdiAtrasado ? "border-red-200 bg-red-50/30" : "border-slate-200 bg-white"}`}>
+              <article key={item.id} className={`rounded-xl border p-3 text-sm ${pdiConcluido ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20/40" : pdiAtrasado ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20/30 dark:bg-red-900/10" : "border-border bg-background"}`}>
                 <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-slate-700">{person?.nome ?? item.personId}</p>
+                  <p className="font-semibold text-foreground/90">{person?.nome ?? item.personId}</p>
                   <span className={`badge ${pdiConcluido ? "badge-ok" : pdiAtrasado ? "badge-danger" : "badge-info"}`}>
                     {pdiConcluido ? "Evoluindo" : pdiAtrasado ? "Atrasado" : "No prazo"}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">Responsavel: {manager?.nome ?? item.responsavelPersonId}</p>
-                <p className="mt-2 text-slate-600">Lacuna: {item.lacuna}</p>
-                <p className="text-slate-600">Acao: {item.acao}</p>
-                <p className="text-slate-600">Prazo: {item.prazo}</p>
+                <p className="text-xs text-muted-foreground">Responsavel: {manager?.nome ?? item.responsavelPersonId}</p>
+                <p className="mt-2 text-muted-foreground/90">Lacuna: {item.lacuna}</p>
+                <p className="text-muted-foreground/90">Acao: {item.acao}</p>
+                <p className="text-muted-foreground/90">Prazo: {item.prazo}</p>
 
-                <label className="mt-2 block text-xs text-slate-500">
+                <label className="mt-2 block text-xs text-muted-foreground">
                   Evolucao
                   <textarea
                     className="textarea mt-1"
@@ -387,7 +387,7 @@ export default function DesenvolvimentoPage() {
                   />
                 </label>
 
-                <label className="mt-2 block text-xs text-slate-500">
+                <label className="mt-2 block text-xs text-muted-foreground">
                   Evidencia
                   <input
                     className="input mt-1"

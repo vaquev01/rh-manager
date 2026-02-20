@@ -350,11 +350,11 @@ export function ScheduleBuilder() {
   const isDragging = draggingPersonId !== null;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-[calc(100vh-140px)]">
+    <div className="flex flex-col lg:flex-row gap-6 h-full">
       {/* ── LEFT: People Pool ── */}
-      <Card className="flex w-full lg:w-[280px] shrink-0 flex-col h-full border-slate-200 bg-slate-50/50 shadow-none">
+      <Card className="flex w-full lg:w-[280px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
         <div className="px-4 py-4">
-          <h3 className="flex items-center gap-2 text-sm font-bold text-slate-800">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
             <Users className="h-4 w-4 text-primary" />
             Equipe Disponível
           </h3>
@@ -370,7 +370,7 @@ export function ScheduleBuilder() {
               onClick={() => setSelectedType("ALL")}
               className={cn(
                 "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
-                selectedType === "ALL" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+                selectedType === "ALL" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
               Todos
@@ -379,7 +379,7 @@ export function ScheduleBuilder() {
               onClick={() => setSelectedType("FIXO")}
               className={cn(
                 "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
-                selectedType === "FIXO" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+                selectedType === "FIXO" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
               Fixo
@@ -388,7 +388,7 @@ export function ScheduleBuilder() {
               onClick={() => setSelectedType("FREELA")}
               className={cn(
                 "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
-                selectedType === "FREELA" ? "bg-white text-primary shadow-sm" : "text-slate-500 hover:text-slate-700"
+                selectedType === "FREELA" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
               Freela
@@ -423,10 +423,10 @@ export function ScheduleBuilder() {
         {/* Search */}
         <div className="px-4 pb-2">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
             <Input
               type="text"
-              className="h-9 pl-9 text-xs bg-white border-slate-200 focus:border-primary/50 focus:ring-primary/20 transition-all shadow-sm"
+              className="h-9 pl-9 text-xs bg-background border-border focus:border-primary/50 focus:ring-primary/20 transition-all shadow-sm"
               placeholder="Buscar por nome ou cargo..."
               value={searchPool}
               onChange={(e) => setSearchPool(e.target.value)}
@@ -453,19 +453,19 @@ export function ScheduleBuilder() {
                   onDragStart={(e) => handlePoolDragStart(e, person.id)}
                   onDragEnd={handleDragEnd}
                   className={cn(
-                    "group relative flex items-center gap-3 rounded-xl border bg-white px-3 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing",
+                    "group relative flex items-center gap-3 rounded-xl border bg-background px-3 py-2.5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md cursor-grab active:cursor-grabbing",
                     isBeingDragged && "opacity-40 ring-2 ring-primary ring-offset-2 scale-95"
                   )}
                 >
                   {/* Hover Indicator */}
                   <div className="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-bold text-slate-600 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-bold text-muted-foreground/90 group-hover:bg-primary/10 group-hover:text-primary transition-colors">
                     {person.nome.split(" ").map((n) => n[0]).join("").slice(0, 2)}
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="truncate text-xs font-semibold text-slate-700">{person.nome}</p>
+                    <p className="truncate text-xs font-semibold text-foreground/90">{person.nome}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <Select
                         value={person.cargoId}
@@ -475,7 +475,7 @@ export function ScheduleBuilder() {
                         }}
                       >
                         <SelectTrigger
-                          className="h-4 px-1 text-[9px] bg-slate-100 text-slate-500 border-0 hover:bg-slate-200 cursor-pointer transition-colors w-auto gap-1"
+                          className="h-4 px-1 text-[9px] bg-muted text-muted-foreground border-0 hover:bg-slate-200 cursor-pointer transition-colors w-auto gap-1"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <span>{personRole?.nome ?? "?"}</span>
@@ -490,7 +490,7 @@ export function ScheduleBuilder() {
                       <span className={cn(
                         "text-[9px] font-bold px-1.5 py-0.5 rounded-md border",
                         person.type === 'FIXO'
-                          ? "text-blue-700 bg-blue-50 border-blue-100"
+                          ? "text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/20 border-blue-100"
                           : "text-amber-700 bg-amber-50 border-amber-100"
                       )}>
                         {person.type === 'FIXO' ? 'Fixo' : 'Freela'}
@@ -501,13 +501,13 @@ export function ScheduleBuilder() {
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-slate-100"
+                    className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity rounded-full hover:bg-muted"
                     onClick={(e) => {
                       e.stopPropagation();
                       setSelectedPersonId(person.id);
                     }}
                   >
-                    <Edit2 className="h-3.5 w-3.5 text-slate-400 hover:text-primary" />
+                    <Edit2 className="h-3.5 w-3.5 text-muted-foreground/70 hover:text-primary" />
                   </Button>
                 </div>
               );
@@ -524,9 +524,9 @@ export function ScheduleBuilder() {
           className={cn(
             "mx-3 mb-3 mt-auto flex items-center justify-center gap-2 rounded-xl border-2 border-dashed py-4 text-xs font-medium transition-all duration-200",
             trashOver
-              ? "border-red-500 bg-red-50 text-red-600 scale-[1.02]"
+              ? "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 scale-[1.02]"
               : isDragging && draggingScheduleId
-                ? "border-red-300 bg-red-50/30 text-red-400"
+                ? "border-red-300 bg-red-50 dark:bg-red-900/20/30 dark:bg-red-900/10 text-red-400"
                 : "border-muted text-muted-foreground"
           )}
         >
@@ -584,7 +584,7 @@ export function ScheduleBuilder() {
 
           {/* Stats pills */}
           <div className="flex items-center gap-3 text-xs">
-            <Badge variant="outline" className="h-7 px-2.5 bg-slate-50">
+            <Badge variant="outline" className="h-7 px-2.5 bg-muted/50">
               {weekStats.totalAssigned} / {weekStats.totalNeeded} escalados
             </Badge>
 
@@ -602,12 +602,12 @@ export function ScheduleBuilder() {
         </Card>
 
         {/* Grid */}
-        <Card className="flex-1 overflow-hidden flex flex-col shadow-md border-slate-200">
+        <Card className="flex-1 overflow-hidden flex flex-col shadow-md border-border">
           <div className="flex-1 overflow-auto">
             <table className="w-full text-xs border-collapse relative">
               <thead className="sticky top-0 z-20">
-                <tr className="bg-slate-50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-slate-100/95 backdrop-blur px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground min-w-[200px] border-r">
+                <tr className="bg-muted/50 border-b shadow-sm">
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground min-w-[200px] border-r">
                     Funcao / Cargo
                   </th>
                   {weekDates.map((d) => {
@@ -621,8 +621,8 @@ export function ScheduleBuilder() {
                         onDrop={(e) => handleDayDrop(e, d)}
                         onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "px-2 py-3 text-center min-w-[160px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-slate-50 relative",
-                          isToday ? "bg-primary/5" : "bg-white",
+                          "px-2 py-3 text-center min-w-[160px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-muted/50 relative",
+                          isToday ? "bg-primary/5" : "bg-background",
                           draggingDay === d && "opacity-50 dashed-border",
                           targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
                         )}
@@ -636,7 +636,7 @@ export function ScheduleBuilder() {
 
                         {/* Drag Handle Indicator */}
                         <div className="absolute top-1/2 left-2 -translate-y-1/2 opacity-0 hover:opacity-100 cursor-grab">
-                          <GripVertical className="h-4 w-4 text-slate-300" />
+                          <GripVertical className="h-4 w-4 text-muted-foreground/40" />
                         </div>
                       </th>
                     );
@@ -649,9 +649,9 @@ export function ScheduleBuilder() {
                   const needed = coverageMap.get(coverageKey) ?? 0;
 
                   return (
-                    <tr key={role.id} className="bg-white hover:bg-slate-50/30 transition-colors">
+                    <tr key={role.id} className="bg-background hover:bg-muted/30 transition-colors">
                       {/* Role header cell */}
-                      <td className="sticky left-0 z-10 bg-white px-4 py-4 align-top border-r group-hover:bg-slate-50/30">
+                      <td className="sticky left-0 z-10 bg-background px-4 py-4 align-top border-r group-hover:bg-muted/30">
                         <div className="flex flex-col gap-2">
                           <div>
                             <p className="font-semibold text-foreground text-sm flex items-center gap-2 group/role">
@@ -731,7 +731,7 @@ export function ScheduleBuilder() {
                               "schedule-grid-cell px-2 py-2 align-top border-r last:border-r-0 transition-all duration-300 relative",
                               cellBg,
                               isDropTarget && "bg-primary/5 ring-inset ring-2 ring-primary/30 z-10",
-                              isDragging && !isDropTarget && "bg-slate-50/80 grayscale-[0.5]"
+                              isDragging && !isDropTarget && "bg-muted/50/80 grayscale-[0.5]"
                             )}
                             onDragOver={(e) => handleCellDragOver(e, { date: d, roleId: role.id })}
                             onDragLeave={handleCellDragLeave}
@@ -739,7 +739,7 @@ export function ScheduleBuilder() {
                           >
                             {/* Drop Target Indicator */}
                             {isDropTarget && (
-                              <div className="absolute inset-2 border-2 border-dashed border-primary/40 rounded-lg flex items-center justify-center bg-white/50 backdrop-blur-[1px] pointer-events-none animate-in fade-in zoom-in duration-200">
+                              <div className="absolute inset-2 border-2 border-dashed border-primary/40 rounded-lg flex items-center justify-center bg-background/50 backdrop-blur-[1px] pointer-events-none animate-in fade-in zoom-in duration-200">
                                 <Plus className="h-6 w-6 text-primary" />
                               </div>
                             )}
@@ -756,22 +756,22 @@ export function ScheduleBuilder() {
                                     onDragStart={(e) => handleChipDragStart(e, sched.id, sched.personId)}
                                     onDragEnd={handleDragEnd}
                                     className={cn(
-                                      "group flex items-center gap-2 rounded-lg border bg-white pl-2 pr-1 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing",
+                                      "group flex items-center gap-2 rounded-lg border bg-background pl-2 pr-1 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing",
                                       isMe && "opacity-30 scale-95 grayscale"
                                     )}
                                   >
-                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-[9px] font-bold text-slate-600 border border-white shadow-sm">
+                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-[9px] font-bold text-muted-foreground/90 border border-white shadow-sm">
                                       {(person?.nome ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                     </div>
 
                                     <div className="min-w-0 flex-1">
                                       <div className="flex items-center justify-between">
-                                        <p className="truncate text-[10px] font-semibold text-slate-700 leading-tight">
+                                        <p className="truncate text-[10px] font-semibold text-foreground/90 leading-tight">
                                           {person?.nome ?? sched.personId}
                                         </p>
                                       </div>
                                       {sched.turns[0] && (
-                                        <p className="flex items-center gap-1 text-[9px] text-slate-400 mt-0.5">
+                                        <p className="flex items-center gap-1 text-[9px] text-muted-foreground/70 mt-0.5">
                                           <Clock className="h-2.5 w-2.5" />
                                           {sched.turns[0].inicio}–{sched.turns[0].fim}
                                         </p>
@@ -781,13 +781,13 @@ export function ScheduleBuilder() {
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 -mr-0.5 rounded-full hover:bg-slate-100"
+                                      className="h-6 w-6 opacity-0 group-hover:opacity-100 -mr-0.5 rounded-full hover:bg-muted"
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         if (person) setSelectedPersonId(person.id);
                                       }}
                                     >
-                                      <Edit2 className="h-3 w-3 text-slate-400 hover:text-primary" />
+                                      <Edit2 className="h-3 w-3 text-muted-foreground/70 hover:text-primary" />
                                     </Button>
                                   </div>
                                 );
@@ -801,7 +801,7 @@ export function ScheduleBuilder() {
                                     "flex items-center justify-center gap-1.5 rounded-md border border-dashed py-2 text-[10px] font-medium transition-colors",
                                     isDragging
                                       ? "border-primary/40 bg-primary/5 text-primary"
-                                      : "border-slate-200 text-slate-400"
+                                      : "border-border text-muted-foreground/70"
                                   )}
                                 >
                                   <User className="h-3 w-3 opacity-50" />
@@ -825,7 +825,7 @@ export function ScheduleBuilder() {
 
                 {/* Add Role Row */}
                 <tr>
-                  <td className="sticky left-0 z-10 bg-white px-4 py-3 border-r border-b-0">
+                  <td className="sticky left-0 z-10 bg-background px-4 py-3 border-r border-b-0">
                     <Button
                       variant="outline"
                       size="sm"
@@ -839,8 +839,8 @@ export function ScheduleBuilder() {
                       Adicionar Cargo
                     </Button>
                   </td>
-                  <td colSpan={7} className="bg-slate-50/30 border-b-0 p-2">
-                    <div className="flex items-center justify-center h-full text-xs text-muted-foreground/40 border-dashed border border-slate-200 rounded-lg mx-2">
+                  <td colSpan={7} className="bg-muted/30 border-b-0 p-2">
+                    <div className="flex items-center justify-center h-full text-xs text-muted-foreground/40 border-dashed border border-border rounded-lg mx-2">
                       +
                     </div>
                   </td>

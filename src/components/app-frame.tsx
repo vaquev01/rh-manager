@@ -105,12 +105,12 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       </a>
       <header className="px-5 pt-4 md:px-8 md:pt-6">
         <div className="panel mb-4 overflow-hidden">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3 md:px-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 px-4 py-3 md:px-6">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-400">People Ops Multi-Empresa</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">People Ops Multi-Empresa</p>
               <h1 className="text-lg font-semibold text-ink">Central Operacional</h1>
             </div>
-            <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground/90">
               <span className="badge badge-ok">Perfil: {ROLE_LABEL[actor.role]}</span>
               <span className="badge badge-warn">Fechamento: {paymentContext.locked ? "Travado" : "Aberto"}</span>
               {!showResetConfirm ? (
@@ -139,7 +139,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             </div>
           </div>
 
-          <nav className="flex flex-wrap gap-2 border-b border-slate-200/80 px-4 py-3 md:px-6">
+          <nav className="flex flex-wrap gap-2 border-b border-border/80 px-4 py-3 md:px-6">
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -148,8 +148,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm transition-all duration-200 ${active
-                    ? "border-emerald-600 bg-emerald-50 font-medium text-emerald-700 shadow-sm"
-                    : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:text-slate-700 hover:shadow-sm"
+                    ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-900/20 font-medium text-emerald-700 dark:text-emerald-300 shadow-sm"
+                    : "border-border bg-background text-muted-foreground hover:border-slate-300 hover:text-foreground/90 hover:shadow-sm"
                     }`}
                 >
                   <Icon className="h-4 w-4" />
@@ -159,18 +159,18 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="grid grid-cols-2 gap-3 px-4 py-3 sm:grid-cols-3 md:grid-cols-6 md:px-6">
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <div className="flex flex-wrap items-end gap-3 px-4 py-3 md:px-6 bg-muted/20 border-b border-border/80">
+            <label className="flex-1 min-w-[140px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Data
               <input
-                className="input mt-1"
+                className="input mt-1.5 h-8 text-xs font-medium"
                 type="date"
                 value={date}
                 onChange={(event) => setDate(event.target.value)}
               />
             </label>
 
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="flex-1 min-w-[140px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Empresa
               <Select
                 value={filters.companyId ?? ""}
@@ -182,7 +182,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1.5 h-8 text-xs font-medium">
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
@@ -196,7 +196,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               </Select>
             </label>
 
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="flex-1 min-w-[140px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Unidade
               <Select
                 value={filters.unitId ?? ""}
@@ -207,7 +207,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1.5 h-8 text-xs font-medium">
                   <SelectValue placeholder="Todas" />
                 </SelectTrigger>
                 <SelectContent>
@@ -221,7 +221,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               </Select>
             </label>
 
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="flex-1 min-w-[140px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Time
               <Select
                 value={filters.teamId ?? ""}
@@ -231,7 +231,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1.5 h-8 text-xs font-medium">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -245,7 +245,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               </Select>
             </label>
 
-            <label className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+            <label className="flex-1 min-w-[140px] text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
               Cargo
               <Select
                 value={filters.cargoId ?? ""}
@@ -255,7 +255,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                   })
                 }
               >
-                <SelectTrigger className="mt-1">
+                <SelectTrigger className="mt-1.5 h-8 text-xs font-medium">
                   <SelectValue placeholder="Todos" />
                 </SelectTrigger>
                 <SelectContent>
@@ -269,8 +269,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               </Select>
             </label>
 
-            <div className="flex items-end">
-              <button className="button w-full" onClick={resetFilters}>
+            <div className="flex items-end w-full sm:w-auto">
+              <button className="button w-full sm:w-auto h-8 text-xs" onClick={resetFilters}>
                 Limpar filtros
               </button>
             </div>

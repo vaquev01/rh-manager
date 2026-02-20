@@ -57,51 +57,51 @@ export default function ConfiguracoesPage() {
   return (
     <div className="page-enter space-y-6">
       <Card>
-        <CardHeader className="px-6 py-4 border-b border-slate-100">
+        <CardHeader className="px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Building2 className="h-5 w-5 text-blue-600" />
+            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             </div>
             <div>
-              <CardTitle className="text-lg font-bold text-slate-800">
+              <CardTitle className="text-lg font-bold text-foreground">
                 Multi-empresa e Estrutura
               </CardTitle>
-              <p className="text-xs text-slate-500 font-medium">
+              <p className="text-xs text-muted-foreground font-medium">
                 Hierarquia: Grupo → Empresa → Unidade → Time
               </p>
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-6">
-          <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 text-sm">
+          <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm">
             <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="bg-white px-3 py-1 text-sm font-bold text-slate-700 shadow-sm">
+              <Badge variant="outline" className="bg-background px-3 py-1 text-sm font-bold text-foreground/90 shadow-sm">
                 Grupo: {state.grupo.nome}
               </Badge>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               {state.companies.map((company) => (
-                <article key={company.id} className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden transition-all hover:shadow-md">
-                  <div className="bg-slate-50 px-4 py-3 border-b border-slate-100">
-                    <p className="font-bold text-slate-800">{company.nome}</p>
+                <article key={company.id} className="rounded-xl border border-border bg-background shadow-sm overflow-hidden transition-all hover:shadow-md">
+                  <div className="bg-muted/50 px-4 py-3 border-b border-border/50">
+                    <p className="font-bold text-foreground">{company.nome}</p>
                   </div>
                   <div className="p-3">
-                    <ul className="space-y-3 text-xs text-slate-600">
+                    <ul className="space-y-3 text-xs text-muted-foreground/90">
                       {(unitsByCompany.get(company.id) ?? []).map((unit) => (
-                        <li key={unit.id} className="rounded-lg border border-slate-100 bg-slate-50/50 p-3">
+                        <li key={unit.id} className="rounded-lg border border-border/50 bg-muted/50 p-3">
                           <div className="flex items-center gap-2 mb-2">
                             <div className="h-2 w-2 rounded-full bg-blue-400" />
-                            <p className="font-medium text-slate-700 text-sm">{unit.nome}</p>
+                            <p className="font-medium text-foreground/90 text-sm">{unit.nome}</p>
                           </div>
                           <div className="pl-4">
-                            <p className="text-[10px] uppercase font-bold text-slate-400 mb-1">Times</p>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">Times</p>
                             <div className="flex flex-wrap gap-1.5">
                               {(teamsByUnit.get(unit.id) ?? []).map((team) => (
-                                <Badge key={team.id} variant="secondary" className="bg-white border-slate-200 text-slate-600 hover:bg-slate-50">
+                                <Badge key={team.id} variant="secondary" className="bg-background border-border text-muted-foreground/90 hover:bg-muted/50">
                                   {team.nome}
                                 </Badge>
                               ))}
-                              {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-slate-400 italic">Nenhum time</span>}
+                              {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-muted-foreground/70 italic">Nenhum time</span>}
                             </div>
                           </div>
                         </li>
@@ -117,12 +117,12 @@ export default function ConfiguracoesPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1.5fr,1fr]">
         <Card>
-          <CardHeader className="px-6 py-4 border-b border-slate-100">
+          <CardHeader className="px-6 py-4 border-b border-border/50">
             <div className="flex items-center gap-2">
               <div className="p-2 bg-indigo-50 rounded-lg">
                 <ShieldCheck className="h-4 w-4 text-indigo-600" />
               </div>
-              <CardTitle className="text-base font-bold text-slate-800">
+              <CardTitle className="text-base font-bold text-foreground">
                 Controle de Acesso (RBAC)
               </CardTitle>
             </div>
@@ -130,11 +130,11 @@ export default function ConfiguracoesPage() {
           <CardContent className="p-0">
             <div className="overflow-auto max-h-[400px]">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                <thead className="bg-muted/50 sticky top-0 z-10 shadow-sm">
                   <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold text-slate-600 border-b">Papel</th>
+                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground/90 border-b">Papel</th>
                     {permissionActions.map((action) => (
-                      <th scope="col" key={action} className="px-3 py-3 font-semibold text-slate-500 border-b text-center min-w-[80px]">
+                      <th scope="col" key={action} className="px-3 py-3 font-semibold text-muted-foreground border-b text-center min-w-[80px]">
                         {action.replace('VER_', '').replace('EDITAR_', '').replace('ADMIN_', '')}
                       </th>
                     ))}
@@ -142,8 +142,8 @@ export default function ConfiguracoesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {(Object.keys(state.permissions) as Array<keyof typeof state.permissions>).map((role) => (
-                    <tr key={role} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="px-4 py-3 text-slate-700 font-bold bg-white sticky left-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                    <tr key={role} className="hover:bg-muted/50/80 transition-colors">
+                      <td className="px-4 py-3 text-foreground/90 font-bold bg-background sticky left-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                         {ROLE_LABEL[role]}
                       </td>
                       {permissionActions.map((action) => (
@@ -167,16 +167,16 @@ export default function ConfiguracoesPage() {
         </Card>
 
         <Card>
-          <CardHeader className="px-6 py-4 border-b border-slate-100">
+          <CardHeader className="px-6 py-4 border-b border-border/50">
             <div className="flex items-center gap-2">
-              <div className="p-2 bg-emerald-50 rounded-lg">
-                <KeyRound className="h-4 w-4 text-emerald-600" />
+              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                <KeyRound className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
               </div>
               <div>
-                <CardTitle className="text-base font-bold text-slate-800">
+                <CardTitle className="text-base font-bold text-foreground">
                   Tipos de Adicional
                 </CardTitle>
-                <p className="text-[10px] text-slate-500 mt-0.5">
+                <p className="text-[10px] text-muted-foreground mt-0.5">
                   Configure regras para lançamentos extras
                 </p>
               </div>
@@ -185,13 +185,13 @@ export default function ConfiguracoesPage() {
           <CardContent className="p-6">
             <ul className="space-y-3">
               {state.additionalTypes.map((type) => (
-                <li key={type.id} className="group rounded-xl border border-slate-200 bg-white p-4 transition-all hover:border-emerald-200 hover:shadow-sm">
+                <li key={type.id} className="group rounded-xl border border-border bg-background p-4 transition-all hover:border-emerald-200 dark:border-emerald-800 hover:shadow-sm">
                   <div className="flex items-center justify-between mb-3">
-                    <p className="font-bold text-slate-800 flex items-center gap-2">
+                    <p className="font-bold text-foreground flex items-center gap-2">
                       {type.nome}
                       {type.ativo ?
-                        <Badge variant="outline" className="bg-emerald-50 text-emerald-600 border-emerald-100 h-5 px-1.5 text-[9px]">Ativo</Badge> :
-                        <Badge variant="outline" className="bg-slate-50 text-slate-500 border-slate-200 h-5 px-1.5 text-[9px]">Inativo</Badge>
+                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 h-5 px-1.5 text-[9px]">Ativo</Badge> :
+                        <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-border h-5 px-1.5 text-[9px]">Inativo</Badge>
                       }
                     </p>
                     <Switch
@@ -201,9 +201,9 @@ export default function ConfiguracoesPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-50/50 p-3 rounded-lg">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 p-3 rounded-lg">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-slate-600 font-medium">PIX Padrão</span>
+                      <span className="text-xs text-muted-foreground/90 font-medium">PIX Padrão</span>
                       <Switch
                         checked={type.pagavelViaPixPorPadrao}
                         onCheckedChange={(checked) => updateAdditionalType(type.id, { pagavelViaPixPorPadrao: checked })}
@@ -212,9 +212,9 @@ export default function ConfiguracoesPage() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-slate-600 font-medium">Exige Descrição</span>
+                        <span className="text-xs text-muted-foreground/90 font-medium">Exige Descrição</span>
                         <Tooltip content="Obrigatório preencher motivo ao lançar">
-                          <Info className="h-3 w-3 text-slate-400" />
+                          <Info className="h-3 w-3 text-muted-foreground/70" />
                         </Tooltip>
                       </div>
                       <Switch
@@ -232,12 +232,12 @@ export default function ConfiguracoesPage() {
       </div>
 
       <Card>
-        <CardHeader className="px-6 py-4 border-b border-slate-100">
+        <CardHeader className="px-6 py-4 border-b border-border/50">
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <Waypoints className="h-4 w-4 text-purple-600" />
+            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+              <Waypoints className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
-            <CardTitle className="text-base font-bold text-slate-800">
+            <CardTitle className="text-base font-bold text-foreground">
               Regras de Pagamento
             </CardTitle>
           </div>
@@ -245,15 +245,15 @@ export default function ConfiguracoesPage() {
         <CardContent className="p-0">
           <div className="overflow-auto">
             <table className="min-w-full text-left text-xs">
-              <thead className="bg-slate-50 border-b border-slate-200">
+              <thead className="bg-muted/50 border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Regra</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Escopo</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Calculo</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Valor Hora</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Diária</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Valor Turno</th>
-                  <th className="px-4 py-3 font-semibold text-slate-500">Turnos Padrão</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Regra</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Escopo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Calculo</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Hora</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Diária</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Turno</th>
+                  <th className="px-4 py-3 font-semibold text-muted-foreground">Turnos Padrão</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -266,12 +266,12 @@ export default function ConfiguracoesPage() {
                     : "Todas unidades";
 
                   return (
-                    <tr key={rule.id} className="hover:bg-slate-50 transition-colors">
-                      <td className="px-4 py-3 text-slate-700 font-mono text-[10px]">{rule.id.substring(0, 8)}...</td>
-                      <td className="px-4 py-3 text-slate-700">
+                    <tr key={rule.id} className="hover:bg-muted/50 transition-colors">
+                      <td className="px-4 py-3 text-foreground/90 font-mono text-[10px]">{rule.id.substring(0, 8)}...</td>
+                      <td className="px-4 py-3 text-foreground/90">
                         <div className="flex flex-col">
-                          <span className="font-semibold text-slate-800">{company}</span>
-                          <span className="text-[10px] text-slate-500">{unit}</span>
+                          <span className="font-semibold text-foreground">{company}</span>
+                          <span className="text-[10px] text-muted-foreground">{unit}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -283,7 +283,7 @@ export default function ConfiguracoesPage() {
                             })
                           }
                         >
-                          <SelectTrigger className="h-8 text-xs border-slate-200">
+                          <SelectTrigger className="h-8 text-xs border-border">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -295,7 +295,7 @@ export default function ConfiguracoesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Input
-                          className="h-8 text-xs w-24 border-slate-200"
+                          className="h-8 text-xs w-24 border-border"
                           type="number"
                           step={0.01}
                           value={rule.valorHora ?? 0}
@@ -308,7 +308,7 @@ export default function ConfiguracoesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Input
-                          className="h-8 text-xs w-24 border-slate-200"
+                          className="h-8 text-xs w-24 border-border"
                           type="number"
                           step={0.01}
                           value={rule.valorDiaria ?? 0}
@@ -321,7 +321,7 @@ export default function ConfiguracoesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Input
-                          className="h-8 text-xs w-24 border-slate-200"
+                          className="h-8 text-xs w-24 border-border"
                           type="number"
                           step={0.01}
                           value={rule.valorTurno ?? 0}
@@ -334,7 +334,7 @@ export default function ConfiguracoesPage() {
                       </td>
                       <td className="px-4 py-3">
                         <Input
-                          className="h-8 text-xs w-20 border-slate-200"
+                          className="h-8 text-xs w-20 border-border"
                           type="number"
                           step={1}
                           value={rule.qtdTurnosPadrao ?? 0}
@@ -356,20 +356,20 @@ export default function ConfiguracoesPage() {
 
       <div className="grid gap-6 xl:grid-cols-[1fr,1.2fr]">
         <Card>
-          <CardHeader className="px-6 py-4 border-b border-slate-100">
-            <CardTitle className="text-base font-bold text-slate-800">Templates de Comunicação</CardTitle>
+          <CardHeader className="px-6 py-4 border-b border-border/50">
+            <CardTitle className="text-base font-bold text-foreground">Templates de Comunicação</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             <ul className="space-y-2">
               {state.communicationTemplates.map((template) => (
-                <li key={template.id} className="rounded-xl border border-slate-200 bg-white p-3 hover:border-blue-200 transition-colors cursor-pointer">
+                <li key={template.id} className="rounded-xl border border-border bg-background p-3 hover:border-blue-200 dark:border-blue-800 transition-colors cursor-pointer">
                   <div className="flex items-center justify-between">
-                    <p className="font-semibold text-slate-700">{template.nome}</p>
+                    <p className="font-semibold text-foreground/90">{template.nome}</p>
                     <Badge variant="secondary" className="text-[10px]">
                       {template.companyId ? "Empresa" : "Global"}
                     </Badge>
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-xs text-muted-foreground mt-1">
                     Escopo: {template.unitId ?? "Todas"} / {template.teamId ?? "Todos"}
                   </p>
                 </li>
@@ -379,13 +379,13 @@ export default function ConfiguracoesPage() {
         </Card>
 
         <Card>
-          <CardHeader className="px-6 py-4 border-b border-slate-100">
+          <CardHeader className="px-6 py-4 border-b border-border/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-slate-100 rounded-lg">
-                  <ListChecks className="h-4 w-4 text-slate-600" />
+                <div className="p-2 bg-muted rounded-lg">
+                  <ListChecks className="h-4 w-4 text-muted-foreground/90" />
                 </div>
-                <CardTitle className="text-base font-bold text-slate-800">
+                <CardTitle className="text-base font-bold text-foreground">
                   Auditoria
                 </CardTitle>
               </div>
@@ -398,19 +398,19 @@ export default function ConfiguracoesPage() {
                   .reverse()
                   .slice(0, 50)
                   .map((entry) => (
-                    <li key={entry.id} className="p-4 hover:bg-slate-50 transition-colors">
+                    <li key={entry.id} className="p-4 hover:bg-muted/50 transition-colors">
                       <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-slate-500">{entry.actorName?.charAt(0) ?? "?"}</span>
+                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                          <span className="text-xs font-bold text-muted-foreground">{entry.actorName?.charAt(0) ?? "?"}</span>
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
-                            <p className="font-semibold text-slate-800 text-sm truncate">{entry.acao.replace(/_/g, " ")}</p>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
+                            <p className="font-semibold text-foreground text-sm truncate">{entry.acao.replace(/_/g, " ")}</p>
+                            <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">
                               {new Date(entry.criadoEm).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5">
                             {entry.actorName} ({entry.actorRole})
                           </p>
 

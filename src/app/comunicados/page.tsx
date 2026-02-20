@@ -165,10 +165,10 @@ export default function ComunicadosPage() {
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50">
-                  <MessageCircle className="h-4 w-4 text-teal-600" />
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
+                  <MessageCircle className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                 </span>
-                <CardTitle className="text-lg font-semibold text-slate-800">Editor de comunicados</CardTitle>
+                <CardTitle className="text-lg font-semibold text-foreground">Editor de comunicados</CardTitle>
               </div>
               <Badge variant="ok">WhatsApp + IA</Badge>
             </div>
@@ -176,7 +176,7 @@ export default function ComunicadosPage() {
 
           <CardContent className="p-4 pt-2 space-y-4">
             <div className="grid gap-2 md:grid-cols-2">
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Selecionar template
                 <Select
                   value={selectedTemplateId}
@@ -203,7 +203,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Nome do template
                 <Input
                   className="mt-1"
@@ -215,7 +215,7 @@ export default function ComunicadosPage() {
             </div>
 
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Conteudo base
                 <Textarea
                   className="mt-1 h-32"
@@ -229,8 +229,8 @@ export default function ComunicadosPage() {
                 />
               </label>
 
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+              <div className="rounded-xl border border-border bg-muted/50 p-3">
+                <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   <Bot className="h-4 w-4" />
                   Apoio IA
                 </p>
@@ -253,7 +253,7 @@ export default function ComunicadosPage() {
                   </Button>
                 </div>
 
-                <label className="mt-2 block text-xs text-slate-500">
+                <label className="mt-2 block text-xs text-muted-foreground">
                   Resultado final
                   <Textarea
                     className="mt-1 h-32"
@@ -321,7 +321,7 @@ export default function ComunicadosPage() {
               </Button>
             </div>
 
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-muted-foreground">
               Ultimo disparo enviou para <strong>{lastRecipients}</strong> pessoa(s).
             </p>
           </CardContent>
@@ -330,15 +330,15 @@ export default function ComunicadosPage() {
         <Card>
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50">
+              <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20">
                 <FileText className="h-3.5 w-3.5 text-blue-500" />
               </span>
-              <CardTitle className="text-base font-semibold text-slate-800">Segmentacao do disparo</CardTitle>
+              <CardTitle className="text-base font-semibold text-foreground">Segmentacao do disparo</CardTitle>
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
             <div className="grid gap-2 md:grid-cols-3">
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Empresa
                 <Select
                   value={segmentacao.companyId ?? ""}
@@ -365,7 +365,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Unidade
                 <Select
                   value={segmentacao.unitId ?? ""}
@@ -391,7 +391,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Time
                 <Select
                   value={segmentacao.teamId ?? ""}
@@ -416,7 +416,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Cargo
                 <Select
                   value={segmentacao.cargoId ?? ""}
@@ -441,7 +441,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Tipo
                 <Select
                   value={segmentacao.tipo ?? ""}
@@ -463,7 +463,7 @@ export default function ComunicadosPage() {
                 </Select>
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Status
                 <Select
                   value={segmentacao.status ?? ""}
@@ -493,12 +493,12 @@ export default function ComunicadosPage() {
               </label>
             </div>
 
-            <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700">
+            <div className="mt-3 rounded-xl border border-border bg-muted/50 p-3">
+              <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/90">
                 <MessageCircle className="h-4 w-4" />
                 Previa WhatsApp
               </p>
-              <div className="mt-2 rounded-2xl bg-[#dcf8c6] p-3 text-sm text-slate-700 shadow">
+              <div className="mt-2 rounded-2xl bg-[#dcf8c6] p-3 text-sm text-foreground/90 shadow">
                 {(aiResult || editorText || "Mensagem vazia").split("\n").map((line, idx) => (
                   <p key={`${line}-${idx}`}>{line}</p>
                 ))}
@@ -514,7 +514,7 @@ export default function ComunicadosPage() {
                 <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
                   <Zap className="h-3.5 w-3.5 text-amber-500" />
                 </span>
-                <CardTitle className="text-base font-semibold text-slate-800">Automacoes por evento</CardTitle>
+                <CardTitle className="text-base font-semibold text-foreground">Automacoes por evento</CardTitle>
               </div>
               <Button
                 variant="secondary"
@@ -530,7 +530,7 @@ export default function ComunicadosPage() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <p className="mt-1 text-xs text-slate-500 mb-2">
+            <p className="mt-1 text-xs text-muted-foreground mb-2">
               Ultima execucao: {lastAutomationResult.campanhas} campanha(s),{" "}
               {lastAutomationResult.destinatarios} destinatario(s)
             </p>
@@ -546,11 +546,11 @@ export default function ComunicadosPage() {
                 return (
                   <label
                     key={rule.id}
-                    className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+                    className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground/90 hover:bg-muted/50 transition-colors"
                   >
                     <div>
                       <span className="font-medium">{eventLabel[rule.evento] ?? rule.evento}</span>
-                      <span className="ml-2 text-[11px] text-slate-400">{rule.evento}</span>
+                      <span className="ml-2 text-[11px] text-muted-foreground/70">{rule.evento}</span>
                     </div>
                     <input
                       type="checkbox"
@@ -570,17 +570,17 @@ export default function ComunicadosPage() {
         <Card>
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-sm font-semibold text-slate-800">Logs de disparos</CardTitle>
-              <span className="text-xs text-slate-500">{state.communicationLogs.length} registros</span>
+              <CardTitle className="text-sm font-semibold text-foreground">Logs de disparos</CardTitle>
+              <span className="text-xs text-muted-foreground">{state.communicationLogs.length} registros</span>
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <ul className="max-h-80 space-y-2 overflow-auto text-xs text-slate-600">
+            <ul className="max-h-80 space-y-2 overflow-auto text-xs text-muted-foreground/90">
               {campaignsWithDetails.map(({ campaign, recipients }) => (
-                <li key={campaign.id} className="rounded-lg border border-slate-200 bg-white p-2">
-                  <p className="font-semibold text-slate-700">
+                <li key={campaign.id} className="rounded-lg border border-border bg-background p-2">
+                  <p className="font-semibold text-foreground/90">
                     {campaign.gatilho || "Disparo manual"}
-                    <span className="ml-2 text-[11px] font-normal text-slate-400">
+                    <span className="ml-2 text-[11px] font-normal text-muted-foreground/70">
                       {new Date(campaign.criadoEm).toLocaleString("pt-BR")}
                     </span>
                   </p>
@@ -595,9 +595,9 @@ export default function ComunicadosPage() {
                 </li>
               ))}
               {campaignsWithDetails.length === 0 && (
-                <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center">
-                  <History className="h-6 w-6 text-slate-300" />
-                  <p className="text-xs text-slate-400">Nenhum disparo registrado ainda.</p>
+                <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-6 text-center">
+                  <History className="h-6 w-6 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground/70">Nenhum disparo registrado ainda.</p>
                 </li>
               )}
             </ul>
@@ -607,7 +607,7 @@ export default function ComunicadosPage() {
         <Card>
           <CardHeader className="p-4 pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold text-slate-800">
+              <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
                 <Workflow className="h-4 w-4" />
                 Conectores de tarefas (webhook)
               </CardTitle>
@@ -618,8 +618,8 @@ export default function ComunicadosPage() {
           </CardHeader>
 
           <CardContent className="p-4 pt-0">
-            <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-              <label className="text-xs text-slate-500">
+            <div className="space-y-2 rounded-xl border border-border bg-muted/50 p-3">
+              <label className="text-xs text-muted-foreground">
                 Nome
                 <Input
                   className="mt-1"
@@ -631,7 +631,7 @@ export default function ComunicadosPage() {
                 />
               </label>
 
-              <label className="text-xs text-slate-500">
+              <label className="text-xs text-muted-foreground">
                 Endpoint
                 <Input
                   className="mt-1"
@@ -643,7 +643,7 @@ export default function ComunicadosPage() {
                 />
               </label>
 
-              <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+              <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground/90">
                 <label className="inline-flex items-center gap-2">
                   <input
                     type="checkbox"
@@ -731,10 +731,10 @@ export default function ComunicadosPage() {
               </Button>
             </div>
 
-            <ul className="mt-2 max-h-40 space-y-2 overflow-auto text-xs text-slate-600">
+            <ul className="mt-2 max-h-40 space-y-2 overflow-auto text-xs text-muted-foreground/90">
               {state.connectorWebhooks.map((webhook) => (
-                <li key={webhook.id} className="rounded-lg border border-slate-200 bg-white p-2">
-                  <p className="font-semibold text-slate-700">{webhook.nome}</p>
+                <li key={webhook.id} className="rounded-lg border border-border bg-background p-2">
+                  <p className="font-semibold text-foreground/90">{webhook.nome}</p>
                   <p>{webhook.endpoint}</p>
                   <p>
                     {webhook.ativo ? "Ativo" : "Inativo"} · eventos: {webhook.eventos.join(", ")}
@@ -747,24 +747,24 @@ export default function ComunicadosPage() {
 
         <Card>
           <CardHeader className="p-4 pb-2">
-            <CardTitle className="text-sm font-semibold text-slate-800">Registro de eventos do webhook</CardTitle>
+            <CardTitle className="text-sm font-semibold text-foreground">Registro de eventos do webhook</CardTitle>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <ul className="mt-2 max-h-56 space-y-2 overflow-auto text-xs text-slate-600">
+            <ul className="mt-2 max-h-56 space-y-2 overflow-auto text-xs text-muted-foreground/90">
               {[...state.connectorEvents]
                 .reverse()
                 .slice(0, 25)
                 .map((event) => (
-                  <li key={event.id} className="rounded-lg border border-slate-200 bg-white p-2">
-                    <p className="font-semibold text-slate-700">{event.evento}</p>
+                  <li key={event.id} className="rounded-lg border border-border bg-background p-2">
+                    <p className="font-semibold text-foreground/90">{event.evento}</p>
                     <p>{event.payloadResumo}</p>
                     <p>{new Date(event.criadoEm).toLocaleString("pt-BR")}</p>
                   </li>
                 ))}
               {state.connectorEvents.length === 0 && (
-                <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-slate-200 py-6 text-center">
-                  <Zap className="h-6 w-6 text-slate-300" />
-                  <p className="text-xs text-slate-400">Nenhum evento sincronizado.</p>
+                <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-6 text-center">
+                  <Zap className="h-6 w-6 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground/70">Nenhum evento sincronizado.</p>
                 </li>
               )}
             </ul>
