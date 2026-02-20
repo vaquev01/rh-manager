@@ -350,10 +350,10 @@ export function ScheduleBuilder() {
   const isDragging = draggingPersonId !== null;
 
   return (
-    <div className="flex flex-col lg:flex-row gap-6 h-full">
+    <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── LEFT: People Pool ── */}
-      <Card className="flex w-full lg:w-[280px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
-        <div className="px-4 py-4">
+      <Card className="flex w-full lg:w-[230px] xl:w-[260px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
+        <div className="px-3 py-3">
           <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
             <Users className="h-4 w-4 text-primary" />
             Equipe Disponível
@@ -602,12 +602,13 @@ export function ScheduleBuilder() {
         </Card>
 
         {/* Grid */}
-        <Card className="flex-1 overflow-hidden flex flex-col shadow-md border-border">
-          <div className="flex-1 overflow-auto">
-            <table className="w-full text-xs border-collapse relative">
+        <Card className="flex-1 overflow-hidden flex flex-col">
+          {/* Scrollable grid area */}
+          <div className="flex-1 overflow-auto rounded-b-xl custom-scrollbar relative">
+            <table className="w-full text-left border-collapse min-w-[700px]">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-muted/50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] min-w-[200px]">
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-3 py-3 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] min-w-[140px] max-w-[180px]">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Funcao / Cargo</span>
                       <Button
@@ -634,7 +635,7 @@ export function ScheduleBuilder() {
                         onDrop={(e) => handleDayDrop(e, d)}
                         onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "px-2 py-3 text-center min-w-[130px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-muted/50 relative",
+                          "w-[90px] sm:w-[110px] border-b border-border/60 bg-slate-50/80 dark:bg-slate-900/80 py-3 px-2 md:px-3 text-center transition-colors",
                           isToday ? "bg-primary/5" : "bg-background",
                           draggingDay === d && "opacity-50 dashed-border",
                           targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
@@ -664,7 +665,7 @@ export function ScheduleBuilder() {
                   return (
                     <tr key={role.id} className="bg-background hover:bg-muted/30 transition-colors">
                       {/* Role header cell */}
-                      <td className="sticky left-0 z-10 bg-background px-4 py-4 align-top border-r group-hover:bg-muted/30 shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
+                      <td className="sticky left-0 z-10 bg-background px-3 py-3 align-top border-r group-hover:bg-muted/30 shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
                         <div className="flex flex-col gap-2">
                           <div>
                             <p className="font-semibold text-foreground text-sm flex items-center gap-2 group/role">

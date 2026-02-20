@@ -93,6 +93,12 @@ export default function EquipePage() {
                 teamId: formData.teamId || "null",
                 contatoTelefone: formData.contatoTelefone,
                 pixKey: formData.pixKey,
+                dataNascimento: formData.dataNascimento,
+                cpf: formData.cpf,
+                rg: formData.rg,
+                salario: formData.salario,
+                inicioFerias: formData.inicioFerias,
+                fimFerias: formData.fimFerias,
                 performance: formData.performance || { dia: "VERDE" },
             };
 
@@ -325,6 +331,64 @@ export default function EquipePage() {
                                     onChange={(e) => setFormData({ ...formData, pixKey: e.target.value })}
                                     placeholder="CPF, Email ou Telefone"
                                 />
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">Data de Nascimento</label>
+                                    <Input
+                                        type="date"
+                                        value={formData.dataNascimento || ""}
+                                        onChange={(e) => setFormData({ ...formData, dataNascimento: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">Salário Bruto</label>
+                                    <Input
+                                        type="number"
+                                        value={formData.salario || ""}
+                                        onChange={(e) => setFormData({ ...formData, salario: Number(e.target.value) })}
+                                        placeholder="R$ 0,00"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">CPF</label>
+                                    <Input
+                                        value={formData.cpf || ""}
+                                        onChange={(e) => setFormData({ ...formData, cpf: e.target.value })}
+                                        placeholder="000.000.000-00"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">RG</label>
+                                    <Input
+                                        value={formData.rg || ""}
+                                        onChange={(e) => setFormData({ ...formData, rg: e.target.value })}
+                                        placeholder="00.000.000-0"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">Início Férias Previstas</label>
+                                    <Input
+                                        type="date"
+                                        value={formData.inicioFerias || ""}
+                                        onChange={(e) => setFormData({ ...formData, inicioFerias: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-medium">Fim Férias Previstas</label>
+                                    <Input
+                                        type="date"
+                                        value={formData.fimFerias || ""}
+                                        onChange={(e) => setFormData({ ...formData, fimFerias: e.target.value })}
+                                    />
+                                </div>
                             </div>
 
                             <div className="pt-6">

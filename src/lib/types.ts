@@ -109,6 +109,12 @@ export interface Person {
   leaderPersonId?: string;
   contatoTelefone?: string;
   pixKey?: string;
+  dataNascimento?: string;
+  cpf?: string;
+  rg?: string;
+  salario?: number;
+  inicioFerias?: string;
+  fimFerias?: string;
   paymentRuleId?: string;
   performance: PersonPerformance;
   intervalo?: string;
