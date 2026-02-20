@@ -34,6 +34,7 @@ export function PixSidebar() {
         removeIndividualAdditional,
         validateHours,
         closePaymentsDay,
+        reopenPaymentsDay,
         downloadPixCsv,
     } = useAppState();
 
@@ -429,39 +430,51 @@ export function PixSidebar() {
                     </div>
 
                     <div className="space-y-2 mt-auto pt-2 hide-on-print">
-                        <div className="flex gap-2">
-                            {!showCloseConfirm ? (
-                                <Button
-                                    className="flex-1 h-9 text-xs font-bold transition-all shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
-                                    disabled={paymentContext.locked || !canClose}
-                                    onClick={() => setShowCloseConfirm(true)}
-                                >
-                                    <Lock className="mr-1.5 h-3.5 w-3.5" /> Travar e Fechar Dia
-                                </Button>
-                            ) : (
-                                <Button
-                                    className="flex-1 h-9 text-xs shadow-sm bg-red-600 hover:bg-red-700 text-white"
-                                    onClick={() => {
-                                        closePaymentsDay();
-                                        setShowCloseConfirm(false);
-                                        toast("Dia fechado com sucesso. Histórico salvo!", "success");
-                                    }}
-                                >
-                                    Confirmar Fechamento
-                                </Button>
-                            )}
-
+                        {paymentContext.locked ? (
                             <Button
-                                variant="outline"
-                                size="icon"
-                                className="h-9 w-9 shrink-0 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800"
-                                title="Validar Horas"
-                                disabled={paymentContext.locked}
-                                onClick={() => validateHours()}
+                                className="w-full h-9 text-xs font-bold transition-all shadow-sm bg-amber-600 hover:bg-amber-700 text-white"
+                                onClick={() => {
+                                    const reason = prompt("Motivo da reabertura do dia:");
+                                    if (reason) reopenPaymentsDay(reason);
+                                }}
                             >
-                                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                Reabrir Dia
                             </Button>
-                        </div>
+                        ) : (
+                            <div className="flex gap-2">
+                                {!showCloseConfirm ? (
+                                    <Button
+                                        className="flex-1 h-9 text-xs font-bold transition-all shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
+                                        disabled={!canClose}
+                                        onClick={() => setShowCloseConfirm(true)}
+                                    >
+                                        <Lock className="mr-1.5 h-3.5 w-3.5" /> Travar e Fechar Dia
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        className="flex-1 h-9 text-xs shadow-sm bg-red-600 hover:bg-red-700 text-white"
+                                        onClick={() => {
+                                            closePaymentsDay();
+                                            setShowCloseConfirm(false);
+                                            toast("Dia fechado com sucesso. Histórico salvo!", "success");
+                                        }}
+                                    >
+                                        Confirmar Fechamento
+                                    </Button>
+                                )}
+
+                                <Button
+                                    variant="outline"
+                                    size="icon"
+                                    className="h-9 w-9 shrink-0 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800"
+                                    title="Validar Horas"
+                                    disabled={paymentContext.locked}
+                                    onClick={() => validateHours()}
+                                >
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                </Button>
+                            </div>
+                        )}
                     </div>
 
                 </CardContent>

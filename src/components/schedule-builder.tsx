@@ -779,17 +779,25 @@ export function ScheduleBuilder() {
                                     </div>
 
                                     <div className="min-w-0 flex-1">
-                                      <div className="flex items-center justify-between">
+                                      <div className="flex flex-col pr-1 gap-0.5 min-w-0">
                                         <p className="truncate text-[10px] font-semibold text-foreground/90 leading-tight">
                                           {person?.nome ?? sched.personId}
                                         </p>
+                                        {person?.type && (
+                                          <span className={cn(
+                                            "w-max text-[8px] font-bold px-1 rounded-sm uppercase tracking-wider",
+                                            person.type === "FIXO" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
+                                          )}>
+                                            {person.type}
+                                          </span>
+                                        )}
+                                        {sched.turns[0] && (
+                                          <p className="flex items-center gap-1 text-[9px] text-muted-foreground/70 mt-0.5">
+                                            <Clock className="h-2.5 w-2.5" />
+                                            {sched.turns[0].inicio}–{sched.turns[0].fim}
+                                          </p>
+                                        )}
                                       </div>
-                                      {sched.turns[0] && (
-                                        <p className="flex items-center gap-1 text-[9px] text-muted-foreground/70 mt-0.5">
-                                          <Clock className="h-2.5 w-2.5" />
-                                          {sched.turns[0].inicio}–{sched.turns[0].fim}
-                                        </p>
-                                      )}
                                     </div>
 
                                     <Button
