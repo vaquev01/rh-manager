@@ -12,6 +12,7 @@ import { money } from "@/lib/format";
 import { CheckCircle2, Clock3, Copy, CreditCard, Download, Lock, TrendingUp, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { AdditionalDay } from "@/lib/types";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
 const HOURS_SOURCE_LABEL = {
     ESCALA_PREVISTA: "Escala prevista",
@@ -71,6 +72,12 @@ export function PixSidebar() {
         return { totalCost: total, teamCost: team, freelaCost: freela, pixCount: pix };
     }, [filteredLines]);
 
+    const donutData = useMemo(() => [
+        { name: 'Equipe Fixa', value: teamCost },
+        { name: 'Freelas', value: freelaCost },
+    ], [teamCost, freelaCost]);
+    const DONUT_COLORS = ['#3b82f6', '#f59e0b'];
+
     // Filter Pix Summary based on visible lines
     const visiblePixSummary = useMemo(() => {
         return paymentContext.pixSummary.filter(pix =>
@@ -128,18 +135,54 @@ export function PixSidebar() {
                 <CardContent className="p-4 pt-0 flex-1 flex flex-col gap-4 overflow-y-auto">
                     {/* Totals */}
                     <div>
-                        <div className="flex items-baseline justify-between">
+                        <div className="flex items-baseline justify-between mb-2">
                             <span className="text-2xl font-bold tracking-tight text-slate-900">{money(totalCost)}</span>
                             <span className="text-xs text-muted-foreground">{filteredLines.length} pessoas</span>
                         </div>
-                        <div className="flex gap-2 mt-1">
-                            <div className="bg-muted/50 px-2 py-1 rounded border border-border/50 flex-1">
-                                <p className="text-[9px] uppercase font-bold text-muted-foreground/70">Equipe</p>
-                                <p className="text-xs font-semibold text-foreground/90">{money(teamCost)}</p>
+                        {totalCost > 0 ? (
+                            <div className="h-[120px] w-full mt-2 relative">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={donutData}
+                                            cx="50%"
+                                            cy="50%"
+                                            innerRadius={36}
+                                            outerRadius={50}
+                                            paddingAngle={2}
+                                            dataKey="value"
+                                            stroke="none"
+                                        >
+                                            {donutData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={DONUT_COLORS[index % DONUT_COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <RechartsTooltip
+                                            formatter={(value: any) => money(Number(value))}
+                                            contentStyle={{ borderRadius: '8px', fontSize: '12px', border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}
+                                            itemStyle={{ color: '#0f172a' }}
+                                        />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                                    <span className="text-[10px] text-muted-foreground font-semibold uppercase tracking-wider">Custo</span>
+                                </div>
                             </div>
-                            <div className="bg-amber-50 px-2 py-1 rounded border border-amber-100 flex-1">
-                                <p className="text-[9px] uppercase font-bold text-amber-600/70">Freela</p>
-                                <p className="text-xs font-semibold text-amber-700">{money(freelaCost)}</p>
+                        ) : null}
+                        <div className="flex gap-2 mt-2">
+                            <div className="bg-muted/50 px-2 py-1.5 rounded-lg border border-border/50 flex-1 flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-blue-500 shrink-0" />
+                                <div>
+                                    <p className="text-[9px] uppercase font-bold text-muted-foreground/90">Equipe</p>
+                                    <p className="text-xs font-semibold text-foreground/90 leading-none">{money(teamCost)}</p>
+                                </div>
+                            </div>
+                            <div className="bg-amber-50 px-2 py-1.5 rounded-lg border border-amber-100 flex-1 flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-amber-500 shrink-0" />
+                                <div>
+                                    <p className="text-[9px] uppercase font-bold text-amber-700/80">Freela</p>
+                                    <p className="text-xs font-semibold text-amber-700 leading-none">{money(freelaCost)}</p>
+                                </div>
                             </div>
                         </div>
                     </div>

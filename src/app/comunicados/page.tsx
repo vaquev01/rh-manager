@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bot, FileText, History, MessageCircle, Send, Sparkles, Workflow, Zap } from "lucide-react";
+import { Bot, FileText, History, MessageCircle, Send, Sparkles, Workflow, Zap, CheckCheck, Smartphone, Filter } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 import { useAppState } from "@/components/state-provider";
@@ -337,9 +337,11 @@ export default function ComunicadosPage() {
             </div>
           </CardHeader>
           <CardContent className="p-4 pt-0">
-            <div className="grid gap-2 md:grid-cols-3">
-              <label className="text-xs text-muted-foreground">
-                Empresa
+            <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-muted/40 rounded-xl border border-border/60">
+              <div className="flex items-center px-3 text-muted-foreground/70 hidden sm:flex">
+                <Filter className="h-4 w-4" />
+              </div>
+              <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5">
                 <Select
                   value={segmentacao.companyId ?? ""}
                   onValueChange={(val) =>
@@ -351,11 +353,11 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todas" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Empresas (Todas)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Todas</SelectItem>
+                    <SelectItem value="ALL" className="font-bold">Todas as Empresas</SelectItem>
                     {state.companies.map((company) => (
                       <SelectItem key={company.id} value={company.id}>
                         {company.nome}
@@ -363,10 +365,9 @@ export default function ComunicadosPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
 
-              <label className="text-xs text-muted-foreground">
-                Unidade
+              <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
                 <Select
                   value={segmentacao.unitId ?? ""}
                   onValueChange={(val) =>
@@ -377,11 +378,11 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todas" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Unidades (Todas)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Todas</SelectItem>
+                    <SelectItem value="ALL" className="font-bold">Todas as Unidades</SelectItem>
                     {unitOptions.map((unit) => (
                       <SelectItem key={unit.id} value={unit.id}>
                         {unit.nome}
@@ -389,10 +390,9 @@ export default function ComunicadosPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
 
-              <label className="text-xs text-muted-foreground">
-                Time
+              <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
                 <Select
                   value={segmentacao.teamId ?? ""}
                   onValueChange={(val) =>
@@ -402,11 +402,11 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Times (Todos)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Todos</SelectItem>
+                    <SelectItem value="ALL" className="font-bold">Todos os Times</SelectItem>
                     {teamOptions.map((team) => (
                       <SelectItem key={team.id} value={team.id}>
                         {team.nome}
@@ -414,10 +414,9 @@ export default function ComunicadosPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
 
-              <label className="text-xs text-muted-foreground">
-                Cargo
+              <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
                 <Select
                   value={segmentacao.cargoId ?? ""}
                   onValueChange={(val) =>
@@ -427,11 +426,11 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Cargos (Todos)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Todos</SelectItem>
+                    <SelectItem value="ALL" className="font-bold">Todos os Cargos</SelectItem>
                     {state.roles.map((role) => (
                       <SelectItem key={role.id} value={role.id}>
                         {role.nome}
@@ -439,10 +438,9 @@ export default function ComunicadosPage() {
                     ))}
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
 
-              <label className="text-xs text-muted-foreground">
-                Tipo
+              <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
                 <Select
                   value={segmentacao.tipo ?? ""}
                   onValueChange={(val) =>
@@ -452,19 +450,18 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Contratos (Todos)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL">Todos</SelectItem>
+                    <SelectItem value="ALL" className="font-bold">Todos os Contratos</SelectItem>
                     <SelectItem value="FIXO">Fixo</SelectItem>
                     <SelectItem value="FREELA">Freela</SelectItem>
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
 
-              <label className="text-xs text-muted-foreground">
-                Status
+              <div className="flex-1 min-w-[130px] px-1.5">
                 <Select
                   value={segmentacao.status ?? ""}
                   onValueChange={(val) =>
@@ -479,29 +476,70 @@ export default function ComunicadosPage() {
                     }))
                   }
                 >
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Todos" />
+                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
+                    <SelectValue placeholder="Status (Todos)" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL_STATUS">Todos</SelectItem>
+                    <SelectItem value="ALL_STATUS" className="font-bold">Todos os Status</SelectItem>
                     <SelectItem value="ATIVO">Ativo</SelectItem>
                     <SelectItem value="FERIAS">Ferias</SelectItem>
                     <SelectItem value="AFASTADO">Afastado</SelectItem>
                     <SelectItem value="OFF_HOJE">Off hoje</SelectItem>
                   </SelectContent>
                 </Select>
-              </label>
+              </div>
             </div>
 
-            <div className="mt-3 rounded-xl border border-border bg-muted/50 p-3">
-              <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/90">
-                <MessageCircle className="h-4 w-4" />
-                Previa WhatsApp
-              </p>
-              <div className="mt-2 rounded-2xl bg-[#dcf8c6] p-3 text-sm text-foreground/90 shadow">
-                {(aiResult || editorText || "Mensagem vazia").split("\n").map((line, idx) => (
-                  <p key={`${line}-${idx}`}>{line}</p>
-                ))}
+            <div className="mt-6">
+              <div className="flex items-center justify-between mb-3 px-1">
+                <p className="inline-flex items-center gap-2 text-sm font-semibold text-foreground/90">
+                  <Smartphone className="h-4 w-4" />
+                  Prévia no Dispositivo
+                </p>
+              </div>
+
+              <div className="flex justify-center bg-muted/10 rounded-2xl p-6 border border-border bg-[url('https://www.transparenttextures.com/patterns/clean-gray-paper.png')] overflow-hidden">
+                <div className="w-[300px] h-[550px] bg-[#efeae2] rounded-[36px] border-[8px] border-slate-900 shadow-2xl relative overflow-hidden flex flex-col font-sans">
+                  {/* Camera hole */}
+                  <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-4 bg-slate-900 rounded-full z-20"></div>
+
+                  {/* WhatsApp Header */}
+                  <div className="bg-[#075e54] text-white px-4 pt-8 pb-3 shadow-md z-10">
+                    <div className="flex items-center gap-3">
+                      <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative">
+                        <Bot className="h-5 w-5 text-[#075e54]" />
+                        <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-[#075e54] rounded-full"></div>
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-sm leading-tight">RH Manager</h4>
+                        <p className="text-[10px] text-white/80">Online</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Chat Area */}
+                  <div className="flex-1 p-4 overflow-y-auto flex flex-col gap-3 relative" style={{ backgroundImage: "url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')", backgroundSize: 'cover', opacity: 0.9 }}>
+                    <div className="bg-[#e1f3fb] text-[#54656f] text-[10px] px-3 py-1 rounded-lg uppercase tracking-wider self-center mb-2 shadow-sm font-semibold z-10 w-fit">
+                      Hoje
+                    </div>
+
+                    <div className="bg-white p-2.5 rounded-lg rounded-tl-none shadow-sm relative w-[85%] self-start group z-10">
+                      {/* Fake bubble tail */}
+                      <div className="absolute top-0 -left-2 w-2 h-3 bg-white" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}></div>
+                      <div className="text-[14px] text-[#111b21] leading-snug whitespace-pre-wrap">
+                        {(aiResult || editorText || "A mensagem do template aparecerá aqui para visualização...").split("\n").map((line, idx) => (
+                          <span key={`${line}-${idx}`}>
+                            {line}
+                            <br />
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-end gap-1 mt-1 opacity-60">
+                        <span className="text-[10px] text-[#667781] font-medium">Agora</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </CardContent>

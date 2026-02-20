@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { AlertTriangle, BookMarked, Brain, CheckCircle2, Clock3, Inbox, Rocket, Target } from "lucide-react";
+import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 
 import { useToast } from "@/components/toast";
 
@@ -176,21 +177,38 @@ export default function DesenvolvimentoPage() {
                 </p>
                 <p className="text-xs text-muted-foreground">Familia: {role.familia}</p>
 
-                <ul className="mt-2 space-y-2 text-xs text-muted-foreground/90">
-                  {competencies.map((competency) => (
-                    <li key={competency.id} className="rounded-lg border border-border bg-muted/50 p-2">
-                      <p className="font-semibold text-foreground/90">{competency.competencia}</p>
-                      <p>Peso: {competency.peso}</p>
-                      <p>Criterio observavel: {competency.criterioObservavel}</p>
-                    </li>
-                  ))}
-                  {competencies.length === 0 && (
-                    <li className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-border py-4 text-center">
-                      <Inbox className="h-5 w-5 text-muted-foreground/40" />
-                      <p className="text-xs text-muted-foreground/70">Sem competências cadastradas.</p>
-                    </li>
-                  )}
-                </ul>
+                {competencies.length > 0 ? (
+                  <div className="mt-2 text-xs text-muted-foreground/90 flex flex-col items-center">
+                    <div className="w-full h-[220px]">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={competencies.map(c => ({
+                          subject: c.competencia.length > 15 ? c.competencia.substring(0, 15) + "..." : c.competencia,
+                          fullSubject: c.competencia,
+                          peso: c.peso,
+                          fullMark: 5
+                        }))} className="text-[10px]" cx="50%" cy="50%" outerRadius="70%">
+                          <PolarGrid stroke="#e2e8f0" />
+                          <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9 }} />
+                          <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
+                          <Radar name="Competências" dataKey="peso" stroke="#0ea5e9" fill="#38bdf8" fillOpacity={0.4} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <ul className="w-full mt-2 space-y-1.5">
+                      {competencies.map((competency) => (
+                        <li key={competency.id} className="flex justify-between items-center text-[10px] pb-1 border-b border-border/50 last:border-0" title={competency.criterioObservavel}>
+                          <span className="font-medium text-foreground">{competency.competencia}</span>
+                          <span className="bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded font-mono font-bold">P{competency.peso}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-border py-4 mt-2 text-center">
+                    <Inbox className="h-5 w-5 text-muted-foreground/40" />
+                    <p className="text-xs text-muted-foreground/70">Sem competências cadastradas.</p>
+                  </div>
+                )}
               </article>
             );
           })}
@@ -244,33 +262,33 @@ export default function DesenvolvimentoPage() {
                   }
                   const { completion, training, person } = entry;
                   return (
-                  <tr key={completion.id} className="border-b border-border/50">
-                    <td className="px-2 py-2 text-foreground/90">{person?.nome ?? completion.personId}</td>
-                    <td className="px-2 py-2 text-foreground/90">{training?.nome ?? completion.trainingId}</td>
-                    <td className="px-2 py-2 text-foreground/90">
-                      {training ? roleById[training.cargoId]?.nome : "-"}
-                    </td>
-                    <td className="px-2 py-2 text-foreground/90">
-                      {training?.obrigatorio ? "Sim" : "Recomendado"}
-                    </td>
-                    <td className="px-2 py-2">
-                      <select
-                        className="select"
-                        value={completion.status}
-                        onChange={(event) =>
-                          updateTrainingCompletion(
-                            completion.id,
-                            event.target.value as "PENDENTE" | "EM_DIA" | "VENCIDO"
-                          )
-                        }
-                      >
-                        <option value="PENDENTE">Pendente</option>
-                        <option value="EM_DIA">Em dia</option>
-                        <option value="VENCIDO">Vencido</option>
-                      </select>
-                    </td>
-                    <td className="px-2 py-2 text-foreground/90">{completion.concluidoEm ?? "-"}</td>
-                  </tr>
+                    <tr key={completion.id} className="border-b border-border/50">
+                      <td className="px-2 py-2 text-foreground/90">{person?.nome ?? completion.personId}</td>
+                      <td className="px-2 py-2 text-foreground/90">{training?.nome ?? completion.trainingId}</td>
+                      <td className="px-2 py-2 text-foreground/90">
+                        {training ? roleById[training.cargoId]?.nome : "-"}
+                      </td>
+                      <td className="px-2 py-2 text-foreground/90">
+                        {training?.obrigatorio ? "Sim" : "Recomendado"}
+                      </td>
+                      <td className="px-2 py-2">
+                        <select
+                          className="select"
+                          value={completion.status}
+                          onChange={(event) =>
+                            updateTrainingCompletion(
+                              completion.id,
+                              event.target.value as "PENDENTE" | "EM_DIA" | "VENCIDO"
+                            )
+                          }
+                        >
+                          <option value="PENDENTE">Pendente</option>
+                          <option value="EM_DIA">Em dia</option>
+                          <option value="VENCIDO">Vencido</option>
+                        </select>
+                      </td>
+                      <td className="px-2 py-2 text-foreground/90">{completion.concluidoEm ?? "-"}</td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -293,58 +311,77 @@ export default function DesenvolvimentoPage() {
               const personStats = onboardingByPerson.get(person.id);
               const progressPct = personStats && personStats.total > 0 ? personStats.done / personStats.total : 0;
               return (
-              <li key={progress.id} className={`rounded-xl border p-3 ${progress.status === "CONCLUIDO" ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20/40" : progress.status === "ATRASADO" ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20/30 dark:bg-red-900/10" : "border-border bg-background"}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold text-foreground/90">{person?.nome ?? progress.personId}</p>
-                  <div className="flex items-center gap-2">
-                    {progress.status === "CONCLUIDO" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
-                    {progress.status === "ATRASADO" && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
-                    {progress.status === "PENDENTE" && <Clock3 className="h-3.5 w-3.5 text-muted-foreground/70" />}
-                    <span className={`badge ${progress.status === "CONCLUIDO" ? "badge-ok" : progress.status === "ATRASADO" ? "badge-danger" : "badge-info"}`}>
-                      {progress.status === "CONCLUIDO" ? "Concluido" : progress.status === "ATRASADO" ? "Atrasado" : "Pendente"}
-                    </span>
-                  </div>
-                </div>
-                {personStats && (
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <div className="progress-bar flex-1">
-                      <div className="progress-bar-fill" style={{ width: `${Math.round(progressPct * 100)}%`, background: progressPct >= 1 ? '#10b981' : progressPct >= 0.5 ? '#3b82f6' : '#f59e0b' }} />
+                <li key={progress.id} className={`rounded-xl border p-3 ${progress.status === "CONCLUIDO" ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20/40" : progress.status === "ATRASADO" ? "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20/30 dark:bg-red-900/10" : "border-border bg-background"}`}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold text-foreground/90">{person?.nome ?? progress.personId}</p>
+                    <div className="flex items-center gap-2">
+                      {progress.status === "CONCLUIDO" && <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />}
+                      {progress.status === "ATRASADO" && <AlertTriangle className="h-3.5 w-3.5 text-red-500" />}
+                      {progress.status === "PENDENTE" && <Clock3 className="h-3.5 w-3.5 text-muted-foreground/70" />}
+                      <span className={`badge ${progress.status === "CONCLUIDO" ? "badge-ok" : progress.status === "ATRASADO" ? "badge-danger" : "badge-info"}`}>
+                        {progress.status === "CONCLUIDO" ? "Concluido" : progress.status === "ATRASADO" ? "Atrasado" : "Pendente"}
+                      </span>
                     </div>
-                    <span className="text-[11px] text-muted-foreground/70">{personStats.done}/{personStats.total}</span>
                   </div>
-                )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Cargo: {role?.nome ?? "-"} · Marco: D+{item?.marcoDia ?? "?"} · Owner: {item?.ownerRole}
-                </p>
-                <p className="text-xs text-muted-foreground">Tarefa: {item?.titulo ?? "Item onboarding"}</p>
+                  {personStats && (
+                    <div className="mt-4 mb-3">
+                      <div className="flex items-center justify-between relative px-2 mb-1.5">
+                        <div className="absolute left-3 right-3 top-1/2 h-1 bg-muted -translate-y-1/2 -z-10 rounded-full overflow-hidden">
+                          <div className="h-full bg-blue-500 dark:bg-blue-600 transition-all duration-500" style={{ width: `${Math.round(progressPct * 100)}%` }} />
+                        </div>
+                        {[1, 7, 14, 30, 90].map((day, idx) => {
+                          const dotProgress = idx / 4;
+                          const isPast = progressPct >= dotProgress;
+                          const isCurrent = progressPct < dotProgress && progressPct >= (idx - 1) / 4;
 
-                <div className="mt-2 grid gap-2 md:grid-cols-2">
-                  <select
-                    className="select"
-                    value={progress.status}
-                    onChange={(event) =>
-                      updateOnboardingProgress(
-                        progress.id,
-                        event.target.value as "PENDENTE" | "CONCLUIDO" | "ATRASADO",
-                        progress.evidencia
-                      )
-                    }
-                  >
-                    <option value="PENDENTE">Pendente</option>
-                    <option value="CONCLUIDO">Concluido</option>
-                    <option value="ATRASADO">Atrasado</option>
-                  </select>
+                          return (
+                            <div key={day} className="flex flex-col items-center gap-1 bg-transparent z-10">
+                              <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center bg-background transition-all ${isPast ? 'border-blue-500 dark:border-blue-600' : isCurrent ? 'border-blue-400 dark:border-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.2)]' : 'border-muted text-transparent'}`}>
+                                {isPast && <div className="h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-600" />}
+                              </div>
+                              <span className={`text-[9px] font-semibold tracking-tight ${isPast ? 'text-blue-600 dark:text-blue-400' : isCurrent ? 'text-foreground' : 'text-muted-foreground/50'}`}>D{day}</span>
+                            </div>
+                          )
+                        })}
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] text-muted-foreground/80 font-medium px-1">
+                        <span>Trilha de Onboarding</span>
+                        <span>{personStats.done} / {personStats.total}</span>
+                      </div>
+                    </div>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cargo: {role?.nome ?? "-"} · Marco: D+{item?.marcoDia ?? "?"} · Owner: {item?.ownerRole}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Tarefa: {item?.titulo ?? "Item onboarding"}</p>
 
-                  <input
-                    className="input"
-                    value={progress.evidencia ?? ""}
-                    placeholder="Evidencia"
-                    onChange={(event) =>
-                      updateOnboardingProgress(progress.id, progress.status, event.target.value)
-                    }
-                  />
-                </div>
-              </li>
+                  <div className="mt-2 grid gap-2 md:grid-cols-2">
+                    <select
+                      className="select"
+                      value={progress.status}
+                      onChange={(event) =>
+                        updateOnboardingProgress(
+                          progress.id,
+                          event.target.value as "PENDENTE" | "CONCLUIDO" | "ATRASADO",
+                          progress.evidencia
+                        )
+                      }
+                    >
+                      <option value="PENDENTE">Pendente</option>
+                      <option value="CONCLUIDO">Concluido</option>
+                      <option value="ATRASADO">Atrasado</option>
+                    </select>
+
+                    <input
+                      className="input"
+                      value={progress.evidencia ?? ""}
+                      placeholder="Evidencia"
+                      onChange={(event) =>
+                        updateOnboardingProgress(progress.id, progress.status, event.target.value)
+                      }
+                    />
+                  </div>
+                </li>
               );
             })}
           </ul>

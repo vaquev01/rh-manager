@@ -607,7 +607,7 @@ export function ScheduleBuilder() {
             <table className="w-full text-xs border-collapse relative">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-muted/50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground min-w-[200px] border-r">
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground min-w-[200px] border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
                     Funcao / Cargo
                   </th>
                   {weekDates.map((d) => {
@@ -643,7 +643,7 @@ export function ScheduleBuilder() {
                   })}
                 </tr>
               </thead>
-              <tbody className="divide-y">
+              <tbody className="divide-y relative">
                 {visibleRoles.map((role) => {
                   const coverageKey = `${activeUnit.id}:${role.id}`;
                   const needed = coverageMap.get(coverageKey) ?? 0;
@@ -651,7 +651,7 @@ export function ScheduleBuilder() {
                   return (
                     <tr key={role.id} className="bg-background hover:bg-muted/30 transition-colors">
                       {/* Role header cell */}
-                      <td className="sticky left-0 z-10 bg-background px-4 py-4 align-top border-r group-hover:bg-muted/30">
+                      <td className="sticky left-0 z-10 bg-background px-4 py-4 align-top border-r group-hover:bg-muted/30 shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
                         <div className="flex flex-col gap-2">
                           <div>
                             <p className="font-semibold text-foreground text-sm flex items-center gap-2 group/role">

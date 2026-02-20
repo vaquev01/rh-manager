@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlarmClock, AlertTriangle, CheckCircle2, ClipboardList, Clock3, Inbox, MessageSquareWarning, TimerReset, Users, ChevronRight } from "lucide-react";
+import { AlarmClock, AlertTriangle, CheckCircle2, ClipboardList, Clock3, Inbox, MessageSquareWarning, TimerReset, Users, ChevronRight, LayoutList, LayoutGrid, Zap } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 import { useAppState } from "@/components/state-provider";
@@ -28,6 +28,7 @@ export default function RecrutamentoPage() {
   const [selectedVagaId, setSelectedVagaId] = useState<string | null>(
     state.recruitmentVagas[0]?.id ?? null
   );
+  const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
   const [lastChargeCount, setLastChargeCount] = useState<number>(0);
   const { toast } = useToast();
 
@@ -135,6 +136,13 @@ export default function RecrutamentoPage() {
     [vagasView]
   );
 
+  const kanbanColumns = useMemo(() => {
+    // Collect all distinct stage names currently active
+    const stages = new Set<string>();
+    vagasView.forEach(v => stages.add(v.stageAtual?.nome ?? "Início"));
+    return Array.from(stages);
+  }, [vagasView]);
+
   const totalVagas = vagasView.length;
   const noPrazoCount = vagasView.filter((i) => !i.travada && i.delayedStages.length === 0).length;
   const atrasadasCount = vagasView.filter((i) => i.delayedStages.length > 0).length;
@@ -207,91 +215,191 @@ export default function RecrutamentoPage() {
                   Acompanhamento em tempo real do checklist
                 </CardDescription>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-muted/50 border-border text-foreground/90 hover:bg-muted hover:text-slate-900"
-                onClick={() => {
-                  const count = chargeDelayedRecruitmentManagers();
-                  setLastChargeCount(count);
-                  toast(`Cobrança enviada para ${count} gestor(es)`, count > 0 ? "success" : "info");
-                }}
-              >
-                <MessageSquareWarning className="mr-2 h-3.5 w-3.5" />
-                Cobrar Gestores
-              </Button>
+              <div className="flex items-center gap-3">
+                <div className="flex bg-muted/60 p-1 rounded-md border border-border/50">
+                  <button
+                    onClick={() => setViewMode("table")}
+                    className={`p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-all ${viewMode === "table" ? "bg-background shadow-sm text-foreground font-semibold" : ""}`}
+                    title="Modo Tabela"
+                  >
+                    <LayoutList className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("kanban")}
+                    className={`p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-all ${viewMode === "kanban" ? "bg-background shadow-sm text-foreground font-semibold" : ""}`}
+                    title="Modo Kanban"
+                  >
+                    <LayoutGrid className="h-4 w-4" />
+                  </button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="bg-muted/30 border-border text-foreground/90 hover:bg-muted"
+                  onClick={() => {
+                    const count = chargeDelayedRecruitmentManagers();
+                    setLastChargeCount(count);
+                    toast(`Cobrança enviada para ${count} gestor(es)`, count > 0 ? "success" : "info");
+                  }}
+                >
+                  <MessageSquareWarning className="mr-2 h-3.5 w-3.5" />
+                  Cobrar Todos
+                </Button>
+              </div>
             </div>
           </CardHeader>
 
           <CardContent className="p-0">
-            <div className="overflow-auto max-h-[500px]">
-              <table className="min-w-full text-left text-xs bg-background">
-                <thead className="bg-muted/50 sticky top-0 z-10 shadow-sm">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 font-semibold text-muted-foreground">Vaga</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Gestor</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">SLA</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Etapa Atual</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Progresso</th>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground text-right">Status</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {vagasView.map((item) => (
-                    <tr
-                      key={item.vaga.id}
-                      className={`group cursor-pointer hover:bg-muted/50 transition-all duration-200 ${selectedVaga?.vaga.id === item.vaga.id ? "bg-blue-50 dark:bg-blue-900/20/60 dark:bg-blue-900/20 hover:bg-blue-50 dark:bg-blue-900/20/80 dark:bg-blue-900/40" : ""
-                        }`}
-                      onClick={() => setSelectedVagaId(item.vaga.id)}
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-foreground text-sm mb-0.5">{item.role?.nome ?? "Cargo Indefinido"}</span>
-                          <span className="text-[10px] text-muted-foreground">
-                            {item.company?.nome} · {item.unit?.nome}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-2">
-                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground">
-                            {item.manager?.nome.charAt(0)}
-                          </div>
-                          <span className="text-foreground/90 font-medium">{item.manager?.nome.split(' ')[0] ?? "Gestor"}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-muted-foreground/90 font-mono text-[10px]">
-                        {item.vaga.dataAbertura} <span className="text-muted-foreground/40 mx-1">|</span> {item.slaDiasAberta}d
-                      </td>
-                      <td className="px-4 py-4">
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
-                          <span className="text-foreground/90">{item.stageAtual?.nome ?? "Início"}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 w-32">
-                        <div className="space-y-1.5">
-                          <Progress value={item.progress * 100} className="h-1.5 bg-muted" />
-                          <p className="text-[10px] text-right font-medium text-muted-foreground">{percent(item.progress)}</p>
-                        </div>
-                      </td>
-                      <td className="px-4 py-4 text-right">
-                        {item.delayedStages.length > 0 ? (
-                          <Badge variant="danger" className="h-6 px-2">
-                            <AlertTriangle className="h-3 w-3 mr-1" />
-                            {item.delayedStages.length} Atraso(s)
-                          </Badge>
-                        ) : item.travada ? (
-                          <Badge variant="warn" className="h-6 px-2">Travada</Badge>
-                        ) : (
-                          <Badge variant="ok" className="h-6 px-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200">No Prazo</Badge>
-                        )}
-                      </td>
+            {viewMode === "table" ? (
+              <div className="overflow-auto max-h-[500px]">
+                <table className="min-w-full text-left text-xs bg-background">
+                  <thead className="bg-muted/50 sticky top-0 z-10 shadow-sm">
+                    <tr>
+                      <th scope="col" className="px-6 py-3 font-semibold text-muted-foreground">Vaga</th>
+                      <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Gestor</th>
+                      <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">SLA</th>
+                      <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Etapa Atual</th>
+                      <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground">Progresso</th>
+                      <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground text-right w-[160px]">Status</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {vagasView.map((item) => (
+                      <tr
+                        key={item.vaga.id}
+                        className={`group cursor-pointer hover:bg-muted/50 transition-all duration-200 ${selectedVaga?.vaga.id === item.vaga.id ? "bg-blue-50 dark:bg-blue-900/20/60 dark:bg-blue-900/20 hover:bg-blue-50 dark:bg-blue-900/20/80 dark:bg-blue-900/40" : ""
+                          }`}
+                        onClick={() => setSelectedVagaId(item.vaga.id)}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="font-bold text-foreground text-sm mb-0.5">{item.role?.nome ?? "Cargo Indefinido"}</span>
+                            <span className="text-[10px] text-muted-foreground">
+                              {item.company?.nome} · {item.unit?.nome}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[9px] font-bold text-muted-foreground">
+                              {item.manager?.nome.charAt(0)}
+                            </div>
+                            <span className="text-foreground/90 font-medium">{item.manager?.nome.split(' ')[0] ?? "Gestor"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-muted-foreground/90 font-mono text-[10px]">
+                          {item.vaga.dataAbertura} <span className="text-muted-foreground/40 mx-1">|</span> {item.slaDiasAberta}d
+                        </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-1.5 w-1.5 rounded-full bg-blue-500"></div>
+                            <span className="text-foreground/90">{item.stageAtual?.nome ?? "Início"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 w-32">
+                          <div className="space-y-1.5">
+                            <Progress value={item.progress * 100} className="h-1.5 bg-muted" />
+                            <p className="text-[10px] text-right font-medium text-muted-foreground">{percent(item.progress)}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-4 text-right">
+                          {item.delayedStages.length > 0 ? (
+                            <div className="flex items-center justify-end gap-2 text-right">
+                              <Badge variant="danger" className="h-6 px-2">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                {item.delayedStages.length} Atraso
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 rounded border border-transparent hover:border-orange-200 bg-orange-100/50 hover:bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:hover:bg-orange-900/50 dark:text-orange-400 transition-colors shadow-sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toast(`Cobrança enviada pelo WhatsApp para ${item.manager?.nome}`, "success");
+                                }}
+                                title="Cobrar Gestor via WhatsApp"
+                              >
+                                <Zap className="h-3 w-3 fill-orange-500 text-orange-500" />
+                              </Button>
+                            </div>
+                          ) : item.travada ? (
+                            <Badge variant="warn" className="h-6 px-2">Travada</Badge>
+                          ) : (
+                            <Badge variant="ok" className="h-6 px-2 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-200">No Prazo</Badge>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="flex gap-4 p-5 overflow-x-auto min-h-[400px] items-start bg-slate-50/50 dark:bg-muted/10">
+                {kanbanColumns.map(col => {
+                  const colItems = vagasView.filter(v => (v.stageAtual?.nome ?? "Início") === col);
+                  return (
+                    <div key={col} className="flex-shrink-0 w-80 flex flex-col gap-3">
+                      <div className="flex items-center justify-between uppercase tracking-wider text-[10.5px] font-bold text-muted-foreground mr-2 px-1">
+                        <span>{col}</span>
+                        <Badge variant="secondary" className="h-5 px-1.5 text-[9px] bg-white dark:bg-background border-border shadow-sm">{colItems.length}</Badge>
+                      </div>
+                      <div className="flex flex-col gap-3 pb-2">
+                        {colItems.map(item => (
+                          <div
+                            key={item.vaga.id}
+                            draggable
+                            onClick={() => setSelectedVagaId(item.vaga.id)}
+                            className={`bg-background border rounded-xl p-4 cursor-grab active:cursor-grabbing hover:border-blue-300 hover:shadow-md transition-all duration-200 ${selectedVagaId === item.vaga.id ? 'ring-2 ring-blue-500/30 border-blue-400 shadow-md transform -translate-y-0.5' : 'border-border shadow-sm'}`}
+                          >
+                            <div className="flex justify-between items-start mb-2">
+                              <div>
+                                <h4 className="font-bold text-sm text-foreground">{item.role?.nome ?? "Cargo Indefinido"}</h4>
+                                <p className="text-[10px] text-muted-foreground/80 mt-0.5">{item.company?.nome} · {item.unit?.nome}</p>
+                              </div>
+                              <div className="h-7 w-7 rounded-full bg-slate-100 dark:bg-muted border border-border flex items-center justify-center text-[10px] font-bold text-muted-foreground shadow-sm" title={item.manager?.nome}>
+                                {item.manager?.nome.charAt(0)}
+                              </div>
+                            </div>
+
+                            <div className="mt-3 mb-1">
+                              <div className="flex justify-between text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-wide">
+                                <span>Checklist</span>
+                                <span>{percent(item.progress)}</span>
+                              </div>
+                              <Progress value={item.progress * 100} className="h-1.5 bg-muted/70" />
+                            </div>
+
+                            <div className="flex justify-between items-center mt-3 pt-3 border-t border-border/60">
+                              <span className="text-[10px] font-mono text-muted-foreground">{item.slaDiasAberta}d aberto</span>
+                              {item.delayedStages.length > 0 ? (
+                                <div className="flex items-center gap-1.5">
+                                  <Badge variant="danger" className="h-5 px-1.5 text-[9px] font-semibold border-red-200 shadow-sm">Atraso</Badge>
+                                  <Button
+                                    size="icon"
+                                    className="h-6 w-6 rounded border border-transparent hover:border-orange-200 bg-orange-100/50 hover:bg-orange-100 text-orange-600 dark:bg-orange-900/40 dark:text-orange-400 p-0 shadow-sm transition-colors"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      toast(`Cobrança enviada com sucesso para ${item.manager?.nome}`, "success");
+                                    }}
+                                    title="Cobrar Gestor via WhatsApp"
+                                  >
+                                    <Zap className="h-3 w-3 fill-orange-500 text-orange-500" />
+                                  </Button>
+                                </div>
+                              ) : item.travada ? (
+                                <Badge variant="warn" className="h-5 px-1.5 text-[9px] shadow-sm">Travada</Badge>
+                              ) : (
+                                <Badge variant="ok" className="h-5 px-1.5 text-[9px] bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 border border-emerald-100 shadow-sm">Em dia</Badge>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 

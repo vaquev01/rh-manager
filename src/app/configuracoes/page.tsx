@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Building2, KeyRound, ListChecks, ShieldCheck, Waypoints, Info } from "lucide-react";
 
 import { useAppState } from "@/components/state-provider";
@@ -22,6 +22,7 @@ import { Tooltip } from "@/components/ui/tooltip";
 import { Badge } from "@/components/ui/badge";
 
 export default function ConfiguracoesPage() {
+  const [activeTab, setActiveTab] = useState<"estrutura" | "rbac" | "pagamentos" | "sistema">("estrutura");
   const {
     state,
     setPermission,
@@ -55,388 +56,403 @@ export default function ConfiguracoesPage() {
   }, [state]);
 
   return (
-    <div className="page-enter space-y-6">
-      <Card>
-        <CardHeader className="px-6 py-4 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-              <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-            </div>
-            <div>
-              <CardTitle className="text-lg font-bold text-foreground">
-                Multi-empresa e Estrutura
-              </CardTitle>
-              <p className="text-xs text-muted-foreground font-medium">
-                Hierarquia: Grupo → Empresa → Unidade → Time
-              </p>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-6">
-          <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm">
-            <div className="flex items-center gap-2 mb-4">
-              <Badge variant="outline" className="bg-background px-3 py-1 text-sm font-bold text-foreground/90 shadow-sm">
-                Grupo: {state.grupo.nome}
-              </Badge>
-            </div>
-            <div className="grid gap-4 md:grid-cols-2">
-              {state.companies.map((company) => (
-                <article key={company.id} className="rounded-xl border border-border bg-background shadow-sm overflow-hidden transition-all hover:shadow-md">
-                  <div className="bg-muted/50 px-4 py-3 border-b border-border/50">
-                    <p className="font-bold text-foreground">{company.nome}</p>
-                  </div>
-                  <div className="p-3">
-                    <ul className="space-y-3 text-xs text-muted-foreground/90">
-                      {(unitsByCompany.get(company.id) ?? []).map((unit) => (
-                        <li key={unit.id} className="rounded-lg border border-border/50 bg-muted/50 p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="h-2 w-2 rounded-full bg-blue-400" />
-                            <p className="font-medium text-foreground/90 text-sm">{unit.nome}</p>
-                          </div>
-                          <div className="pl-4">
-                            <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">Times</p>
-                            <div className="flex flex-wrap gap-1.5">
-                              {(teamsByUnit.get(unit.id) ?? []).map((team) => (
-                                <Badge key={team.id} variant="secondary" className="bg-background border-border text-muted-foreground/90 hover:bg-muted/50">
-                                  {team.nome}
-                                </Badge>
-                              ))}
-                              {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-muted-foreground/70 italic">Nenhum time</span>}
-                            </div>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="page-enter flex flex-col xl:flex-row gap-6 items-start">
+      <aside className="w-full xl:w-64 shrink-0 xl:sticky top-6 z-10">
+        <nav className="flex xl:flex-col gap-2 overflow-x-auto pb-2 xl:pb-0 scrollbar-none">
+          <button onClick={() => setActiveTab('estrutura')} className={`flex flex-col xl:flex-row items-center xl:items-start gap-2 xl:gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'estrutura' ? 'bg-background shadow-sm border border-border font-bold text-blue-600 dark:text-blue-400' : 'hover:bg-muted/50 text-muted-foreground border border-transparent'}`}>
+            <Building2 className="h-5 w-5 shrink-0" />
+            <span className="text-xs xl:text-sm whitespace-nowrap">Estrutura e Unidades</span>
+          </button>
+          <button onClick={() => setActiveTab('rbac')} className={`flex flex-col xl:flex-row items-center xl:items-start gap-2 xl:gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'rbac' ? 'bg-background shadow-sm border border-border font-bold text-indigo-600 dark:text-indigo-400' : 'hover:bg-muted/50 text-muted-foreground border border-transparent'}`}>
+            <ShieldCheck className="h-5 w-5 shrink-0" />
+            <span className="text-xs xl:text-sm whitespace-nowrap">Acessos e Permissões</span>
+          </button>
+          <button onClick={() => setActiveTab('pagamentos')} className={`flex flex-col xl:flex-row items-center xl:items-start gap-2 xl:gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'pagamentos' ? 'bg-background shadow-sm border border-border font-bold text-emerald-600 dark:text-emerald-400' : 'hover:bg-muted/50 text-muted-foreground border border-transparent'}`}>
+            <Waypoints className="h-5 w-5 shrink-0" />
+            <span className="text-xs xl:text-sm whitespace-nowrap">Regras de Pagamento</span>
+          </button>
+          <button onClick={() => setActiveTab('sistema')} className={`flex flex-col xl:flex-row items-center xl:items-start gap-2 xl:gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'sistema' ? 'bg-background shadow-sm border border-border font-bold text-slate-800 dark:text-slate-200' : 'hover:bg-muted/50 text-muted-foreground border border-transparent'}`}>
+            <ListChecks className="h-5 w-5 shrink-0" />
+            <span className="text-xs xl:text-sm whitespace-nowrap">Sistema e Auditoria</span>
+          </button>
+        </nav>
+      </aside>
 
-      <div className="grid gap-6 xl:grid-cols-[1.5fr,1fr]">
-        <Card>
-          <CardHeader className="px-6 py-4 border-b border-border/50">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-indigo-50 rounded-lg">
-                <ShieldCheck className="h-4 w-4 text-indigo-600" />
-              </div>
-              <CardTitle className="text-base font-bold text-foreground">
-                Controle de Acesso (RBAC)
-              </CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-auto max-h-[400px]">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-muted/50 sticky top-0 z-10 shadow-sm">
-                  <tr>
-                    <th scope="col" className="px-4 py-3 font-semibold text-muted-foreground/90 border-b">Papel</th>
-                    {permissionActions.map((action) => (
-                      <th scope="col" key={action} className="px-3 py-3 font-semibold text-muted-foreground border-b text-center min-w-[80px]">
-                        {action.replace('VER_', '').replace('EDITAR_', '').replace('ADMIN_', '')}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {(Object.keys(state.permissions) as Array<keyof typeof state.permissions>).map((role) => (
-                    <tr key={role} className="hover:bg-muted/50/80 transition-colors">
-                      <td className="px-4 py-3 text-foreground/90 font-bold bg-background sticky left-0 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                        {ROLE_LABEL[role]}
-                      </td>
-                      {permissionActions.map((action) => (
-                        <td key={`${role}-${action}`} className="px-3 py-3 text-center">
-                          <div className="flex justify-center">
-                            <Checkbox
-                              checked={state.permissions[role][action]}
-                              onCheckedChange={(checked) => setPermission(role, action, checked)}
-                              aria-label={`${ROLE_LABEL[role]}: ${action}`}
-                              className="data-[state=checked]:bg-indigo-600 data-[state=checked]:border-indigo-600"
-                            />
-                          </div>
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="px-6 py-4 border-b border-border/50">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
-                <KeyRound className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <CardTitle className="text-base font-bold text-foreground">
-                  Tipos de Adicional
-                </CardTitle>
-                <p className="text-[10px] text-muted-foreground mt-0.5">
-                  Configure regras para lançamentos extras
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-6">
-            <ul className="space-y-3">
-              {state.additionalTypes.map((type) => (
-                <li key={type.id} className="group rounded-xl border border-border bg-background p-4 transition-all hover:border-emerald-200 dark:border-emerald-800 hover:shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <p className="font-bold text-foreground flex items-center gap-2">
-                      {type.nome}
-                      {type.ativo ?
-                        <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 h-5 px-1.5 text-[9px]">Ativo</Badge> :
-                        <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-border h-5 px-1.5 text-[9px]">Inativo</Badge>
-                      }
-                    </p>
-                    <Switch
-                      checked={type.ativo}
-                      onCheckedChange={(checked) => updateAdditionalType(type.id, { ativo: checked })}
-                      className="scale-90 data-[state=checked]:bg-emerald-500"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 p-3 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground/90 font-medium">PIX Padrão</span>
-                      <Switch
-                        checked={type.pagavelViaPixPorPadrao}
-                        onCheckedChange={(checked) => updateAdditionalType(type.id, { pagavelViaPixPorPadrao: checked })}
-                        className="scale-75 data-[state=checked]:bg-emerald-500"
-                      />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-muted-foreground/90 font-medium">Exige Descrição</span>
-                        <Tooltip content="Obrigatório preencher motivo ao lançar">
-                          <Info className="h-3 w-3 text-muted-foreground/70" />
-                        </Tooltip>
-                      </div>
-                      <Switch
-                        checked={type.descricaoObrigatoria}
-                        onCheckedChange={(checked) => updateAdditionalType(type.id, { descricaoObrigatoria: checked })}
-                        className="scale-75 data-[state=checked]:bg-emerald-500"
-                      />
-                    </div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader className="px-6 py-4 border-b border-border/50">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-              <Waypoints className="h-4 w-4 text-purple-600 dark:text-purple-400" />
-            </div>
-            <CardTitle className="text-base font-bold text-foreground">
-              Regras de Pagamento
-            </CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-auto">
-            <table className="min-w-full text-left text-xs">
-              <thead className="bg-muted/50 border-b border-border">
-                <tr>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Regra</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Escopo</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Calculo</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Hora</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Diária</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Turno</th>
-                  <th className="px-4 py-3 font-semibold text-muted-foreground">Turnos Padrão</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {state.paymentRules.map((rule) => {
-                  const company = rule.companyId
-                    ? state.companies.find((item) => item.id === rule.companyId)?.nome
-                    : "Global";
-                  const unit = rule.unitId
-                    ? state.units.find((item) => item.id === rule.unitId)?.nome
-                    : "Todas unidades";
-
-                  return (
-                    <tr key={rule.id} className="hover:bg-muted/50 transition-colors">
-                      <td className="px-4 py-3 text-foreground/90 font-mono text-[10px]">{rule.id.substring(0, 8)}...</td>
-                      <td className="px-4 py-3 text-foreground/90">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-foreground">{company}</span>
-                          <span className="text-[10px] text-muted-foreground">{unit}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Select
-                          value={rule.type}
-                          onValueChange={(val) =>
-                            updatePaymentRule(rule.id, {
-                              type: val as "VALOR_HORA" | "DIARIA" | "TURNO"
-                            })
-                          }
-                        >
-                          <SelectTrigger className="h-8 text-xs border-border">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="VALOR_HORA">Valor hora</SelectItem>
-                            <SelectItem value="DIARIA">Diaria</SelectItem>
-                            <SelectItem value="TURNO">Turno</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          className="h-8 text-xs w-24 border-border"
-                          type="number"
-                          step={0.01}
-                          value={rule.valorHora ?? 0}
-                          onChange={(event) =>
-                            updatePaymentRule(rule.id, {
-                              valorHora: Number(event.target.value || "0")
-                            })
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          className="h-8 text-xs w-24 border-border"
-                          type="number"
-                          step={0.01}
-                          value={rule.valorDiaria ?? 0}
-                          onChange={(event) =>
-                            updatePaymentRule(rule.id, {
-                              valorDiaria: Number(event.target.value || "0")
-                            })
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          className="h-8 text-xs w-24 border-border"
-                          type="number"
-                          step={0.01}
-                          value={rule.valorTurno ?? 0}
-                          onChange={(event) =>
-                            updatePaymentRule(rule.id, {
-                              valorTurno: Number(event.target.value || "0")
-                            })
-                          }
-                        />
-                      </td>
-                      <td className="px-4 py-3">
-                        <Input
-                          className="h-8 text-xs w-20 border-border"
-                          type="number"
-                          step={1}
-                          value={rule.qtdTurnosPadrao ?? 0}
-                          onChange={(event) =>
-                            updatePaymentRule(rule.id, {
-                              qtdTurnosPadrao: Number(event.target.value || "0")
-                            })
-                          }
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-6 xl:grid-cols-[1fr,1.2fr]">
-        <Card>
-          <CardHeader className="px-6 py-4 border-b border-border/50">
-            <CardTitle className="text-base font-bold text-foreground">Templates de Comunicação</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <ul className="space-y-2">
-              {state.communicationTemplates.map((template) => (
-                <li key={template.id} className="rounded-xl border border-border bg-background p-3 hover:border-blue-200 dark:border-blue-800 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-foreground/90">{template.nome}</p>
-                    <Badge variant="secondary" className="text-[10px]">
-                      {template.companyId ? "Empresa" : "Global"}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Escopo: {template.unitId ?? "Todas"} / {template.teamId ?? "Todos"}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="px-6 py-4 border-b border-border/50">
-            <div className="flex items-center justify-between">
+      <main className="flex-1 min-w-0 w-full space-y-6">
+        <div className={activeTab === 'estrutura' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-muted rounded-lg">
-                  <ListChecks className="h-4 w-4 text-muted-foreground/90" />
+                <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                  <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
-                <CardTitle className="text-base font-bold text-foreground">
-                  Auditoria
-                </CardTitle>
+                <div>
+                  <CardTitle className="text-lg font-bold text-foreground">
+                    Multi-empresa e Estrutura
+                  </CardTitle>
+                  <p className="text-xs text-muted-foreground font-medium">
+                    Hierarquia: Grupo → Empresa → Unidade → Time
+                  </p>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="overflow-auto max-h-[400px]">
-              <ul className="divide-y divide-slate-100">
-                {[...state.auditLogs]
-                  .reverse()
-                  .slice(0, 50)
-                  .map((entry) => (
-                    <li key={entry.id} className="p-4 hover:bg-muted/50 transition-colors">
-                      <div className="flex items-start gap-3">
-                        <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                          <span className="text-xs font-bold text-muted-foreground">{entry.actorName?.charAt(0) ?? "?"}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="font-semibold text-foreground text-sm truncate">{entry.acao.replace(/_/g, " ")}</p>
-                            <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">
-                              {new Date(entry.criadoEm).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
-                            </span>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {entry.actorName} ({entry.actorRole})
-                          </p>
-
-                          {!!entry.before && !!entry.after && (
-                            <div className="mt-2 text-[10px] font-mono bg-slate-900 rounded-lg p-3 overflow-x-auto">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div className="text-red-300">
-                                  <div className="uppercase opacity-50 mb-1">Antes</div>
-                                  {JSON.stringify(entry.before ?? {}, null, 1)?.slice(0, 100)}
-                                </div>
-                                <div className="text-emerald-300">
-                                  <div className="uppercase opacity-50 mb-1">Depois</div>
-                                  {JSON.stringify(entry.after ?? {}, null, 1)?.slice(0, 100)}
+            </CardHeader>
+            <CardContent className="p-6">
+              <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm">
+                <div className="flex items-center gap-2 mb-4">
+                  <Badge variant="outline" className="bg-background px-3 py-1 text-sm font-bold text-foreground/90 shadow-sm">
+                    Grupo: {state.grupo.nome}
+                  </Badge>
+                </div>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {state.companies.map((company) => (
+                    <article key={company.id} className="rounded-xl border border-border bg-background shadow-sm overflow-hidden transition-all hover:shadow-md">
+                      <div className="bg-muted/50 px-4 py-3 border-b border-border/50">
+                        <p className="font-bold text-foreground">{company.nome}</p>
+                      </div>
+                      <div className="p-3">
+                        <ul className="space-y-3 text-xs text-muted-foreground/90">
+                          {(unitsByCompany.get(company.id) ?? []).map((unit) => (
+                            <li key={unit.id} className="rounded-lg border border-border/50 bg-muted/50 p-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <div className="h-2 w-2 rounded-full bg-blue-400" />
+                                <p className="font-medium text-foreground/90 text-sm">{unit.nome}</p>
+                              </div>
+                              <div className="pl-4">
+                                <p className="text-[10px] uppercase font-bold text-muted-foreground/70 mb-1">Times</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {(teamsByUnit.get(unit.id) ?? []).map((team) => (
+                                    <Badge key={team.id} variant="secondary" className="bg-background border-border text-muted-foreground/90 hover:bg-muted/50">
+                                      {team.nome}
+                                    </Badge>
+                                  ))}
+                                  {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-muted-foreground/70 italic">Nenhum time</span>}
                                 </div>
                               </div>
-                            </div>
-                          )}
-                        </div>
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </li>
+                    </article>
                   ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className={activeTab === 'rbac' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6' : 'hidden'}>
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-indigo-50 rounded-lg">
+                  <ShieldCheck className="h-4 w-4 text-indigo-600" />
+                </div>
+                <CardTitle className="text-base font-bold text-foreground">
+                  Controle de Acesso (RBAC)
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="grid gap-6">
+                {(Object.keys(state.permissions) as Array<keyof typeof state.permissions>).map((role) => (
+                  <div key={role} className="rounded-xl border border-border bg-background shadow-sm overflow-hidden">
+                    <div className="bg-muted/40 px-5 py-3 border-b border-border/60">
+                      <h3 className="font-bold text-foreground/90">{ROLE_LABEL[role]}</h3>
+                    </div>
+                    <div className="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 gap-y-4">
+                      {permissionActions.map((action) => (
+                        <label key={`${action}-${role}`} className="flex items-center justify-between p-3 rounded-lg border border-border/60 hover:border-indigo-200 dark:hover:border-indigo-800 hover:bg-indigo-50/50 dark:hover:bg-indigo-900/10 transition-colors cursor-pointer group shadow-sm bg-background">
+                          <span className="text-xs font-semibold text-muted-foreground group-hover:text-foreground transition-colors tracking-tight">
+                            {action.replace('VER_', '').replace('EDITAR_', '').replace('ADMIN_', '').replace(/_/g, ' ')}
+                          </span>
+                          <Switch
+                            checked={state.permissions[role][action]}
+                            onCheckedChange={(checked) => setPermission(role, action, checked)}
+                            className="scale-90 data-[state=checked]:bg-indigo-600"
+                          />
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg">
+                  <KeyRound className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                </div>
+                <div>
+                  <CardTitle className="text-base font-bold text-foreground">
+                    Tipos de Adicional
+                  </CardTitle>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">
+                    Configure regras para lançamentos extras
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ul className="space-y-3">
+                {state.additionalTypes.map((type) => (
+                  <li key={type.id} className="group rounded-xl border border-border bg-background p-4 transition-all hover:border-emerald-200 dark:border-emerald-800 hover:shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="font-bold text-foreground flex items-center gap-2">
+                        {type.nome}
+                        {type.ativo ?
+                          <Badge variant="outline" className="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-100 h-5 px-1.5 text-[9px]">Ativo</Badge> :
+                          <Badge variant="outline" className="bg-muted/50 text-muted-foreground border-border h-5 px-1.5 text-[9px]">Inativo</Badge>
+                        }
+                      </p>
+                      <Switch
+                        checked={type.ativo}
+                        onCheckedChange={(checked) => updateAdditionalType(type.id, { ativo: checked })}
+                        className="scale-90 data-[state=checked]:bg-emerald-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-muted/50 p-3 rounded-lg">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-muted-foreground/90 font-medium">PIX Padrão</span>
+                        <Switch
+                          checked={type.pagavelViaPixPorPadrao}
+                          onCheckedChange={(checked) => updateAdditionalType(type.id, { pagavelViaPixPorPadrao: checked })}
+                          className="scale-75 data-[state=checked]:bg-emerald-500"
+                        />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-xs text-muted-foreground/90 font-medium">Exige Descrição</span>
+                          <Tooltip content="Obrigatório preencher motivo ao lançar">
+                            <Info className="h-3 w-3 text-muted-foreground/70" />
+                          </Tooltip>
+                        </div>
+                        <Switch
+                          checked={type.descricaoObrigatoria}
+                          onCheckedChange={(checked) => updateAdditionalType(type.id, { descricaoObrigatoria: checked })}
+                          className="scale-75 data-[state=checked]:bg-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  </li>
+                ))}
               </ul>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className={activeTab === 'pagamentos' ? 'block animate-in fade-in slide-in-from-bottom-2 duration-300 space-y-6' : 'hidden'}>
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                  <Waypoints className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+                </div>
+                <CardTitle className="text-base font-bold text-foreground">
+                  Regras de Pagamento
+                </CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-auto">
+                <table className="min-w-full text-left text-xs">
+                  <thead className="bg-muted/50 border-b border-border">
+                    <tr>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Regra</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Escopo</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Calculo</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Hora</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Diária</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Valor Turno</th>
+                      <th className="px-4 py-3 font-semibold text-muted-foreground">Turnos Padrão</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {state.paymentRules.map((rule) => {
+                      const company = rule.companyId
+                        ? state.companies.find((item) => item.id === rule.companyId)?.nome
+                        : "Global";
+                      const unit = rule.unitId
+                        ? state.units.find((item) => item.id === rule.unitId)?.nome
+                        : "Todas unidades";
+
+                      return (
+                        <tr key={rule.id} className="hover:bg-muted/50 transition-colors">
+                          <td className="px-4 py-3 text-foreground/90 font-mono text-[10px]">{rule.id.substring(0, 8)}...</td>
+                          <td className="px-4 py-3 text-foreground/90">
+                            <div className="flex flex-col">
+                              <span className="font-semibold text-foreground">{company}</span>
+                              <span className="text-[10px] text-muted-foreground">{unit}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Select
+                              value={rule.type}
+                              onValueChange={(val) =>
+                                updatePaymentRule(rule.id, {
+                                  type: val as "VALOR_HORA" | "DIARIA" | "TURNO"
+                                })
+                              }
+                            >
+                              <SelectTrigger className="h-8 text-xs border-border">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="VALOR_HORA">Valor hora</SelectItem>
+                                <SelectItem value="DIARIA">Diaria</SelectItem>
+                                <SelectItem value="TURNO">Turno</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </td>
+                          <td className="px-4 py-3">
+                            <Input
+                              className="h-8 text-xs w-24 border-border"
+                              type="number"
+                              step={0.01}
+                              value={rule.valorHora ?? 0}
+                              onChange={(event) =>
+                                updatePaymentRule(rule.id, {
+                                  valorHora: Number(event.target.value || "0")
+                                })
+                              }
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <Input
+                              className="h-8 text-xs w-24 border-border"
+                              type="number"
+                              step={0.01}
+                              value={rule.valorDiaria ?? 0}
+                              onChange={(event) =>
+                                updatePaymentRule(rule.id, {
+                                  valorDiaria: Number(event.target.value || "0")
+                                })
+                              }
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <Input
+                              className="h-8 text-xs w-24 border-border"
+                              type="number"
+                              step={0.01}
+                              value={rule.valorTurno ?? 0}
+                              onChange={(event) =>
+                                updatePaymentRule(rule.id, {
+                                  valorTurno: Number(event.target.value || "0")
+                                })
+                              }
+                            />
+                          </td>
+                          <td className="px-4 py-3">
+                            <Input
+                              className="h-8 text-xs w-20 border-border"
+                              type="number"
+                              step={1}
+                              value={rule.qtdTurnosPadrao ?? 0}
+                              onChange={(event) =>
+                                updatePaymentRule(rule.id, {
+                                  qtdTurnosPadrao: Number(event.target.value || "0")
+                                })
+                              }
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className={activeTab === 'sistema' ? 'grid gap-6 xl:grid-cols-[1fr,1.2fr] animate-in fade-in slide-in-from-bottom-2 duration-300' : 'hidden'}>
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
+              <CardTitle className="text-base font-bold text-foreground">Templates de Comunicação</CardTitle>
+            </CardHeader>
+            <CardContent className="p-6">
+              <ul className="space-y-2">
+                {state.communicationTemplates.map((template) => (
+                  <li key={template.id} className="rounded-xl border border-border bg-background p-3 hover:border-blue-200 dark:border-blue-800 transition-colors cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <p className="font-semibold text-foreground/90">{template.nome}</p>
+                      <Badge variant="secondary" className="text-[10px]">
+                        {template.companyId ? "Empresa" : "Global"}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Escopo: {template.unitId ?? "Todas"} / {template.teamId ?? "Todos"}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="px-6 py-4 border-b border-border/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 bg-muted rounded-lg">
+                    <ListChecks className="h-4 w-4 text-muted-foreground/90" />
+                  </div>
+                  <CardTitle className="text-base font-bold text-foreground">
+                    Auditoria
+                  </CardTitle>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-auto max-h-[400px]">
+                <ul className="divide-y divide-slate-100">
+                  {[...state.auditLogs]
+                    .reverse()
+                    .slice(0, 50)
+                    .map((entry) => (
+                      <li key={entry.id} className="p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex items-start gap-3">
+                          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            <span className="text-xs font-bold text-muted-foreground">{entry.actorName?.charAt(0) ?? "?"}</span>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center justify-between">
+                              <p className="font-semibold text-foreground text-sm truncate">{entry.acao.replace(/_/g, " ")}</p>
+                              <span className="text-[10px] text-muted-foreground/70 whitespace-nowrap">
+                                {new Date(entry.criadoEm).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}
+                              </span>
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {entry.actorName} ({entry.actorRole})
+                            </p>
+
+                            {!!entry.before && !!entry.after && (
+                              <div className="mt-2 text-[10px] font-mono bg-slate-900 rounded-lg p-3 overflow-x-auto">
+                                <div className="grid grid-cols-2 gap-4">
+                                  <div className="text-red-300">
+                                    <div className="uppercase opacity-50 mb-1">Antes</div>
+                                    {JSON.stringify(entry.before ?? {}, null, 1)?.slice(0, 100)}
+                                  </div>
+                                  <div className="text-emerald-300">
+                                    <div className="uppercase opacity-50 mb-1">Depois</div>
+                                    {JSON.stringify(entry.after ?? {}, null, 1)?.slice(0, 100)}
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main >
+    </div >
   );
 }
