@@ -892,9 +892,6 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       }
 
       const computation = computePaymentContext(previous, date, filters);
-      if (computation.locked) {
-        return previous;
-      }
 
       const items = computation.lines.map(snapshotFromComputedLine);
       const closure = {

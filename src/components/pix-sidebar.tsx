@@ -213,11 +213,6 @@ export function PixSidebar() {
                                     style={{ width: `${closingProgress * 100}%` }}
                                 />
                             </div>
-                            {paymentContext.locked && (
-                                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded w-fit">
-                                    <Lock className="h-3 w-3" /> DIA FECHADO
-                                </p>
-                            )}
                         </div>
                     )}
 
@@ -230,7 +225,6 @@ export function PixSidebar() {
                                 variant={paymentContext.config.mode === "CUSTO" ? "primary" : "outline"}
                                 size="sm"
                                 onClick={() => setPaymentMode("CUSTO")}
-                                disabled={paymentContext.locked}
                                 className="w-full text-xs h-7"
                             >
                                 Custo
@@ -239,7 +233,6 @@ export function PixSidebar() {
                                 variant={paymentContext.config.mode === "PAGAMENTO" ? "primary" : "outline"}
                                 size="sm"
                                 onClick={() => setPaymentMode("PAGAMENTO")}
-                                disabled={paymentContext.locked}
                                 className="w-full text-xs h-7"
                             >
                                 Pagamento
@@ -254,7 +247,6 @@ export function PixSidebar() {
                                     className="h-7 mt-1 text-xs"
                                     min={0}
                                     step={0.25}
-                                    disabled={paymentContext.locked}
                                     value={paymentContext.config.horasPadraoDia}
                                     onChange={(e) => setGlobalStandardHours(Number(e.target.value))}
                                 />
@@ -265,7 +257,7 @@ export function PixSidebar() {
                                     value={paymentContext.config.fonteHoras}
                                     onValueChange={(val) => setHoursSource(val as any)}
                                 >
-                                    <SelectTrigger className="h-7 mt-1 text-xs" disabled={paymentContext.locked}>
+                                    <SelectTrigger className="h-7 mt-1 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -284,7 +276,7 @@ export function PixSidebar() {
                                     value={globalAdditionalDraft.tipo}
                                     onValueChange={(val) => setGlobalAdditionalDraft(p => ({ ...p, tipo: val as any }))}
                                 >
-                                    <SelectTrigger className="h-7 text-xs flex-1" disabled={paymentContext.locked}>
+                                    <SelectTrigger className="h-7 text-xs flex-1">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -296,7 +288,6 @@ export function PixSidebar() {
                                     className="h-7 w-20 text-xs"
                                     placeholder="R$"
                                     value={globalAdditionalDraft.valor}
-                                    disabled={paymentContext.locked}
                                     onChange={(e) => setGlobalAdditionalDraft(p => ({ ...p, valor: Number(e.target.value) }))}
                                 />
                             </div>
@@ -304,7 +295,6 @@ export function PixSidebar() {
                                 size="sm"
                                 variant="secondary"
                                 className="w-full h-7 text-xs bg-background border border-border hover:bg-muted"
-                                disabled={paymentContext.locked}
                                 onClick={() => {
                                     setGlobalAdditional({
                                         ...globalAdditionalDraft,
@@ -323,7 +313,7 @@ export function PixSidebar() {
                     {/* Pix List */}
                     <div className="flex-1 min-h-[300px] flex flex-col">
                         <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Resumo PIX {!paymentContext.locked && "- Somente após Validar"}</h4>
+                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Resumo PIX</h4>
                             <div className="flex gap-1 hide-on-print">
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyReport} title="Copiar Relatório em Texto">
                                     <Copy className="h-3 w-3 text-muted-foreground/70" />
@@ -430,51 +420,38 @@ export function PixSidebar() {
                     </div>
 
                     <div className="space-y-2 mt-auto pt-2 hide-on-print">
-                        {paymentContext.locked ? (
-                            <Button
-                                className="w-full h-9 text-xs font-bold transition-all shadow-sm bg-amber-600 hover:bg-amber-700 text-white"
-                                onClick={() => {
-                                    const reason = prompt("Motivo da reabertura do dia:");
-                                    if (reason) reopenPaymentsDay(reason);
-                                }}
-                            >
-                                Reabrir Dia
-                            </Button>
-                        ) : (
-                            <div className="flex gap-2">
-                                {!showCloseConfirm ? (
-                                    <Button
-                                        className="flex-1 h-9 text-xs font-bold transition-all shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
-                                        disabled={!canClose}
-                                        onClick={() => setShowCloseConfirm(true)}
-                                    >
-                                        <Lock className="mr-1.5 h-3.5 w-3.5" /> Travar e Fechar Dia
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        className="flex-1 h-9 text-xs shadow-sm bg-red-600 hover:bg-red-700 text-white"
-                                        onClick={() => {
-                                            closePaymentsDay();
-                                            setShowCloseConfirm(false);
-                                            toast("Dia fechado com sucesso. Histórico salvo!", "success");
-                                        }}
-                                    >
-                                        Confirmar Fechamento
-                                    </Button>
-                                )}
-
+                        <div className="flex gap-2">
+                            {!showCloseConfirm ? (
                                 <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-9 w-9 shrink-0 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800"
-                                    title="Validar Horas"
-                                    disabled={paymentContext.locked}
-                                    onClick={() => validateHours()}
+                                    className="flex-1 h-9 text-xs font-bold transition-all shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
+                                    disabled={!canClose}
+                                    onClick={() => setShowCloseConfirm(true)}
                                 >
-                                    <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                                    <Lock className="mr-1.5 h-3.5 w-3.5" /> Salvar Histórico do Dia
                                 </Button>
-                            </div>
-                        )}
+                            ) : (
+                                <Button
+                                    className="flex-1 h-9 text-xs shadow-sm bg-red-600 hover:bg-red-700 text-white"
+                                    onClick={() => {
+                                        closePaymentsDay();
+                                        setShowCloseConfirm(false);
+                                        toast("Histórico do dia salvo com sucesso!", "success");
+                                    }}
+                                >
+                                    Confirmar Salvamento
+                                </Button>
+                            )}
+
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="h-9 w-9 shrink-0 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800"
+                                title="Validar Horas"
+                                onClick={() => validateHours()}
+                            >
+                                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                            </Button>
+                        </div>
                     </div>
 
                 </CardContent>
