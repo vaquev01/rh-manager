@@ -353,23 +353,23 @@ export function ScheduleBuilder() {
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── LEFT: People Pool ── */}
       <Card className="flex w-full lg:w-[230px] xl:w-[260px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
-        <div className="px-3 py-3">
-          <h3 className="flex items-center gap-2 text-sm font-bold text-foreground">
-            <Users className="h-4 w-4 text-primary" />
+        <div className="px-3 py-2">
+          <h3 className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1 mt-0.5">
+            <Users className="h-3.5 w-3.5 text-primary" />
             Equipe Disponível
           </h3>
-          <p className="text-[11px] text-muted-foreground mt-1">
+          <p className="text-[9px] text-muted-foreground leading-tight">
             Arraste os cartões para a escala
           </p>
         </div>
 
         {/* Type Filter - Segmented Control */}
-        <div className="px-3 pb-3">
-          <div className="flex bg-slate-200/50 p-1 rounded-lg">
+        <div className="px-3 pb-1.5">
+          <div className="flex bg-slate-200/50 p-0.5 rounded-md">
             <button
               onClick={() => setSelectedType("ALL")}
               className={cn(
-                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                "flex-1 text-[9px] uppercase tracking-wider font-semibold py-1 rounded transition-all",
                 selectedType === "ALL" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
@@ -378,7 +378,7 @@ export function ScheduleBuilder() {
             <button
               onClick={() => setSelectedType("FIXO")}
               className={cn(
-                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                "flex-1 text-[9px] uppercase tracking-wider font-semibold py-1 rounded transition-all",
                 selectedType === "FIXO" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
@@ -387,7 +387,7 @@ export function ScheduleBuilder() {
             <button
               onClick={() => setSelectedType("FREELA")}
               className={cn(
-                "flex-1 text-[10px] font-semibold py-1.5 rounded-md transition-all",
+                "flex-1 text-[9px] uppercase tracking-wider font-semibold py-1 rounded transition-all",
                 selectedType === "FREELA" ? "bg-background text-primary shadow-sm" : "text-muted-foreground hover:text-foreground/90"
               )}
             >
@@ -397,36 +397,36 @@ export function ScheduleBuilder() {
         </div>
 
         {/* Shift selector */}
-        <div className="border-b px-3 py-2 bg-muted/10">
-          <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">
+        <div className="border-b border-t px-3 py-1.5 bg-muted/10">
+          <label className="text-[8px] font-bold uppercase tracking-wider text-muted-foreground mb-1 block">
             Turno ao escalar
           </label>
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-1 px-1">
             {SHIFTS.map((shift, idx) => (
               <Button
                 key={shift.id}
                 variant={selectedShiftIdx === idx ? "primary" : "outline"}
                 size="sm"
                 className={cn(
-                  "h-auto flex-col items-start px-2 py-1 text-left transition-all",
+                  "h-auto flex-col items-start px-2 py-0.5 text-left transition-all",
                   selectedShiftIdx === idx ? "border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"
                 )}
                 onClick={() => setSelectedShiftIdx(idx)}
               >
-                <div className="font-semibold text-[11px] leading-none mb-0.5">{shift.label}</div>
-                <div className="text-[9px] opacity-80 font-mono">{shift.inicio}-{shift.fim}</div>
+                <div className="font-semibold text-[10px] leading-tight mt-0.5">{shift.label}</div>
+                <div className="text-[8px] opacity-80 font-mono mb-0.5">{shift.inicio}-{shift.fim}</div>
               </Button>
             ))}
           </div>
         </div>
 
         {/* Search */}
-        <div className="px-4 pb-2">
+        <div className="px-3 pt-2 pb-1.5">
           <div className="relative group">
-            <Search className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground/70 group-focus-within:text-primary transition-colors" />
             <Input
               type="text"
-              className="h-9 pl-9 text-xs bg-background border-border focus:border-primary/50 focus:ring-primary/20 transition-all shadow-sm"
+              className="h-7 pl-8 text-[11px] bg-background border-border focus:border-primary/50 focus:ring-primary/20 transition-all shadow-sm rounded-md"
               placeholder="Buscar por nome ou cargo..."
               value={searchPool}
               onChange={(e) => setSearchPool(e.target.value)}
