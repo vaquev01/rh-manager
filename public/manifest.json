@@ -1,0 +1,23 @@
+{
+    "name": "B People",
+    "short_name": "B People",
+    "description": "Plataforma inteligente de People Ops multi-empresa",
+    "start_url": "/landing",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#0d9488",
+    "orientation": "any",
+    "icons": [
+        {
+            "src": "/favicon.svg",
+            "sizes": "any",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "business",
+        "productivity"
+    ],
+    "lang": "pt-BR"
+}

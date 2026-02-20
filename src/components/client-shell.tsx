@@ -1,37 +1,44 @@
 "use client";
 
 import { ReactNode } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
 import { AuthProvider, useAuth } from "@/components/auth-context";
+import { ErrorBoundary } from "@/components/error-boundary";
+import { PageSkeleton } from "@/components/loading-skeleton";
 import { AppFrame } from "@/components/app-frame";
 import { AppStateProvider } from "@/components/state-provider";
 import { ToastProvider } from "@/components/toast";
 
 function AuthGuardedShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, loading } = useAuth();
 
   // Public routes — render directly without AppFrame
   const isPublic = pathname === "/landing" || pathname === "/login";
   if (isPublic) {
-    return <>{children}</>;
+    return <ErrorBoundary>{children}</ErrorBoundary>;
+  }
+
+  // Show loading skeleton while checking auth
+  if (loading) {
+    return <PageSkeleton />;
   }
 
   // If not logged in, redirect to landing
   if (!user) {
-    // We can't use router.push in render, so show landing redirect
-    if (typeof window !== "undefined") {
-      window.location.href = "/landing";
-    }
-    return null;
+    router.replace("/landing");
+    return <PageSkeleton />;
   }
 
   // Authenticated app routes
   return (
     <AppStateProvider>
       <ToastProvider>
-        <AppFrame>{children}</AppFrame>
+        <ErrorBoundary>
+          <AppFrame>{children}</AppFrame>
+        </ErrorBoundary>
       </ToastProvider>
     </AppStateProvider>
   );
