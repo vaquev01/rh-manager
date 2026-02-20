@@ -615,6 +615,42 @@ export function createInitialState(): AppState {
         criterioObservavel: "Escala sem buraco critico por 4 semanas"
       }
     ],
+    recruitmentCandidates: [
+      {
+        id: "cand-1",
+        nome: "Alice Ferreira",
+        telefone: "11999999999",
+        email: "alice@example.com",
+        status: "NOVA_APLICACAO",
+        origem: "Gupy",
+        dataAplicacao: "2026-02-18",
+        vagaId: "vga-1",
+        cargoId: "role-attendant",
+        observacoes: "Experiência anterior com varejo."
+      },
+      {
+        id: "cand-2",
+        nome: "Bruno Souza",
+        telefone: "11988888888",
+        email: "bruno.s@example.com",
+        status: "BANCO_TALENTOS",
+        origem: "LinkedIn",
+        dataAplicacao: "2026-02-01",
+        cargoId: "role-cook",
+        anotacoesRH: "Muito bom perfil técnico, armazenar para futuras vagas de liderança."
+      },
+      {
+        id: "cand-3",
+        nome: "Carla Dias",
+        telefone: "11977777777",
+        email: "carla.d@example.com",
+        status: "EM_PROCESSO",
+        origem: "Indicação Interna",
+        dataAplicacao: "2026-02-15",
+        vagaId: "vga-1",
+        cargoId: "role-attendant"
+      }
+    ],
     onboardingItems: [
       { id: "on1", cargoId: "role-attendant", marcoDia: 1, titulo: "Boas-vindas e tour", ownerRole: "RH" },
       { id: "on2", cargoId: "role-attendant", marcoDia: 7, titulo: "Checklist caixa", ownerRole: "GESTOR" },

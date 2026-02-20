@@ -320,6 +320,21 @@ export interface RecruitmentVaga {
   checklist: RecruitmentStage[];
 }
 
+export interface RecruitmentCandidate {
+  id: string;
+  nome: string;
+  telefone: string;
+  email: string;
+  vagaId?: string;
+  cargoId?: string;
+  status: "NOVA_APLICACAO" | "EM_PROCESSO" | "APROVADO" | "REPROVADO" | "BANCO_TALENTOS";
+  origem: string;
+  dataAplicacao: string;
+  curriculoUrl?: string;
+  observacoes?: string;
+  anotacoesRH?: string;
+}
+
 export interface Training {
   id: string;
   nome: string;
@@ -418,6 +433,7 @@ export interface AppState {
   connectorWebhooks: ConnectorWebhook[];
   connectorEvents: ConnectorEvent[];
   recruitmentVagas: RecruitmentVaga[];
+  recruitmentCandidates: RecruitmentCandidate[];
   trainings: Training[];
   trainingCompletions: TrainingCompletion[];
   competencies: CompetencyRole[];

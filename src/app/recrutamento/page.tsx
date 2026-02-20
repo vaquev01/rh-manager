@@ -28,7 +28,7 @@ export default function RecrutamentoPage() {
   const [selectedVagaId, setSelectedVagaId] = useState<string | null>(
     state.recruitmentVagas[0]?.id ?? null
   );
-  const [viewMode, setViewMode] = useState<"table" | "kanban">("kanban");
+  const [viewMode, setViewMode] = useState<"table" | "kanban" | "talentos">("kanban");
   const [lastChargeCount, setLastChargeCount] = useState<number>(0);
   const { toast } = useToast();
 
@@ -148,6 +148,17 @@ export default function RecrutamentoPage() {
   const atrasadasCount = vagasView.filter((i) => i.delayedStages.length > 0).length;
   const slaMedio = totalVagas > 0 ? Math.round(vagasView.reduce((s, i) => s + i.slaDiasAberta, 0) / totalVagas) : 0;
 
+  const candidatesView = useMemo(() => {
+    return (state.recruitmentCandidates || []).filter((cand) => {
+      if (filters.cargoId && cand.cargoId !== filters.cargoId) return false;
+      return true;
+    }).map(cand => ({
+      ...cand,
+      role: state.roles.find(r => r.id === cand.cargoId),
+      vaga: state.recruitmentVagas.find(v => v.id === cand.vagaId)
+    }));
+  }, [state.recruitmentCandidates, filters, state.roles, state.recruitmentVagas]);
+
   return (
     <div className="page-enter grid gap-6 xl:grid-cols-[1.35fr,1fr]">
       <section className="space-y-6">
@@ -230,6 +241,14 @@ export default function RecrutamentoPage() {
                     title="Modo Kanban"
                   >
                     <LayoutGrid className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={() => setViewMode("talentos")}
+                    className={`p-1.5 rounded-md text-muted-foreground hover:text-foreground transition-all flex items-center gap-1.5 ${viewMode === "talentos" ? "bg-background shadow-sm text-foreground font-semibold" : ""}`}
+                    title="Banco de Talentos"
+                  >
+                    <Users className="h-4 w-4" />
+                    <span className="text-[10px] uppercase font-bold tracking-wider hidden sm:inline-block">Talentos</span>
                   </button>
                 </div>
                 <Button
@@ -333,7 +352,7 @@ export default function RecrutamentoPage() {
                   </tbody>
                 </table>
               </div>
-            ) : (
+            ) : viewMode === "kanban" ? (
               <div className="flex gap-4 p-5 overflow-x-auto min-h-[400px] items-start bg-slate-50/50 dark:bg-muted/10">
                 {kanbanColumns.map(col => {
                   const colItems = vagasView.filter(v => (v.stageAtual?.nome ?? "Início") === col);
@@ -399,11 +418,56 @@ export default function RecrutamentoPage() {
                   );
                 })}
               </div>
-            )}
+            ) : viewMode === "talentos" ? (
+              <div className="p-5 overflow-auto max-h-[600px] bg-slate-50/50 dark:bg-muted/10 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {candidatesView.map(cand => (
+                  <div key={cand.id} className="bg-background rounded-xl border border-border p-4 shadow-sm hover:shadow-md transition-all relative group cursor-pointer hover:border-blue-200">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground leading-tight group-hover:text-blue-600 transition-colors">{cand.nome}</h4>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">{cand.email}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">{cand.telefone}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] bg-muted/30 shadow-sm">{cand.origem}</Badge>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 mt-3 mb-1">
+                      {cand.status === "NOVA_APLICACAO" && <Badge className="bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-blue-200">Nova Aplicação</Badge>}
+                      {cand.status === "EM_PROCESSO" && <Badge className="bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 hover:bg-purple-200">Em Processo</Badge>}
+                      {cand.status === "BANCO_TALENTOS" && <Badge className="bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-300">Banco</Badge>}
+                      {cand.status === "APROVADO" && <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-200">Aprovado</Badge>}
+                      {cand.status === "REPROVADO" && <Badge className="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-200">Reprovado</Badge>}
+                      <Badge variant="secondary" className="text-[9px] bg-muted/40 text-foreground/80 font-normal">
+                        {cand.role?.nome ?? "Múltiplos"}
+                      </Badge>
+                    </div>
+                    {cand.vaga && (
+                      <div className="mt-3 pt-3 border-t border-border/50 text-[10px] font-medium text-foreground/80 flex items-center justify-between">
+                        <span className="text-muted-foreground/60">Vaga Ativa:</span>
+                        <span className="font-mono bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded cursor-pointer hover:underline" onClick={() => { setViewMode("kanban"); setSelectedVagaId(cand.vagaId ?? null); }}>#{cand.vaga.id.slice(0, 6)}</span>
+                      </div>
+                    )}
+                    {cand.anotacoesRH && (
+                      <p className="mt-2 text-[10px] text-muted-foreground italic bg-yellow-50 dark:bg-yellow-900/10 p-2 text-yellow-800 dark:text-yellow-200/70 rounded line-clamp-2 border border-yellow-100 dark:border-yellow-900/30">
+                        &quot;{cand.anotacoesRH}&quot;
+                      </p>
+                    )}
+                  </div>
+                ))}
+                {candidatesView.length === 0 && (
+                  <div className="col-span-full py-12 flex flex-col items-center justify-center text-center">
+                    <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center mb-3 border border-border/50 shadow-sm">
+                      <Inbox className="h-6 w-6 text-muted-foreground/60" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground/80 mb-1">Nenhum talento salvo.</p>
+                    <p className="text-xs text-muted-foreground">Seu banco de talentos está vazio ou não corresponde aos filtros atuais.</p>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
-        {selectedVaga && (
+        {viewMode !== "talentos" && selectedVaga && (
           <Card className="border-border shadow-lg ring-1 ring-slate-200/50">
             <CardHeader className="px-6 py-5 border-b border-border/50 bg-muted/30">
               <div className="flex items-start justify-between">
@@ -417,7 +481,7 @@ export default function RecrutamentoPage() {
                     </Badge>
                   </div>
                   <CardTitle className="text-base font-bold text-foreground">
-                    Checklist de Atividades
+                    Linha do Tempo da Vaga
                   </CardTitle>
                 </div>
                 <div className="text-right">
@@ -427,99 +491,129 @@ export default function RecrutamentoPage() {
               </div>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-4 max-h-[600px] overflow-auto">
-              {selectedVaga.vaga.checklist.map((stage, index) => {
-                const isCompleted = stage.status === "CONCLUIDA";
-                const isLate = stage.prazo < date && !isCompleted;
+            <CardContent className="p-6 space-y-6 max-h-[600px] overflow-auto">
 
-                return (
-                  <article
-                    key={stage.id}
-                    className={`group relative rounded-xl border p-4 transition-all duration-300 ${isCompleted ? "bg-muted/50 border-border opacity-80 hover:opacity-100" : "bg-background border-border shadow-sm hover:shadow-md hover:border-blue-200 dark:border-blue-800"}`}
-                  >
-                    {/* Connecting Line */}
-                    {index < selectedVaga.vaga.checklist.length - 1 && (
-                      <div className="absolute left-[19px] top-[50px] bottom-[-20px] w-[2px] bg-muted -z-10 group-hover:bg-blue-50 dark:bg-blue-900/20 transition-colors" />
-                    )}
+              {/* Canais de Publicação */}
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Canais de Publicação Ativos</h4>
+                <div className="flex gap-2">
+                  <div className="flex items-center gap-2 bg-[#0A66C2]/10 dark:bg-[#0A66C2]/20 border border-[#0A66C2]/20 rounded-lg px-3 py-2 cursor-pointer hover:bg-[#0A66C2]/15 transition-colors">
+                    <div className="font-bold text-[#0A66C2] text-[11px]">in</div>
+                    <span className="text-xs font-semibold text-foreground/80">LinkedIn</span>
+                  </div>
+                  <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-900/50 rounded-lg px-3 py-2 cursor-pointer hover:bg-blue-100 transition-colors">
+                    <div className="font-bold text-blue-600 text-[11px] bg-blue-100 dark:bg-blue-800 rounded px-1">G</div>
+                    <span className="text-xs font-semibold text-foreground/80">Gupy</span>
+                  </div>
+                  <Button variant="outline" size="sm" className="h-8 border-dashed text-muted-foreground">
+                    + Adicionar Canal
+                  </Button>
+                </div>
+              </div>
 
-                    <div className="flex flex-col gap-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${isCompleted ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400" : isLate ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400" : "bg-background border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400"}`}>
-                            {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <span className="text-xs font-bold">{index + 1}</span>}
+              {/* Fases do Processo Seletivo */}
+              <div>
+                <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-4">Etapas do Processo Seletivo</h4>
+                <div className="space-y-4 relative">
+                  {/* Linha guia contínua do timeline */}
+                  <div className="absolute left-[35px] top-4 bottom-8 w-[2px] bg-border -z-10" />
+
+                  {selectedVaga.vaga.checklist.map((stage, index) => {
+                    const isCompleted = stage.status === "CONCLUIDA";
+                    const isLate = stage.prazo < date && !isCompleted;
+
+                    return (
+                      <article
+                        key={stage.id}
+                        className={`group relative rounded-xl border p-4 transition-all duration-300 ml-5 ${isCompleted ? "bg-muted/50 border-border opacity-80 hover:opacity-100" : "bg-background border-border shadow-sm hover:shadow-md hover:border-blue-200 dark:border-blue-800"}`}
+                      >
+                        {/* Indicador Bolinha do Timeline sobre a linha guia */}
+                        <div className={`absolute -left-[26px] top-5 h-4 w-4 rounded-full border-4 z-10 transition-colors ${isCompleted ? "bg-emerald-500 border-emerald-100 dark:border-emerald-900" : isLate ? "bg-red-500 border-red-100 dark:border-red-900 animate-pulse" : "bg-blue-500 border-blue-100 dark:border-blue-900"}`} />
+
+                        <div className="flex flex-col gap-3">
+                          {/* Connecting Line removed since we added a global guide line outside */}
+
+
+                          <div className="flex flex-col gap-3">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className={`h-8 w-8 rounded-full flex items-center justify-center border-2 ${isCompleted ? "bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400" : isLate ? "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-600 dark:text-red-400" : "bg-background border-blue-200 dark:border-blue-800 text-blue-600 dark:text-blue-400"}`}>
+                                  {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <span className="text-xs font-bold">{index + 1}</span>}
+                                </div>
+                                <div>
+                                  <p className={`text-sm font-bold ${isCompleted ? "text-muted-foreground line-through decoration-slate-300" : "text-foreground"}`}>
+                                    {stage.nome}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">
+                                    Responsável: {stage.ownerRole}
+                                  </p>
+                                </div>
+                              </div>
+                              <div>
+                                {stage.opcional && <Badge variant="secondary" className="text-[10px] mr-2">Opcional</Badge>}
+                                {isLate && <Badge variant="danger" className="text-[10px]">Atrasada</Badge>}
+                                {isCompleted && <Badge variant="ok" className="text-[10px]">Concluido</Badge>}
+                              </div>
+                            </div>
+
+                            <div className="pl-11 grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div>
+                                <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">Status</label>
+                                <Select
+                                  value={stage.status}
+                                  onValueChange={(val) =>
+                                    updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
+                                      status: val as "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA"
+                                    })
+                                  }
+                                >
+                                  <SelectTrigger className={`h-8 text-xs ${isCompleted ? "bg-emerald-50 dark:bg-emerald-900/20/50 border-emerald-100 text-emerald-700 dark:text-emerald-300" : ""}`}>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="PENDENTE">Pendente</SelectItem>
+                                    <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
+                                    <SelectItem value="CONCLUIDA">Concluída</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div>
+                                <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">Prazo</label>
+                                <Input
+                                  className="h-8 text-xs"
+                                  type="date"
+                                  value={stage.prazo}
+                                  onChange={(event) =>
+                                    updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
+                                      prazo: event.target.value
+                                    })
+                                  }
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">
+                                  Evidência <span className="font-normal text-muted-foreground/40 ml-1">({stage.evidenciaMinima})</span>
+                                </label>
+                                <Input
+                                  className="h-8 text-xs"
+                                  value={stage.evidencia ?? ""}
+                                  placeholder="Cole link ou texto..."
+                                  onChange={(event) =>
+                                    updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
+                                      evidencia: event.target.value
+                                    })
+                                  }
+                                />
+                              </div>
+                            </div>
                           </div>
-                          <div>
-                            <p className={`text-sm font-bold ${isCompleted ? "text-muted-foreground line-through decoration-slate-300" : "text-foreground"}`}>
-                              {stage.nome}
-                            </p>
-                            <p className="text-[10px] text-muted-foreground">
-                              Responsável: {stage.ownerRole}
-                            </p>
-                          </div>
-                        </div>
-                        <div>
-                          {stage.opcional && <Badge variant="secondary" className="text-[10px] mr-2">Opcional</Badge>}
-                          {isLate && <Badge variant="danger" className="text-[10px]">Atrasada</Badge>}
-                          {isCompleted && <Badge variant="ok" className="text-[10px]">Concluido</Badge>}
-                        </div>
-                      </div>
-
-                      <div className="pl-11 grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div>
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">Status</label>
-                          <Select
-                            value={stage.status}
-                            onValueChange={(val) =>
-                              updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
-                                status: val as "PENDENTE" | "EM_ANDAMENTO" | "CONCLUIDA"
-                              })
-                            }
-                          >
-                            <SelectTrigger className={`h-8 text-xs ${isCompleted ? "bg-emerald-50 dark:bg-emerald-900/20/50 border-emerald-100 text-emerald-700 dark:text-emerald-300" : ""}`}>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="PENDENTE">Pendente</SelectItem>
-                              <SelectItem value="EM_ANDAMENTO">Em andamento</SelectItem>
-                              <SelectItem value="CONCLUIDA">Concluída</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">Prazo</label>
-                          <Input
-                            className="h-8 text-xs"
-                            type="date"
-                            value={stage.prazo}
-                            onChange={(event) =>
-                              updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
-                                prazo: event.target.value
-                              })
-                            }
-                          />
-                        </div>
-
-                        <div>
-                          <label className="text-[10px] font-bold text-muted-foreground/70 uppercase tracking-wide mb-1 block">
-                            Evidência <span className="font-normal text-muted-foreground/40 ml-1">({stage.evidenciaMinima})</span>
-                          </label>
-                          <Input
-                            className="h-8 text-xs"
-                            value={stage.evidencia ?? ""}
-                            placeholder="Cole link ou texto..."
-                            onChange={(event) =>
-                              updateRecruitmentStage(selectedVaga.vaga.id, stage.id, {
-                                evidencia: event.target.value
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
