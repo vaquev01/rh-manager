@@ -1,0 +1,329 @@
+// B People — Prisma Schema
+// Ready for Supabase PostgreSQL. Run: npx prisma migrate dev
+// To use: npm install prisma @prisma/client && npx prisma init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ── Multi-tenant ────────────────────────
+
+model Tenant {
+  id        String   @id @default(uuid())
+  slug      String   @unique
+  nome      String
+  plano     String   @default("starter") // starter | professional | enterprise
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  users     User[]
+  companies Company[]
+  templates Template[]
+  webhooks  Webhook[]
+  auditLogs AuditLog[]
+
+  @@map("tenants")
+}
+
+// ── Auth ────────────────────────────────
+
+model User {
+  id        String   @id @default(uuid())
+  tenantId  String
+  email     String
+  senhaHash String
+  nome      String
+  role      UserRole @default(RH)
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+  ultimoLogin DateTime?
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, email])
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  GERENTE
+  RH
+}
+
+// ── Organization ────────────────────────
+
+model Company {
+  id        String   @id @default(uuid())
+  tenantId  String
+  nome      String
+  cnpj      String?
+  segmento  String?
+  ativo     Boolean  @default(true)
+  criadoEm  DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  units     Unit[]
+
+  @@map("companies")
+}
+
+model Unit {
+  id        String   @id @default(uuid())
+  companyId String
+  nome      String
+  criadoEm  DateTime @default(now())
+
+  company   Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  teams     Team[]
+  persons   Person[]
+  schedules ScheduleEntry[]
+
+  @@map("units")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  unitId    String
+  nome      String
+  criadoEm  DateTime @default(now())
+
+  unit      Unit     @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  persons   Person[]
+
+  @@map("teams")
+}
+
+model JobRole {
+  id        String   @id @default(uuid())
+  nome      String
+  nivel     String?
+  area      String?
+  criadoEm  DateTime @default(now())
+
+  persons   Person[]
+  competencies RoleCompetency[]
+
+  @@map("job_roles")
+}
+
+// ── People ──────────────────────────────
+
+model Person {
+  id            String       @id @default(uuid())
+  nome          String
+  cpf           String?
+  email         String?
+  telefone      String?
+  tipo          PersonType   @default(FIXO)
+  status        PersonStatus @default(ATIVO)
+  unitId        String
+  teamId        String?
+  cargoId       String
+  dataAdmissao  DateTime?
+  dataNascimento DateTime?
+  pix           String?
+  valorHora     Float        @default(0)
+  foto          String?
+  criadoEm      DateTime     @default(now())
+  atualizadoEm  DateTime     @updatedAt
+
+  unit          Unit         @relation(fields: [unitId], references: [id])
+  team          Team?        @relation(fields: [teamId], references: [id])
+  cargo         JobRole      @relation(fields: [cargoId], references: [id])
+  schedules     ScheduleEntry[]
+  competencies  PersonCompetency[]
+  payments      Payment[]
+
+  @@map("persons")
+}
+
+enum PersonType {
+  FIXO
+  FREELA
+}
+
+enum PersonStatus {
+  ATIVO
+  FERIAS
+  AFASTADO
+  OFF_HOJE
+}
+
+// ── Scheduling ──────────────────────────
+
+model ScheduleEntry {
+  id        String   @id @default(uuid())
+  personId  String
+  unitId    String
+  date      DateTime @db.Date
+  turno     String
+  inicio    String
+  fim       String
+  criadoEm  DateTime @default(now())
+
+  person    Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+  unit      Unit     @relation(fields: [unitId], references: [id])
+
+  @@unique([personId, date])
+  @@index([date])
+  @@map("schedule_entries")
+}
+
+// ── Payments ────────────────────────────
+
+model Payment {
+  id          String   @id @default(uuid())
+  personId    String
+  date        DateTime @db.Date
+  horasTrabalhadas Float
+  valorHora   Float
+  adicionais  Float    @default(0)
+  total       Float
+  statusPix   String   @default("PENDENTE") // PENDENTE | ENVIADO | CONFIRMADO
+  criadoEm    DateTime @default(now())
+
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, date])
+  @@index([date])
+  @@map("payments")
+}
+
+// ── Communications ──────────────────────
+
+model Template {
+  id        String   @id @default(uuid())
+  tenantId  String
+  nome      String
+  conteudo  String
+  criadoEm  DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  dispatches CommunicationDispatch[]
+
+  @@map("templates")
+}
+
+model CommunicationDispatch {
+  id          String   @id @default(uuid())
+  templateId  String?
+  conteudo    String
+  canal       String   @default("whatsapp")
+  destinatarios Int
+  status      String   @default("PENDENTE")
+  disparadoPor String
+  criadoEm    DateTime @default(now())
+
+  template    Template? @relation(fields: [templateId], references: [id])
+
+  @@index([criadoEm])
+  @@map("communication_dispatches")
+}
+
+// ── Webhooks ────────────────────────────
+
+model Webhook {
+  id        String   @id @default(uuid())
+  tenantId  String
+  nome      String
+  endpoint  String
+  ativo     Boolean  @default(false)
+  eventos   String[] // array of event names
+  criadoEm  DateTime @default(now())
+
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("webhooks")
+}
+
+// ── Competencies ────────────────────────
+
+model RoleCompetency {
+  id        String   @id @default(uuid())
+  cargoId   String
+  nome      String
+  peso      Int      @default(1)
+
+  cargo     JobRole  @relation(fields: [cargoId], references: [id], onDelete: Cascade)
+
+  @@unique([cargoId, nome])
+  @@map("role_competencies")
+}
+
+model PersonCompetency {
+  id          String   @id @default(uuid())
+  personId    String
+  competencia String
+  nota        Int      // 1-5
+  feedback    String?
+  avaliadoPor String?
+  criadoEm    DateTime @default(now())
+
+  person      Person   @relation(fields: [personId], references: [id], onDelete: Cascade)
+
+  @@unique([personId, competencia])
+  @@map("person_competencies")
+}
+
+// ── Recruitment ─────────────────────────
+
+model Vacancy {
+  id          String   @id @default(uuid())
+  titulo      String
+  descricao   String?
+  cargoId     String?
+  unitId      String?
+  status      String   @default("ABERTA") // ABERTA | EM_PROCESSO | FECHADA | CANCELADA
+  prioridade  String   @default("MEDIA")
+  criadoEm    DateTime @default(now())
+  fechadoEm   DateTime?
+
+  candidates  Candidate[]
+
+  @@index([status])
+  @@map("vacancies")
+}
+
+model Candidate {
+  id          String   @id @default(uuid())
+  vagaId      String
+  nome        String
+  email       String?
+  telefone    String?
+  etapa       String   @default("TRIAGEM") // TRIAGEM | ENTREVISTA | TESTE | OFERTA | CONTRATADO | REPROVADO
+  nota        Int?
+  observacoes String?
+  criadoEm    DateTime @default(now())
+  atualizadoEm DateTime @updatedAt
+
+  vaga        Vacancy  @relation(fields: [vagaId], references: [id], onDelete: Cascade)
+
+  @@map("candidates")
+}
+
+// ── Audit Log ───────────────────────────
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  tenantId    String
+  userId      String
+  userEmail   String
+  acao        String
+  recurso     String
+  recursoId   String?
+  detalhes    Json?
+  ip          String?
+  criadoEm    DateTime @default(now())
+
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, criadoEm])
+  @@index([userId])
+  @@map("audit_logs")
+}
