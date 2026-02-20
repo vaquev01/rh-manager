@@ -13,8 +13,8 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "RH Manager | People Ops",
-  description: "Sistema de gestão de escalas e pagamentos",
+  title: "B People | People Ops",
+  description: "Plataforma inteligente de People Ops multi-empresa",
   icons: {
     icon: "/favicon.svg",
   },

@@ -166,7 +166,7 @@ export default function ComunicadosPage() {
                   <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-400 border-2 border-[#075e54] rounded-full" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-[14px] leading-tight text-white truncate">RH Manager</h4>
+                  <h4 className="font-bold text-[14px] leading-tight text-white truncate">B People</h4>
                   <p className="text-[10px] text-white/80 font-medium">Business Account</p>
                 </div>
               </div>

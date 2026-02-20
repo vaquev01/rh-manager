@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users } from "lucide-react";
+import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut } from "lucide-react";
 
 import {
   Select,
@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/select";
 import { ROLE_LABEL } from "@/lib/constants";
 import { useAppState } from "@/components/state-provider";
+import { useAuth } from "@/components/auth-context";
 
 const NAV_ITEMS = [
   {
@@ -100,6 +101,8 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
     return true;
   });
 
+  const { logout, user } = useAuth();
+
   return (
     <div className="min-h-screen pb-10">
       <a
@@ -111,9 +114,14 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
       <header className="px-5 pt-4 md:px-8 md:pt-6">
         <div className="panel mb-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 px-4 py-3 md:px-6">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">People Ops Multi-Empresa</p>
-              <h1 className="text-lg font-semibold text-ink">Central Operacional</h1>
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <span className="text-primary-foreground font-black text-sm">B</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">B People · Multi-Empresa</p>
+                <h1 className="text-lg font-semibold text-ink">Central Operacional</h1>
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground/90">
               <span className="badge badge-ok">Perfil: {ROLE_LABEL[actor.role]}</span>
@@ -140,6 +148,14 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 title={dark ? "Modo claro" : "Modo escuro"}
               >
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+              </button>
+              <button
+                className="button ghost inline-flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => { logout(); window.location.href = "/landing"; }}
+                title={`Sair (${user?.email})`}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                Sair
               </button>
             </div>
           </div>
