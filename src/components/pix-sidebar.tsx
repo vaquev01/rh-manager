@@ -240,24 +240,24 @@ export function PixSidebar() {
 
                     {/* Controls */}
                     <div className="space-y-2 hide-on-print bg-muted/30 p-2 rounded-lg border border-border/50">
-                        <div className="flex gap-2">
+                        <div className="grid grid-cols-2 gap-1.5">
                             <Select
                                 value={paymentContext.config.mode}
                                 onValueChange={(val) => setPaymentMode(val as any)}
                             >
-                                <SelectTrigger className="h-7 text-[10px] flex-1 font-bold bg-background">
+                                <SelectTrigger className="h-7 text-[9px] font-bold bg-background">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="CUSTO" className="text-[10px]">Custo Operacional</SelectItem>
-                                    <SelectItem value="PAGAMENTO" className="text-[10px]">Modo Pagamento</SelectItem>
+                                    <SelectItem value="CUSTO" className="text-[10px]">Custo</SelectItem>
+                                    <SelectItem value="PAGAMENTO" className="text-[10px]">Pagamento</SelectItem>
                                 </SelectContent>
                             </Select>
                             <Select
                                 value={paymentContext.config.fonteHoras}
                                 onValueChange={(val) => setHoursSource(val as any)}
                             >
-                                <SelectTrigger className="h-7 text-[10px] flex-1 bg-background">
+                                <SelectTrigger className="h-7 text-[9px] bg-background">
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -268,53 +268,51 @@ export function PixSidebar() {
                             </Select>
                         </div>
 
-                        <div className="flex gap-2 items-center">
-                            <div className="bg-background rounded-md border border-input flex items-center h-7 px-2">
-                                <span className="text-[9px] font-bold text-muted-foreground uppercase mr-1">Hrs</span>
+                        <div className="flex gap-1.5 items-center">
+                            <div className="bg-background rounded-md border border-input flex items-center h-7 px-2 shrink-0">
+                                <span className="text-[8px] font-bold text-muted-foreground uppercase mr-1">Hrs</span>
                                 <Input
                                     type="number"
-                                    className="h-5 w-10 text-[10px] border-none px-1 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+                                    className="h-5 w-8 text-[10px] border-none px-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-center"
                                     min={0}
                                     step={0.25}
                                     value={paymentContext.config.horasPadraoDia}
                                     onChange={(e) => setGlobalStandardHours(Number(e.target.value))}
                                 />
                             </div>
-                            <div className="flex-1 flex gap-1">
-                                <Select
-                                    value={globalAdditionalDraft.tipo}
-                                    onValueChange={(val) => setGlobalAdditionalDraft(p => ({ ...p, tipo: val as any }))}
-                                >
-                                    <SelectTrigger className="h-7 text-[10px] flex-1 bg-background">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {additionalTypes.map(t => <SelectItem key={t.id} value={t.nome} className="text-[10px]">{t.nome}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <Input
-                                    type="number"
-                                    className="h-7 w-12 text-[10px] bg-background text-center px-1"
-                                    placeholder="R$"
-                                    value={globalAdditionalDraft.valor}
-                                    onChange={(e) => setGlobalAdditionalDraft(p => ({ ...p, valor: Number(e.target.value) }))}
-                                />
-                                <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    className="h-7 w-7 p-0 bg-background border border-border shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground"
-                                    onClick={() => {
-                                        setGlobalAdditional({
-                                            ...globalAdditionalDraft,
-                                            descricao: globalAdditionalDraft.descricao.trim() || undefined
-                                        });
-                                        toast("Adicional aplicado", "success");
-                                    }}
-                                    title="Aplicar Adicional Global à Equipe"
-                                >
-                                    +
-                                </Button>
-                            </div>
+                            <Select
+                                value={globalAdditionalDraft.tipo}
+                                onValueChange={(val) => setGlobalAdditionalDraft(p => ({ ...p, tipo: val as any }))}
+                            >
+                                <SelectTrigger className="h-7 text-[9px] flex-1 bg-background min-w-0">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {additionalTypes.map(t => <SelectItem key={t.id} value={t.nome} className="text-[10px]">{t.nome}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                            <Input
+                                type="number"
+                                className="h-7 w-14 text-[10px] bg-background text-center px-1 shrink-0"
+                                placeholder="R$"
+                                value={globalAdditionalDraft.valor}
+                                onChange={(e) => setGlobalAdditionalDraft(p => ({ ...p, valor: Number(e.target.value) }))}
+                            />
+                            <Button
+                                size="sm"
+                                variant="secondary"
+                                className="h-7 w-7 p-0 bg-background border border-border shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground"
+                                onClick={() => {
+                                    setGlobalAdditional({
+                                        ...globalAdditionalDraft,
+                                        descricao: globalAdditionalDraft.descricao.trim() || undefined
+                                    });
+                                    toast("Adicional aplicado", "success");
+                                }}
+                                title="Aplicar Adicional Global à Equipe"
+                            >
+                                +
+                            </Button>
                         </div>
                     </div>
 
@@ -468,7 +466,7 @@ export function PixSidebar() {
 
                 </CardContent>
             </Card>
-        </div>
+        </div >
     );
 }
 
