@@ -317,6 +317,7 @@ export interface RecruitmentVaga {
   dataAbertura: string;
   etapaAtualId: string;
   diasSemAvanco: number;
+  descricao?: string;
   checklist: RecruitmentStage[];
 }
 
@@ -356,8 +357,17 @@ export interface CompetencyRole {
   cargoId: string;
   nivel: string;
   competencia: string;
-  peso: number;
+  peso: number; // 0-5, expected/target level for the role
   criterioObservavel: string;
+}
+
+export interface PersonCompetencyScore {
+  id: string;
+  personId: string;
+  competencyId: string; // references CompetencyRole.id
+  score: number; // 0-5, actual person's score
+  feedback?: string; // manager/RH note
+  avaliadoEm: string; // ISO date
 }
 
 export interface OnboardingItem {
@@ -437,6 +447,7 @@ export interface AppState {
   trainings: Training[];
   trainingCompletions: TrainingCompletion[];
   competencies: CompetencyRole[];
+  personCompetencyScores: PersonCompetencyScore[];
   onboardingItems: OnboardingItem[];
   onboardingProgress: OnboardingProgress[];
   pdiItems: PDIItem[];

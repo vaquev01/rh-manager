@@ -1,13 +1,16 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AlertTriangle, BookMarked, Brain, CheckCircle2, Clock3, Inbox, Rocket, Target } from "lucide-react";
-import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { AlertTriangle, BookMarked, Brain, CheckCircle2, Clock3, Inbox, Rocket, Target, UserCheck, ChevronDown, Star } from "lucide-react";
+import { ResponsiveContainer, Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend } from "recharts";
 
 import { useToast } from "@/components/toast";
 
 import { useAppState } from "@/components/state-provider";
 import { CompetencyRole } from "@/lib/types";
+
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 export default function DesenvolvimentoPage() {
   const {
@@ -17,11 +20,19 @@ export default function DesenvolvimentoPage() {
     updateTrainingCompletion,
     sendFlashTraining,
     updateOnboardingProgress,
-    updatePdiProgress
+    updatePdiProgress,
+    upsertPersonCompetencyScore,
   } = useAppState();
 
   const [flashRecipients, setFlashRecipients] = useState<number>(0);
   const { toast } = useToast();
+
+  // Map of selectedPersonId per role card
+  const [selectedPersonByRole, setSelectedPersonByRole] = useState<Record<string, string>>({});
+  // Local draft feedback edits: key = `${personId}:${competencyId}`
+  const [feedbackDraft, setFeedbackDraft] = useState<Record<string, string>>({});
+  // Local draft scores: key = `${personId}:${competencyId}`
+  const [scoreDraft, setScoreDraft] = useState<Record<string, number>>({});
 
   const roleById = useMemo(
     () => Object.fromEntries(state.roles.map((role) => [role.id, role])),
@@ -97,6 +108,15 @@ export default function DesenvolvimentoPage() {
     return map;
   }, [state.competencies]);
 
+  // Index saved person scores by personId + competencyId
+  const scoreIndex = useMemo(() => {
+    const idx: Record<string, { score: number; feedback?: string }> = {};
+    state.personCompetencyScores.forEach((s) => {
+      idx[`${s.personId}:${s.competencyId}`] = { score: s.score, feedback: s.feedback };
+    });
+    return idx;
+  }, [state.personCompetencyScores]);
+
   const trainingRows = useMemo(() => {
     return state.trainingCompletions.map((completion) => {
       const training = trainingById[completion.trainingId];
@@ -161,48 +181,173 @@ export default function DesenvolvimentoPage() {
 
   return (
     <div className="page-enter space-y-4">
+      {/* ── MATRIZ DE COMPETÊNCIAS ─────────────────────────────── */}
       <section className="panel p-4">
-        <h2 className="inline-flex items-center gap-2 text-lg font-semibold text-foreground">
-          <Brain className="h-5 w-5" />
-          Matriz de competencias por cargo
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="inline-flex items-center gap-2 text-base font-semibold text-foreground">
+            <Brain className="h-4 w-4 text-sky-500" />
+            Matriz de competências por cargo
+          </h2>
+          <span className="text-[11px] text-muted-foreground">Selecione um colaborador para ver aderência vs. perfil ideal</span>
+        </div>
 
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div className="mt-2 grid gap-4 md:grid-cols-2">
           {visibleRoles.map((role) => {
             const competencies = competenciesByRole.get(role.id) ?? [];
+            const peopleForRole = filteredPeople.filter(p => p.cargoId === role.id);
+            const selectedPersonId = selectedPersonByRole[role.id] ?? "";
+            const selectedPerson = selectedPersonId ? personById[selectedPersonId] : null;
+
+            // Build radar data merging ideal + person scores
+            const radarData = competencies.map(c => {
+              const draftKey = `${selectedPersonId}:${c.id}`;
+              const savedEntry = scoreIndex[`${selectedPersonId}:${c.id}`];
+              const personScore = scoreDraft[draftKey] ?? savedEntry?.score ?? null;
+              return {
+                subject: c.competencia.length > 14 ? c.competencia.slice(0, 14) + "…" : c.competencia,
+                fullLabel: c.competencia,
+                ideal: c.peso,
+                pessoa: personScore,
+                fullMark: 5,
+              };
+            });
+
+            // Global adherence % (only for competencies where person has a score)
+            const scoredComps = radarData.filter(d => d.pessoa !== null);
+            const adherencePct = scoredComps.length > 0
+              ? Math.round(scoredComps.reduce((sum, d) => sum + Math.min(d.pessoa! / d.ideal, 1), 0) / scoredComps.length * 100)
+              : null;
+
             return (
-              <article key={role.id} className="rounded-xl border border-border bg-background p-3">
-                <p className="text-sm font-semibold text-foreground/90">
-                  {role.nome} · {role.nivel}
-                </p>
-                <p className="text-xs text-muted-foreground">Familia: {role.familia}</p>
+              <article key={role.id} className="rounded-xl border border-border bg-background p-4 space-y-3">
+                {/* Role header */}
+                <div className="flex items-start justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-bold text-foreground">{role.nome}</p>
+                    <p className="text-[11px] text-muted-foreground">{role.familia} · {role.nivel}</p>
+                  </div>
+                  {adherencePct !== null && (
+                    <div className={`flex flex-col items-center px-2.5 py-1 rounded-lg text-[11px] font-bold ${adherencePct >= 80 ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-400" : adherencePct >= 60 ? "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400" : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400"}`}>
+                      <span className="text-base font-black leading-none">{adherencePct}%</span>
+                      <span className="text-[9px] uppercase tracking-wide font-semibold opacity-70">aderência</span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Person selector */}
+                <div className="flex gap-2 items-center">
+                  <Select
+                    value={selectedPersonId}
+                    onValueChange={(val) => setSelectedPersonByRole(prev => ({ ...prev, [role.id]: val }))}
+                  >
+                    <SelectTrigger className="h-7 text-[11px] flex-1 bg-muted/40 border-border/60">
+                      <SelectValue placeholder="Sobrepor colaborador…" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="" className="text-[11px] text-muted-foreground italic">— Somente perfil ideal —</SelectItem>
+                      {peopleForRole.map(p => (
+                        <SelectItem key={p.id} value={p.id} className="text-[11px]">
+                          {p.nome}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
                 {competencies.length > 0 ? (
-                  <div className="mt-2 text-xs text-muted-foreground/90 flex flex-col items-center">
-                    <div className="w-full h-[220px]">
+                  <>
+                    {/* Radar chart */}
+                    <div className="w-full h-[210px]">
                       <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart data={competencies.map(c => ({
-                          subject: c.competencia.length > 15 ? c.competencia.substring(0, 15) + "..." : c.competencia,
-                          fullSubject: c.competencia,
-                          peso: c.peso,
-                          fullMark: 5
-                        }))} className="text-[10px]" cx="50%" cy="50%" outerRadius="70%">
+                        <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="68%">
                           <PolarGrid stroke="#e2e8f0" />
                           <PolarAngleAxis dataKey="subject" tick={{ fill: '#64748b', fontSize: 9 }} />
                           <PolarRadiusAxis angle={30} domain={[0, 5]} tick={false} axisLine={false} />
-                          <Radar name="Competências" dataKey="peso" stroke="#0ea5e9" fill="#38bdf8" fillOpacity={0.4} />
+                          <Radar name="Perfil Ideal" dataKey="ideal" stroke="#0ea5e9" fill="#38bdf8" fillOpacity={0.25} strokeWidth={2} />
+                          {selectedPerson && (
+                            <Radar name={selectedPerson.nome.split(" ")[0]} dataKey="pessoa" stroke="#f59e0b" fill="#fcd34d" fillOpacity={0.35} strokeWidth={2} strokeDasharray="4 2" />
+                          )}
+                          {selectedPerson && <Legend wrapperStyle={{ fontSize: 10 }} />}
                         </RadarChart>
                       </ResponsiveContainer>
                     </div>
-                    <ul className="w-full mt-2 space-y-1.5">
-                      {competencies.map((competency) => (
-                        <li key={competency.id} className="flex justify-between items-center text-[10px] pb-1 border-b border-border/50 last:border-0" title={competency.criterioObservavel}>
-                          <span className="font-medium text-foreground">{competency.competencia}</span>
-                          <span className="bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded font-mono font-bold">P{competency.peso}</span>
-                        </li>
-                      ))}
+
+                    {/* Competency breakdown + edit */}
+                    <ul className="w-full space-y-2.5">
+                      {competencies.map((c) => {
+                        const draftKey = `${selectedPersonId}:${c.id}`;
+                        const savedEntry = scoreIndex[`${selectedPersonId}:${c.id}`];
+                        const personScore = scoreDraft[draftKey] ?? savedEntry?.score;
+                        const fbKey = `${selectedPersonId}:${c.id}:fb`;
+                        const fbDraft = feedbackDraft[fbKey] ?? savedEntry?.feedback ?? "";
+                        const adh = personScore !== undefined ? Math.round(Math.min(personScore / c.peso, 1) * 100) : null;
+
+                        return (
+                          <li key={c.id} className="border-b border-border/40 pb-2.5 last:border-0 last:pb-0">
+                            {/* Row 1: label + score slider + adherence badge */}
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[11px] font-semibold text-foreground flex-1 truncate" title={c.criterioObservavel}>
+                                {c.competencia}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground font-mono bg-sky-50 dark:bg-sky-900/20 text-sky-600 dark:text-sky-400 px-1.5 py-0.5 rounded shrink-0">
+                                meta P{c.peso}
+                              </span>
+                              {adh !== null && (
+                                <Badge className={`text-[9px] px-1.5 py-0 h-4 rounded font-bold shrink-0 ${adh >= 80 ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : adh >= 60 ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"}`}>
+                                  {adh}%
+                                </Badge>
+                              )}
+                            </div>
+
+                            {/* Score dots — only if person selected */}
+                            {selectedPersonId && (
+                              <div className="flex items-center gap-1.5 mb-1.5">
+                                <span className="text-[9px] text-muted-foreground w-8 shrink-0">Score:</span>
+                                <div className="flex gap-1">
+                                  {[1, 2, 3, 4, 5].map(v => (
+                                    <button
+                                      key={v}
+                                      onClick={() => setScoreDraft(p => ({ ...p, [draftKey]: v }))}
+                                      className={`h-5 w-5 rounded-full border-2 flex items-center justify-center text-[9px] font-bold transition-all ${(scoreDraft[draftKey] ?? savedEntry?.score ?? 0) >= v ? "bg-amber-400 border-amber-400 text-white" : "border-border bg-muted/40 text-muted-foreground hover:border-amber-300"}`}
+                                    >
+                                      {v}
+                                    </button>
+                                  ))}
+                                </div>
+                                {scoreDraft[draftKey] !== undefined && (
+                                  <button
+                                    onClick={() => {
+                                      upsertPersonCompetencyScore(selectedPersonId, c.id, scoreDraft[draftKey], feedbackDraft[fbKey]);
+                                      toast(`Score salvo para ${selectedPerson?.nome.split(" ")[0]}`, "success");
+                                    }}
+                                    className="ml-auto text-[9px] font-bold px-2 py-0.5 rounded bg-emerald-500 hover:bg-emerald-600 text-white transition-colors"
+                                  >
+                                    Salvar
+                                  </button>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Feedback textarea — only if person selected */}
+                            {selectedPersonId && (
+                              <textarea
+                                rows={1}
+                                placeholder="Feedback / observação…"
+                                value={fbDraft}
+                                onChange={e => setFeedbackDraft(p => ({ ...p, [fbKey]: e.target.value }))}
+                                onBlur={() => {
+                                  if (personScore !== undefined) {
+                                    upsertPersonCompetencyScore(selectedPersonId, c.id, personScore, feedbackDraft[fbKey] || undefined);
+                                  }
+                                }}
+                                className="w-full resize-none text-[10px] py-1 px-1.5 rounded border border-border/50 bg-muted/30 text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-ring"
+                              />
+                            )}
+                          </li>
+                        );
+                      })}
                     </ul>
-                  </div>
+                  </>
                 ) : (
                   <div className="flex flex-col items-center gap-1.5 rounded-lg border border-dashed border-border py-4 mt-2 text-center">
                     <Inbox className="h-5 w-5 text-muted-foreground/40" />
@@ -214,6 +359,7 @@ export default function DesenvolvimentoPage() {
           })}
         </div>
       </section>
+
 
       <section className="grid gap-4 xl:grid-cols-[1.2fr,1fr]">
         <div className="panel p-4">

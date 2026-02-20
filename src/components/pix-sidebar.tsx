@@ -54,14 +54,16 @@ export function PixSidebar() {
     }, [paymentContext.lines, filters]);
 
     // 2. Calculate breakdowns
-    const { totalCost, teamCost, freelaCost, pixCount } = useMemo(() => {
+    const { totalCost, teamCost, freelaCost, pixCount, totalHours, avgHourlyCost } = useMemo(() => {
         let total = 0;
         let team = 0;
         let freela = 0;
         let pix = 0;
+        let hours = 0;
 
         filteredLines.forEach(line => {
             total += line.total;
+            hours += line.hours;
             if (line.person.type === "FREELA") {
                 freela += line.total;
             } else {
@@ -72,7 +74,9 @@ export function PixSidebar() {
             }
         });
 
-        return { totalCost: total, teamCost: team, freelaCost: freela, pixCount: pix };
+        const avg = hours > 0 ? total / hours : 0;
+
+        return { totalCost: total, teamCost: team, freelaCost: freela, pixCount: pix, totalHours: hours, avgHourlyCost: avg };
     }, [filteredLines]);
 
     const donutData = useMemo(() => [
@@ -114,16 +118,29 @@ export function PixSidebar() {
     const handleCopyReport = () => {
         const lines = [
             `*Relatório Diário - ${asDateLabel(date)}*`,
-            `Total Equipe: ${money(totalCost)}`,
+            `Total Geral: ${money(totalCost)} (${totalHours}h | Média: ${money(avgHourlyCost)}/h)`,
             `-------------------`,
             `Fixo: ${money(teamCost)}`,
             `Freela: ${money(freelaCost)}`,
             ``,
-            `*PIX a pagar:*`,
-            ...visiblePixSummary.map(p => `• ${p.nome}: ${money(p.valor)}`)
+            `*PIX a pagar:*`
         ];
+
+        visiblePixSummary.forEach(pix => {
+            const lineData = filteredLines.find(l => l.person.id === pix.personId);
+            if (lineData) {
+                const baseStr = lineData.base > 0 ? `Base: ${money(lineData.base)}` : '';
+                const formatAds = lineData.additionals.reduce((a, b) => a + b.valorEfetivo, 0);
+                const adsStr = formatAds !== 0 ? `, Extras: ${formatAds > 0 ? '+' : ''}${money(formatAds)}` : '';
+                lines.push(`• ${pix.nome}: ${money(pix.valor)}`);
+                lines.push(`  ↳ ${lineData.hours}h (${baseStr}${adsStr})`);
+            } else {
+                lines.push(`• ${pix.nome}: ${money(pix.valor)}`);
+            }
+        });
+
         navigator.clipboard.writeText(lines.join("\n"));
-        toast("Relatório copiado!", "success");
+        toast("Relatório copiado com detalhamento!", "success");
     };
 
     const handlePrintPix = () => {
@@ -148,9 +165,12 @@ export function PixSidebar() {
 
                     {/* Totals */}
                     <div className="hide-on-print">
-                        <div className="flex items-baseline justify-between mb-2">
+                        <div className="flex items-baseline justify-between mb-0">
                             <span className="text-2xl font-bold tracking-tight text-slate-900">{money(totalCost)}</span>
-                            <span className="text-xs text-muted-foreground">{filteredLines.length} pessoas</span>
+                            <div className="text-right">
+                                <p className="text-xs font-bold text-muted-foreground">{filteredLines.length} pessoas</p>
+                                <p className="text-[10px] text-muted-foreground/80 font-mono">{totalHours}h totais · {money(avgHourlyCost)}/h</p>
+                            </div>
                         </div>
                         {totalCost > 0 ? (
                             <div className="h-[120px] w-full mt-2 relative">
@@ -219,92 +239,82 @@ export function PixSidebar() {
                     <Separator className="hide-on-print" />
 
                     {/* Controls */}
-                    <div className="space-y-3 hide-on-print">
-                        <div className="grid grid-cols-2 gap-2">
-                            <Button
-                                variant={paymentContext.config.mode === "CUSTO" ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => setPaymentMode("CUSTO")}
-                                className="w-full text-xs h-7"
+                    <div className="space-y-2 hide-on-print bg-muted/30 p-2 rounded-lg border border-border/50">
+                        <div className="flex gap-2">
+                            <Select
+                                value={paymentContext.config.mode}
+                                onValueChange={(val) => setPaymentMode(val as any)}
                             >
-                                Custo
-                            </Button>
-                            <Button
-                                variant={paymentContext.config.mode === "PAGAMENTO" ? "primary" : "outline"}
-                                size="sm"
-                                onClick={() => setPaymentMode("PAGAMENTO")}
-                                className="w-full text-xs h-7"
+                                <SelectTrigger className="h-7 text-[10px] flex-1 font-bold bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="CUSTO" className="text-[10px]">Custo Operacional</SelectItem>
+                                    <SelectItem value="PAGAMENTO" className="text-[10px]">Modo Pagamento</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <Select
+                                value={paymentContext.config.fonteHoras}
+                                onValueChange={(val) => setHoursSource(val as any)}
                             >
-                                Pagamento
-                            </Button>
+                                <SelectTrigger className="h-7 text-[10px] flex-1 bg-background">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {Object.entries(HOURS_SOURCE_LABEL).map(([v, l]) => (
+                                        <SelectItem key={v} value={v} className="text-[10px]">{l}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-2">
-                            <div>
-                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Horas Padrão</label>
+                        <div className="flex gap-2 items-center">
+                            <div className="bg-background rounded-md border border-input flex items-center h-7 px-2">
+                                <span className="text-[9px] font-bold text-muted-foreground uppercase mr-1">Hrs</span>
                                 <Input
                                     type="number"
-                                    className="h-7 mt-1 text-xs"
+                                    className="h-5 w-10 text-[10px] border-none px-1 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
                                     min={0}
                                     step={0.25}
                                     value={paymentContext.config.horasPadraoDia}
                                     onChange={(e) => setGlobalStandardHours(Number(e.target.value))}
                                 />
                             </div>
-                            <div>
-                                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Fonte</label>
-                                <Select
-                                    value={paymentContext.config.fonteHoras}
-                                    onValueChange={(val) => setHoursSource(val as any)}
-                                >
-                                    <SelectTrigger className="h-7 mt-1 text-xs">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {Object.entries(HOURS_SOURCE_LABEL).map(([v, l]) => (
-                                            <SelectItem key={v} value={v} className="text-xs">{l}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1.5 p-2 bg-muted/50 rounded-lg border border-border/50">
-                            <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Adicional Global</label>
-                            <div className="flex gap-2">
+                            <div className="flex-1 flex gap-1">
                                 <Select
                                     value={globalAdditionalDraft.tipo}
                                     onValueChange={(val) => setGlobalAdditionalDraft(p => ({ ...p, tipo: val as any }))}
                                 >
-                                    <SelectTrigger className="h-7 text-xs flex-1">
+                                    <SelectTrigger className="h-7 text-[10px] flex-1 bg-background">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {additionalTypes.map(t => <SelectItem key={t.id} value={t.nome} className="text-xs">{t.nome}</SelectItem>)}
+                                        {additionalTypes.map(t => <SelectItem key={t.id} value={t.nome} className="text-[10px]">{t.nome}</SelectItem>)}
                                     </SelectContent>
                                 </Select>
                                 <Input
                                     type="number"
-                                    className="h-7 w-20 text-xs"
+                                    className="h-7 w-12 text-[10px] bg-background text-center px-1"
                                     placeholder="R$"
                                     value={globalAdditionalDraft.valor}
                                     onChange={(e) => setGlobalAdditionalDraft(p => ({ ...p, valor: Number(e.target.value) }))}
                                 />
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    className="h-7 w-7 p-0 bg-background border border-border shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 text-muted-foreground"
+                                    onClick={() => {
+                                        setGlobalAdditional({
+                                            ...globalAdditionalDraft,
+                                            descricao: globalAdditionalDraft.descricao.trim() || undefined
+                                        });
+                                        toast("Adicional aplicado", "success");
+                                    }}
+                                    title="Aplicar Adicional Global à Equipe"
+                                >
+                                    +
+                                </Button>
                             </div>
-                            <Button
-                                size="sm"
-                                variant="secondary"
-                                className="w-full h-7 text-xs bg-background border border-border hover:bg-muted"
-                                onClick={() => {
-                                    setGlobalAdditional({
-                                        ...globalAdditionalDraft,
-                                        descricao: globalAdditionalDraft.descricao.trim() || undefined
-                                    });
-                                    toast("Adicional global aplicado", "success");
-                                }}
-                            >
-                                Aplicar a todos
-                            </Button>
                         </div>
                     </div>
 
@@ -370,23 +380,23 @@ export function PixSidebar() {
 
                                                 {/* Add quick additional */}
                                                 {!paymentContext.locked && (
-                                                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                    <div className="flex items-center gap-1.5 mt-1 pt-1 opacity-70 focus-within:opacity-100 hover:opacity-100 transition-opacity">
                                                         <Input
                                                             id={`add-val-${pix.personId}`}
                                                             type="number"
                                                             placeholder="R$"
-                                                            className="h-6 text-[10px] w-16"
+                                                            className="h-6 text-[10px] w-14 px-1 text-center bg-background/50 border-dashed border-muted-foreground/30 focus:border-solid focus:bg-background"
                                                         />
                                                         <Input
                                                             id={`add-desc-${pix.personId}`}
                                                             type="text"
-                                                            placeholder="Motivo..."
-                                                            className="h-6 text-[10px] flex-1"
+                                                            placeholder="Motivo (Opcional)"
+                                                            className="h-6 text-[10px] flex-1 px-1.5 bg-background/50 border-dashed border-muted-foreground/30 focus:border-solid focus:bg-background"
                                                         />
                                                         <Button
                                                             size="sm"
                                                             variant="secondary"
-                                                            className="h-6 text-[10px] px-2"
+                                                            className="h-6 px-2 text-[10px] bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold shadow-sm"
                                                             onClick={async () => {
                                                                 const valInput = document.getElementById(`add-val-${pix.personId}`) as HTMLInputElement;
                                                                 const descInput = document.getElementById(`add-desc-${pix.personId}`) as HTMLInputElement;
@@ -404,10 +414,12 @@ export function PixSidebar() {
                                                                     valInput.value = "";
                                                                     if (descInput) descInput.value = "";
                                                                     toast(`Adicionado a ${pix.nome.split(" ")[0]}`, "success");
+                                                                } else {
+                                                                    toast("Informe um valor maior que zero.", "warning");
                                                                 }
                                                             }}
                                                         >
-                                                            Add Extra
+                                                            Incluir
                                                         </Button>
                                                     </div>
                                                 )}

@@ -154,6 +154,7 @@ interface AppStateContextValue {
     evidencia?: string
   ) => void;
   updatePdiProgress: (pdiId: string, evolucao: string, evidencia?: string) => void;
+  upsertPersonCompetencyScore: (personId: string, competencyId: string, score: number, feedback?: string) => void;
   setPermission: (
     role: UserRole,
     action: keyof AppState["permissions"][UserRole],
@@ -1525,6 +1526,26 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, [date, filters]);
 
+  const upsertPersonCompetencyScore = useCallback(
+    (personId: string, competencyId: string, score: number, feedback?: string) => {
+      setState((previous) => {
+        const existing = previous.personCompetencyScores.find(
+          (s) => s.personId === personId && s.competencyId === competencyId
+        );
+        const updated = existing
+          ? { ...existing, score, feedback, avaliadoEm: nowIso() }
+          : { id: `pcs-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, personId, competencyId, score, feedback, avaliadoEm: nowIso() };
+        const personCompetencyScores = existing
+          ? previous.personCompetencyScores.map((s) =>
+            s.personId === personId && s.competencyId === competencyId ? updated : s
+          )
+          : [...previous.personCompetencyScores, updated];
+        return { ...previous, personCompetencyScores };
+      });
+    },
+    []
+  );
+
   const updateRecruitmentStage = useCallback(
     (
       vagaId: string,
@@ -2322,6 +2343,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       sendFlashTraining,
       updateOnboardingProgress,
       updatePdiProgress,
+      upsertPersonCompetencyScore,
       setPermission,
       updatePaymentRule,
       updateAdditionalType,

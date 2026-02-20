@@ -590,30 +590,37 @@ export function createInitialState(): AppState {
       { id: "tc3", personId: "p10", trainingId: "tr3", status: "VENCIDO", concluidoEm: "2024-11-01" }
     ],
     competencies: [
-      {
-        id: "comp1",
-        cargoId: "role-attendant",
-        nivel: "Junior",
-        competencia: "Atendimento consultivo",
-        peso: 3,
-        criterioObservavel: "Apresenta opcoes e fecha venda com objecoes tratadas"
-      },
-      {
-        id: "comp2",
-        cargoId: "role-cook",
-        nivel: "Pleno",
-        competencia: "Padrao de producao",
-        peso: 4,
-        criterioObservavel: "Entrega dentro de padrao e tempo em 95% dos turnos"
-      },
-      {
-        id: "comp3",
-        cargoId: "role-supervisor",
-        nivel: "Senior",
-        competencia: "Gestao de escala",
-        peso: 5,
-        criterioObservavel: "Escala sem buraco critico por 4 semanas"
-      }
+      // Atendente
+      { id: "comp1", cargoId: "role-attendant", nivel: "Junior", competencia: "Atendimento consultivo", peso: 4, criterioObservavel: "Apresenta opções e fecha venda com objeções tratadas" },
+      { id: "comp1b", cargoId: "role-attendant", nivel: "Junior", competencia: "Produtividade", peso: 3, criterioObservavel: "Atinge meta de atendimentos/turno" },
+      { id: "comp1c", cargoId: "role-attendant", nivel: "Junior", competencia: "Comunicação", peso: 4, criterioObservavel: "Clareza na fala, zero reclamações de cordialidade" },
+      { id: "comp1d", cargoId: "role-attendant", nivel: "Junior", competencia: "Postura", peso: 3, criterioObservavel: "Fardamento correto, pontualidade" },
+      { id: "comp1e", cargoId: "role-attendant", nivel: "Junior", competencia: "Conhec. Produto", peso: 4, criterioObservavel: "Sabe responder FAQ sem consultar" },
+      // Cozinheiro
+      { id: "comp2", cargoId: "role-cook", nivel: "Pleno", competencia: "Padrão de produção", peso: 5, criterioObservavel: "Entrega dentro de padrão e tempo em 95% dos turnos" },
+      { id: "comp2b", cargoId: "role-cook", nivel: "Pleno", competencia: "Higiene e APPCC", peso: 5, criterioObservavel: "Zero apontamentos em vistoria" },
+      { id: "comp2c", cargoId: "role-cook", nivel: "Pleno", competencia: "Trabalho em equipe", peso: 3, criterioObservavel: "Suporte ao time sem ser solicitado" },
+      { id: "comp2d", cargoId: "role-cook", nivel: "Pleno", competencia: "Controle de desperdício", peso: 4, criterioObservavel: "Aproveitamento ≥ 90%" },
+      // Supervisor
+      { id: "comp3", cargoId: "role-supervisor", nivel: "Senior", competencia: "Gestão de escala", peso: 5, criterioObservavel: "Escala sem buraco crítico por 4 semanas" },
+      { id: "comp3b", cargoId: "role-supervisor", nivel: "Senior", competencia: "Liderança", peso: 5, criterioObservavel: "NPS interno do time ≥ 8" },
+      { id: "comp3c", cargoId: "role-supervisor", nivel: "Senior", competencia: "Tomada de decisão", peso: 4, criterioObservavel: "Resolve ocorrências em < 30min" },
+      { id: "comp3d", cargoId: "role-supervisor", nivel: "Senior", competencia: "Desenvolvimento de equipe", peso: 3, criterioObservavel: "1 feedback formal/mês por liderado" },
+      { id: "comp3e", cargoId: "role-supervisor", nivel: "Senior", competencia: "Resultados", peso: 5, criterioObservavel: "SLA de abertura e fechamento 0 falhas" },
+    ],
+    personCompetencyScores: [
+      // Ana Martins (p1, role-attendant) — scores
+      { id: "pcs-1", personId: "p1", competencyId: "comp1", score: 3, feedback: "Melhora visível no fechamento, mas ainda perde em objeções de preço.", avaliadoEm: "2026-02-10" },
+      { id: "pcs-2", personId: "p1", competencyId: "comp1b", score: 4, avaliadoEm: "2026-02-10" },
+      { id: "pcs-3", personId: "p1", competencyId: "comp1c", score: 4, avaliadoEm: "2026-02-10" },
+      { id: "pcs-4", personId: "p1", competencyId: "comp1d", score: 3, avaliadoEm: "2026-02-10" },
+      { id: "pcs-5", personId: "p1", competencyId: "comp1e", score: 4, feedback: "Ótima evolução depois do treinamento de produto.", avaliadoEm: "2026-02-10" },
+      // Diego Rocha (p2, role-supervisor)
+      { id: "pcs-6", personId: "p2", competencyId: "comp3", score: 5, avaliadoEm: "2026-02-10" },
+      { id: "pcs-7", personId: "p2", competencyId: "comp3b", score: 4, feedback: "Time bem engajado, coletar NPS formal.", avaliadoEm: "2026-02-10" },
+      { id: "pcs-8", personId: "p2", competencyId: "comp3c", score: 4, avaliadoEm: "2026-02-10" },
+      { id: "pcs-9", personId: "p2", competencyId: "comp3d", score: 3, feedback: "Feedback formal ainda irregular.", avaliadoEm: "2026-02-10" },
+      { id: "pcs-10", personId: "p2", competencyId: "comp3e", score: 5, avaliadoEm: "2026-02-10" },
     ],
     recruitmentCandidates: [
       {
