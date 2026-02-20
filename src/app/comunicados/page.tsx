@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bot, FileText, History, MessageCircle, Send, Sparkles, Workflow, Zap, CheckCheck, Smartphone, Filter } from "lucide-react";
+import { Bot, FileText, History, MessageCircle, Send, Sparkles, Workflow, Zap, CheckCheck, Smartphone, Filter, ChevronDown, ChevronUp } from "lucide-react";
 
 import { useToast } from "@/components/toast";
 import { useAppState } from "@/components/state-provider";
@@ -20,51 +20,39 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
+/* ─── AI Transform (local mock) ──────────────────────────── */
 function aiTransform(action: string, text: string): string {
-  const cleanText = text.trim();
-  if (!cleanText) {
-    return "";
-  }
-
+  const t = text.trim();
+  if (!t) return "";
   switch (action) {
     case "shorten": {
-      const words = cleanText.split(/\s+/);
-      const shortened = words.slice(0, Math.max(8, Math.floor(words.length * 0.6))).join(" ");
-      return shortened.endsWith(".") ? shortened : `${shortened}.`;
+      const w = t.split(/\s+/);
+      const s = w.slice(0, Math.max(8, Math.floor(w.length * 0.6))).join(" ");
+      return s.endsWith(".") ? s : `${s}.`;
     }
     case "firm":
-      return `ATENCAO: ${cleanText} Esta orientacao requer confirmacao imediata.`;
+      return `ATENÇÃO: ${t} Esta orientação requer confirmação imediata.`;
     case "friendly":
-      return `Oi, time! 😊 ${cleanText} Qualquer duvida, estamos por aqui para apoiar.`;
+      return `Oi, time! 😊 ${t} Qualquer dúvida, estamos por aqui para apoiar.`;
     case "bullets": {
-      const chunks = cleanText
-        .split(/[.!?]\s+/)
-        .map((item) => item.trim())
-        .filter(Boolean);
-      return chunks.map((item) => `• ${item}`).join("\n");
+      const chunks = t.split(/[.!?]\s+/).map(i => i.trim()).filter(Boolean);
+      return chunks.map(i => `• ${i}`).join("\n");
     }
-    case "versions": {
+    case "versions":
       return [
-        `Versao 1 (direta): ${cleanText}`,
-        `Versao 2 (acolhedora): Oi pessoal, ${cleanText.toLowerCase()}`,
-        `Versao 3 (objetiva): Acao imediata -> ${cleanText}`
+        `Versão 1 (direta): ${t}`,
+        `Versão 2 (acolhedora): Oi pessoal, ${t.toLowerCase()}`,
+        `Versão 3 (objetiva): Ação imediata → ${t}`,
       ].join("\n\n");
-    }
     default:
-      return cleanText;
+      return t;
   }
 }
 
 export default function ComunicadosPage() {
   const {
-    state,
-    sendCommunication,
-    runCommunicationAutomations,
-    upsertTemplate,
-    toggleAutomationRule,
-    upsertWebhook,
-    syncConnectorEvents,
-    filters
+    state, sendCommunication, runCommunicationAutomations,
+    upsertTemplate, toggleAutomationRule, upsertWebhook, syncConnectorEvents, filters,
   } = useAppState();
 
   const { toast } = useToast();
@@ -73,798 +61,416 @@ export default function ComunicadosPage() {
   const [templateNameDraft, setTemplateNameDraft] = useState<string>("");
   const [editorText, setEditorText] = useState<string>("");
   const [lastRecipients, setLastRecipients] = useState<number>(0);
-  const [lastAutomationResult, setLastAutomationResult] = useState<{
-    campanhas: number;
-    destinatarios: number;
-  }>({ campanhas: 0, destinatarios: 0 });
+  const [lastAutomationResult, setLastAutomationResult] = useState<{ campanhas: number; destinatarios: number }>({ campanhas: 0, destinatarios: 0 });
+
+  // Collapsible sections
+  const [showAutomations, setShowAutomations] = useState(false);
+  const [showLogs, setShowLogs] = useState(false);
+  const [showWebhooks, setShowWebhooks] = useState(false);
+
   const [webhookDraft, setWebhookDraft] = useState({
-    nome: "",
-    endpoint: "",
-    ativo: false,
-    aviso: true,
-    recrutamento: true,
-    treinamento: false
+    nome: "", endpoint: "", ativo: false,
+    aviso: true, recrutamento: true, treinamento: false,
   });
 
   const [segmentacao, setSegmentacao] = useState<{
-    companyId?: string;
-    unitId?: string;
-    teamId?: string;
-    cargoId?: string;
-    tipo?: "FIXO" | "FREELA";
-    status?: "ATIVO" | "FERIAS" | "AFASTADO" | "OFF_HOJE";
+    companyId?: string; unitId?: string; teamId?: string;
+    cargoId?: string; tipo?: "FIXO" | "FREELA"; status?: "ATIVO" | "FERIAS" | "AFASTADO" | "OFF_HOJE";
   }>({
-    companyId: filters.companyId,
-    unitId: filters.unitId,
-    teamId: filters.teamId,
-    cargoId: filters.cargoId
+    companyId: filters.companyId, unitId: filters.unitId,
+    teamId: filters.teamId, cargoId: filters.cargoId,
   });
 
+  /* ─── Memos ──────────────────────────────────────────── */
+
   const templates = useMemo(() => {
-    return state.communicationTemplates.filter((template) => {
-      if (segmentacao.companyId && template.companyId && template.companyId !== segmentacao.companyId) {
-        return false;
-      }
-      if (segmentacao.unitId && template.unitId && template.unitId !== segmentacao.unitId) {
-        return false;
-      }
+    return state.communicationTemplates.filter((t) => {
+      if (segmentacao.companyId && t.companyId && t.companyId !== segmentacao.companyId) return false;
+      if (segmentacao.unitId && t.unitId && t.unitId !== segmentacao.unitId) return false;
       return true;
     });
   }, [state.communicationTemplates, segmentacao.companyId, segmentacao.unitId]);
 
   const campaignsWithDetails = useMemo(() => {
-    return [...state.communicationCampaigns]
-      .reverse()
-      .map((campaign) => {
-        const recipients = state.communicationLogs.filter((log) => log.campaignId === campaign.id);
-        return {
-          campaign,
-          recipients
-        };
-      });
+    return [...state.communicationCampaigns].reverse().map((c) => ({
+      campaign: c,
+      recipients: state.communicationLogs.filter((l) => l.campaignId === c.id),
+    }));
   }, [state.communicationCampaigns, state.communicationLogs]);
 
-  const unitOptions = state.units.filter(
-    (unit) => !segmentacao.companyId || unit.companyId === segmentacao.companyId
-  );
-
-  const teamOptions = state.teams.filter((team) => {
-    const unit = state.units.find((current) => current.id === team.unitId);
-    if (!unit) {
-      return false;
-    }
-    if (segmentacao.companyId && unit.companyId !== segmentacao.companyId) {
-      return false;
-    }
-    if (segmentacao.unitId && team.unitId !== segmentacao.unitId) {
-      return false;
-    }
+  const unitOptions = state.units.filter((u) => !segmentacao.companyId || u.companyId === segmentacao.companyId);
+  const teamOptions = state.teams.filter((t) => {
+    const u = state.units.find((x) => x.id === t.unitId);
+    if (!u) return false;
+    if (segmentacao.companyId && u.companyId !== segmentacao.companyId) return false;
+    if (segmentacao.unitId && t.unitId !== segmentacao.unitId) return false;
     return true;
   });
 
   const selectedTemplate = selectedTemplateId
-    ? state.communicationTemplates.find((template) => template.id === selectedTemplateId)
+    ? state.communicationTemplates.find((t) => t.id === selectedTemplateId)
     : undefined;
 
   const recipientPreviewCount = useMemo(() => {
-    return state.people.filter((person) => {
-      if (segmentacao.companyId && person.companyId !== segmentacao.companyId) return false;
-      if (segmentacao.unitId && person.unitId !== segmentacao.unitId) return false;
-      if (segmentacao.teamId && person.teamId !== segmentacao.teamId) return false;
-      if (segmentacao.cargoId && person.cargoId !== segmentacao.cargoId) return false;
-      if (segmentacao.tipo && person.type !== segmentacao.tipo) return false;
-      if (segmentacao.status && person.status !== segmentacao.status) return false;
+    return state.people.filter((p) => {
+      if (segmentacao.companyId && p.companyId !== segmentacao.companyId) return false;
+      if (segmentacao.unitId && p.unitId !== segmentacao.unitId) return false;
+      if (segmentacao.teamId && p.teamId !== segmentacao.teamId) return false;
+      if (segmentacao.cargoId && p.cargoId !== segmentacao.cargoId) return false;
+      if (segmentacao.tipo && p.type !== segmentacao.tipo) return false;
+      if (segmentacao.status && p.status !== segmentacao.status) return false;
       return true;
     }).length;
   }, [state.people, segmentacao]);
 
+  /* ─── Helpers ────────────────────────────────────────── */
+
+  function mkSel(label: string, value: string | undefined, onVal: (v: string) => void, allLabel: string, options: { id: string; nome: string }[], allValue = "ALL") {
+    return (
+      <Select value={value ?? ""} onValueChange={(v) => onVal(v === allValue ? "" : v)}>
+        <SelectTrigger className="h-7 text-[10px] bg-muted/40 border-border/50 font-semibold">
+          <SelectValue placeholder={label} />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={allValue} className="text-[10px] font-bold">{allLabel}</SelectItem>
+          {options.map((o) => <SelectItem key={o.id} value={o.id} className="text-[10px]">{o.nome}</SelectItem>)}
+        </SelectContent>
+      </Select>
+    );
+  }
+
+  /* ─── Render ─────────────────────────────────────────── */
+
   return (
-    <div className="page-enter grid gap-4 xl:grid-cols-[1.2fr,1fr]">
-      <div className="flex flex-col lg:flex-row gap-4">
-        {/* Left Column: Editor & Segmentation */}
-        <div className="flex-1 space-y-4 min-w-0">
-          <Card className="border-border shadow-sm">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-teal-50 dark:bg-teal-900/20">
-                    <MessageCircle className="h-4 w-4 text-teal-600 dark:text-teal-400" />
-                  </span>
-                  <CardTitle className="text-lg font-semibold text-foreground">Editor de comunicados</CardTitle>
+    <div className="page-enter space-y-4">
+      {/* ── MAIN: Phone + Editor side-by-side ───────────── */}
+      <div className="grid gap-4 xl:grid-cols-[340px_1fr]">
+        {/* ── LEFT: WhatsApp Phone Preview (sticky) ──── */}
+        <div className="xl:sticky xl:top-4 xl:self-start">
+          <div className="flex flex-col items-center">
+            {/* Recipient badge */}
+            <div className="mb-2 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-bold text-muted-foreground bg-background rounded-full px-3 py-1 shadow-sm border">
+              <Smartphone className="h-3 w-3" />
+              Prévia · {recipientPreviewCount} destinatário{recipientPreviewCount !== 1 ? "s" : ""}
+            </div>
+
+            {/* Phone frame */}
+            <div className="w-full max-w-[310px] h-[540px] bg-[#efeae2] rounded-[32px] border-[8px] border-slate-900 shadow-2xl relative overflow-hidden flex flex-col font-sans">
+              {/* Notch */}
+              <div className="absolute top-1.5 left-1/2 transform -translate-x-1/2 w-14 h-3.5 bg-slate-900 rounded-full z-20" />
+
+              {/* WhatsApp header */}
+              <div className="bg-[#075e54] text-white px-3.5 pt-7 pb-2.5 shadow-md z-10 flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-full bg-slate-100 flex items-center justify-center relative shadow-sm shrink-0">
+                  <Bot className="h-4 w-4 text-[#075e54]" />
+                  <div className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-emerald-400 border-2 border-[#075e54] rounded-full" />
                 </div>
-                <Badge variant="ok">WhatsApp + IA</Badge>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4 pt-2 space-y-4">
-              <div className="grid gap-2 md:grid-cols-2">
-                <label className="text-xs text-muted-foreground">
-                  Selecionar template
-                  <Select
-                    value={selectedTemplateId}
-                    onValueChange={(value) => {
-                      setSelectedTemplateId(value);
-                      const template = state.communicationTemplates.find((item) => item.id === value);
-                      if (template) {
-                        setEditorText(template.conteudo);
-                      }
-                    }}
-                  >
-                    <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="Sem template" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="NO_TEMPLATE">Sem template</SelectItem>
-                      {templates.map((template) => (
-                        <SelectItem key={template.id} value={template.id}>
-                          {template.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </label>
-
-                <label className="text-xs text-muted-foreground">
-                  Nome do template
-                  <Input
-                    className="mt-1"
-                    value={templateNameDraft}
-                    onChange={(event) => setTemplateNameDraft(event.target.value)}
-                    placeholder="Ex.: Pendencia onboarding"
-                  />
-                </label>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-[14px] leading-tight text-white truncate">RH Manager</h4>
+                  <p className="text-[10px] text-white/80 font-medium">Business Account</p>
+                </div>
               </div>
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-xs text-muted-foreground">
-                  Conteudo base
-                  <Textarea
-                    className="mt-1 h-32"
-                    value={editorText}
-                    onChange={(event) => {
-                      setEditorText(event.target.value);
-                    }}
-                  />
-                </label>
+              {/* Chat area */}
+              <div className="flex-1 p-3 overflow-y-auto flex flex-col gap-2.5 relative bg-[#efeae2]">
+                <div className="bg-[#dcf8c6]/80 text-[#54656f] text-[9px] px-2.5 py-0.5 rounded-lg uppercase tracking-wider self-center font-semibold z-10 w-fit">
+                  Hoje
+                </div>
 
-                <div className="rounded-xl border border-border bg-muted/50 p-3">
-                  <p className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <Bot className="h-4 w-4" />
-                    Apoio IA
-                  </p>
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    <Button variant="outline" size="sm" onClick={() => setEditorText(aiTransform("shorten", editorText))}>
-                      Encurtar
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setEditorText(aiTransform("firm", editorText))}>
-                      Mais firme
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setEditorText(aiTransform("friendly", editorText))}>
-                      Mais amigavel
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setEditorText(aiTransform("bullets", editorText))}>
-                      Em bullets
-                    </Button>
-                    <Button variant="secondary" size="sm" className="col-span-2" onClick={() => setEditorText(aiTransform("versions", editorText))}>
-                      <Sparkles className="mr-1 inline h-3.5 w-3.5" />
-                      Gerar 3 versoes
-                    </Button>
+                <div className="bg-white p-2.5 rounded-lg rounded-tl-none shadow-[0_1px_1px_rgba(0,0,0,0.08)] relative w-[90%] self-start z-10">
+                  <div className="absolute top-0 -left-2 w-2 h-3 bg-white" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }} />
+                  <div className="text-[13px] text-[#111b21] leading-snug whitespace-pre-wrap">
+                    {(editorText || "Sua mensagem aparecerá aqui.\n\nDigite o texto ao lado e veja a prévia em tempo real. Use os botões de IA para ajustar o tom.").split("\n").map((line, i) => (
+                      <span key={i}>{line}<br /></span>
+                    ))}
+                  </div>
+                  <div className="flex items-center justify-end gap-1 mt-1 opacity-50">
+                    <span className="text-[9px] text-[#667781] font-medium">10:42</span>
+                    <CheckCheck className="h-3 w-3 text-blue-500" />
                   </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 mt-2">
+              {/* Send CTA inside phone */}
+              <div className="bg-[#f0f2f5] p-2 z-10">
                 <Button
-                  variant="outline"
+                  className="w-full h-9 rounded-xl text-xs shadow-md font-bold bg-[#00a884] hover:bg-[#008f6f] text-white flex items-center justify-center gap-1.5"
                   onClick={() => {
-                    if (!templateNameDraft.trim()) {
-                      toast("Informe um nome para o template.", "error");
-                      return;
-                    }
-                    if (!editorText.trim()) {
-                      toast("O conteúdo do template está vazio.", "error");
-                      return;
-                    }
-                    upsertTemplate({
-                      id: selectedTemplate?.id,
-                      nome: templateNameDraft,
-                      conteudo: editorText,
-                      companyId: segmentacao.companyId,
-                      unitId: segmentacao.unitId,
-                      teamId: segmentacao.teamId
+                    const r = sendCommunication({
+                      templateId: selectedTemplateId || undefined,
+                      conteudoFinal: editorText,
+                      segmentacao,
+                      gatilho: undefined,
                     });
-                    setTemplateNameDraft("");
-                    toast("Template salvo com sucesso.", "success");
+                    setLastRecipients(r);
+                    toast(`Enviado para ${r} pessoa(s)`, r > 0 ? "success" : "warning");
                   }}
                 >
-                  Salvar Template
-                </Button>
-
-                <Button
-                  variant="ghost"
-                  className="text-muted-foreground ml-auto"
-                  onClick={() => {
-                    setEditorText("");
-                    setSelectedTemplateId("");
-                    toast("Editor limpo.", "info");
-                  }}
-                >
-                  Limpar editor
+                  <Send className="h-3.5 w-3.5" />
+                  Disparar para {recipientPreviewCount}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
 
-            </CardContent>
-          </Card>
+        {/* ── RIGHT: Editor + Segmentation + AI (compact) ── */}
+        <div className="space-y-3">
+          {/* Template + Name */}
+          <div className="panel p-4 space-y-3">
+            <div className="flex items-center gap-2 mb-1">
+              <MessageCircle className="h-4 w-4 text-teal-500" />
+              <h2 className="text-sm font-bold text-foreground">Editor de Comunicado</h2>
+              <Badge variant="ok" className="text-[9px] ml-auto">WhatsApp + IA</Badge>
+            </div>
 
-          <Card className="border-border shadow-sm">
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 dark:bg-blue-900/20">
-                  <FileText className="h-3.5 w-3.5 text-blue-500" />
-                </span>
-                <CardTitle className="text-sm font-semibold text-foreground">Seleção de Público</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <div className="flex flex-wrap items-center gap-1.5 p-1.5 bg-muted/40 rounded-xl border border-border/60">
-                <div className="flex items-center px-3 text-muted-foreground/70 hidden sm:flex">
-                  <Filter className="h-4 w-4" />
-                </div>
-                <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5">
-                  <Select
-                    value={segmentacao.companyId ?? ""}
-                    onValueChange={(val) =>
-                      setSegmentacao((previous) => ({
-                        ...previous,
-                        companyId: val === "ALL" ? undefined : val,
-                        unitId: undefined,
-                        teamId: undefined
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                      <SelectValue placeholder="Empresas (Todas)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL" className="font-bold">Todas as Empresas</SelectItem>
-                      {state.companies.map((company) => (
-                        <SelectItem key={company.id} value={company.id}>
-                          {company.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
-                  <Select
-                    value={segmentacao.unitId ?? ""}
-                    onValueChange={(val) =>
-                      setSegmentacao((previous) => ({
-                        ...previous,
-                        unitId: val === "ALL" ? undefined : val,
-                        teamId: undefined
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                      <SelectValue placeholder="Unidades (Todas)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL" className="font-bold">Todas as Unidades</SelectItem>
-                      {unitOptions.map((unit) => (
-                        <SelectItem key={unit.id} value={unit.id}>
-                          {unit.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
-                  <Select
-                    value={segmentacao.teamId ?? ""}
-                    onValueChange={(val) =>
-                      setSegmentacao((previous) => ({
-                        ...previous,
-                        teamId: val === "ALL" ? undefined : val
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                      <SelectValue placeholder="Times (Todos)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL" className="font-bold">Todos os Times</SelectItem>
-                      {teamOptions.map((team) => (
-                        <SelectItem key={team.id} value={team.id}>
-                          {team.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1 min-w-[130px] border-r border-border/40 pr-1.5 px-1.5">
-                  <Select
-                    value={segmentacao.cargoId ?? ""}
-                    onValueChange={(val) =>
-                      setSegmentacao((previous) => ({
-                        ...previous,
-                        cargoId: val === "ALL" ? undefined : val
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                      <SelectValue placeholder="Cargos (Todos)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL" className="font-bold">Todos os Cargos</SelectItem>
-                      {state.roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex-1 min-w-[130px] px-1.5">
-                  <Select
-                    value={segmentacao.tipo ?? ""}
-                    onValueChange={(val) =>
-                      setSegmentacao((previous) => ({
-                        ...previous,
-                        tipo: (val === "ALL" ? undefined : val) as "FIXO" | "FREELA" | undefined
-                      }))
-                    }
-                  >
-                    <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                      <SelectValue placeholder="Contratos (Todos)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="ALL" className="font-bold">Todos os Contratos</SelectItem>
-                      <SelectItem value="FIXO">Fixo</SelectItem>
-                      <SelectItem value="FREELA">Freela</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="flex-1 min-w-[130px] px-1.5 mt-2">
+            {/* Row 1: Template + Name */}
+            <div className="grid gap-2 md:grid-cols-2">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1 block">Template</label>
                 <Select
-                  value={segmentacao.status ?? ""}
-                  onValueChange={(val) =>
-                    setSegmentacao((previous) => ({
-                      ...previous,
-                      status: (val === "ALL_STATUS" ? undefined : val) as
-                        | "ATIVO"
-                        | "FERIAS"
-                        | "AFASTADO"
-                        | "OFF_HOJE"
-                        | undefined
-                    }))
-                  }
+                  value={selectedTemplateId}
+                  onValueChange={(v) => {
+                    setSelectedTemplateId(v);
+                    const t = state.communicationTemplates.find((x) => x.id === v);
+                    if (t) setEditorText(t.conteudo);
+                  }}
                 >
-                  <SelectTrigger className="mt-0 border-0 bg-transparent shadow-none focus:ring-0 text-xs font-semibold h-9 hover:bg-muted/50 transition-colors">
-                    <SelectValue placeholder="Status (Todos)" />
+                  <SelectTrigger className="h-8 text-xs">
+                    <SelectValue placeholder="Sem template" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ALL_STATUS" className="font-bold">Todos os Status</SelectItem>
-                    <SelectItem value="ATIVO">Ativo</SelectItem>
-                    <SelectItem value="FERIAS">Ferias</SelectItem>
-                    <SelectItem value="AFASTADO">Afastado</SelectItem>
-                    <SelectItem value="OFF_HOJE">Off hoje</SelectItem>
+                    <SelectItem value="NO_TEMPLATE" className="text-xs">Sem template</SelectItem>
+                    {templates.map((t) => <SelectItem key={t.id} value={t.id} className="text-xs">{t.nome}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Automations Card */}
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
-                    <Zap className="h-3.5 w-3.5 text-amber-500" />
-                  </span>
-                  <CardTitle className="text-base font-semibold text-foreground">Automações In-App</CardTitle>
-                </div>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    const result = runCommunicationAutomations();
-                    setLastAutomationResult(result);
-                    toast(`Automações ativadas emitiram ${result.campanhas} campanha(s).`, result.campanhas > 0 ? "success" : "info");
-                  }}
-                >
-                  Gerar disparos agora
-                </Button>
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1 block">Nome (salvar como)</label>
+                <Input className="h-8 text-xs" value={templateNameDraft} onChange={(e) => setTemplateNameDraft(e.target.value)} placeholder="Ex.: Pendência onboarding" />
               </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="mt-1 text-xs text-muted-foreground mb-2">
-                Ultima execucao: {lastAutomationResult.campanhas} campanha(s),{" "}
-                {lastAutomationResult.destinatarios} destinatario(s)
-              </p>
-              <div className="grid gap-2 md:grid-cols-2 mt-2">
-                {state.automationRules.map((rule) => {
-                  const eventLabel: Record<string, string> = {
-                    DOC_PENDENTE: "Documentação pendente",
-                    PIX_AUSENTE: "Chave PIX ausente",
-                    ANIVERSARIO: "Aniversário na semana",
-                    FERIAS_PROXIMAS: "Férias próximas",
-                    TREINAMENTO_VENCIDO: "Treinamentos vencidos"
-                  };
-                  return (
-                    <label
-                      key={rule.id}
-                      className={cn("flex cursor-pointer items-center justify-between rounded-lg border bg-background px-3 py-2 text-sm text-foreground/90 transition-colors", rule.ativo ? "border-primary/50 bg-primary/5 shadow-sm" : "border-border hover:bg-muted/50")}
-                    >
-                      <div>
-                        <span className={cn("font-medium", rule.ativo ? "text-primary" : "text-foreground")}>{eventLabel[rule.evento] ?? rule.evento}</span>
-                      </div>
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-300 text-primary focus:ring-primary h-4 w-4"
-                        checked={rule.ativo}
-                        onChange={(event) => toggleAutomationRule(rule.evento, event.target.checked)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
 
-        {/* Right Column: WhatsApp Preview */}
-        <div className="w-full lg:w-[350px] shrink-0 sticky top-0 h-fit space-y-4">
-          <Card className="border-border shadow-sm bg-muted/20 pb-0">
-            <CardHeader className="p-4 pb-0 items-center justify-center">
-              <span className="inline-flex items-center gap-1.5 text-xs uppercase tracking-wider font-bold text-muted-foreground bg-background rounded-full px-3 py-1 shadow-sm border mb-2">
-                <Smartphone className="h-3 w-3" />
-                Prévia: {recipientPreviewCount} destinatários
+            {/* Row 2: Textarea + AI buttons side-by-side */}
+            <div className="grid gap-3 md:grid-cols-[1fr,auto]">
+              <div>
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1 block">Conteúdo da mensagem</label>
+                <Textarea
+                  className="h-36 text-xs resize-none"
+                  value={editorText}
+                  onChange={(e) => setEditorText(e.target.value)}
+                  placeholder="Digite sua mensagem aqui…"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5 md:w-32">
+                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                  <Bot className="h-3 w-3" /> Apoio IA
+                </span>
+                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("shorten", editorText))}>✂️ Encurtar</button>
+                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("firm", editorText))}>💪 Mais firme</button>
+                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("friendly", editorText))}>😊 Amigável</button>
+                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("bullets", editorText))}>📋 Bullets</button>
+                <button className="text-[10px] font-bold px-2 py-1.5 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 hover:bg-amber-100 text-amber-700 dark:text-amber-400 transition-colors text-left flex items-center gap-1" onClick={() => setEditorText(aiTransform("versions", editorText))}>
+                  <Sparkles className="h-3 w-3" /> 3 versões
+                </button>
+              </div>
+            </div>
+
+            {/* Row 3: Actions */}
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => {
+                  if (!templateNameDraft.trim()) { toast("Informe um nome.", "error"); return; }
+                  if (!editorText.trim()) { toast("Conteúdo vazio.", "error"); return; }
+                  upsertTemplate({
+                    id: selectedTemplate?.id,
+                    nome: templateNameDraft,
+                    conteudo: editorText,
+                    companyId: segmentacao.companyId,
+                    unitId: segmentacao.unitId,
+                    teamId: segmentacao.teamId,
+                  });
+                  setTemplateNameDraft("");
+                  toast("Template salvo!", "success");
+                }}
+              >
+                Salvar Template
+              </Button>
+              <Button variant="ghost" size="sm" className="text-xs text-muted-foreground ml-auto" onClick={() => { setEditorText(""); setSelectedTemplateId(""); toast("Editor limpo.", "info"); }}>
+                Limpar
+              </Button>
+            </div>
+          </div>
+
+          {/* Segmentation row — compact */}
+          <div className="panel p-3">
+            <div className="flex items-center gap-2 mb-2">
+              <Filter className="h-3.5 w-3.5 text-blue-500" />
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Público-alvo</span>
+              <Badge variant="secondary" className="ml-auto text-[9px]">{recipientPreviewCount} pessoa{recipientPreviewCount !== 1 ? "s" : ""}</Badge>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-1.5">
+              {mkSel("Empresa", segmentacao.companyId, (v) => setSegmentacao(p => ({ ...p, companyId: v || undefined, unitId: undefined, teamId: undefined })), "Todas", state.companies)}
+              {mkSel("Unidade", segmentacao.unitId, (v) => setSegmentacao(p => ({ ...p, unitId: v || undefined, teamId: undefined })), "Todas", unitOptions)}
+              {mkSel("Time", segmentacao.teamId, (v) => setSegmentacao(p => ({ ...p, teamId: v || undefined })), "Todos", teamOptions)}
+              {mkSel("Cargo", segmentacao.cargoId, (v) => setSegmentacao(p => ({ ...p, cargoId: v || undefined })), "Todos", state.roles)}
+              {mkSel("Contrato", segmentacao.tipo, (v) => setSegmentacao(p => ({ ...p, tipo: (v || undefined) as any })), "Todos", [{ id: "FIXO", nome: "Fixo" }, { id: "FREELA", nome: "Freela" }])}
+              {mkSel("Status", segmentacao.status, (v) => setSegmentacao(p => ({ ...p, status: (v || undefined) as any })), "Todos", [{ id: "ATIVO", nome: "Ativo" }, { id: "FERIAS", nome: "Férias" }, { id: "AFASTADO", nome: "Afastado" }, { id: "OFF_HOJE", nome: "Off hoje" }], "ALL_STATUS")}
+            </div>
+          </div>
+
+          {/* ── COLLAPSIBLE: Automations ──────────────── */}
+          <div className="panel overflow-hidden">
+            <button
+              onClick={() => setShowAutomations(p => !p)}
+              className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-xs font-bold text-foreground/80">
+                <Zap className="h-3.5 w-3.5 text-amber-500" />
+                Automações por Evento
+                <Badge variant="secondary" className="text-[8px] ml-1">{state.automationRules.filter(r => r.ativo).length}/{state.automationRules.length} ativas</Badge>
               </span>
-            </CardHeader>
-            <CardContent className="p-4 pt-2">
-              <div className="flex justify-center bg-transparent rounded-2xl">
-                <div className="w-full max-w-[320px] h-[580px] bg-[#efeae2] rounded-[36px] border-[10px] border-slate-900 shadow-2xl relative overflow-hidden flex flex-col font-sans shrink-0">
-                  {/* Camera hole */}
-                  <div className="absolute top-2 left-1/2 transform -translate-x-1/2 w-16 h-4 bg-slate-900 rounded-full z-20"></div>
-
-                  {/* WhatsApp Header */}
-                  <div className="bg-[#075e54] text-white px-4 pt-8 pb-3 shadow-md z-10 flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center relative shadow-sm">
-                        <Bot className="h-5 w-5 text-[#075e54]" />
-                        <div className="absolute bottom-0 right-0 h-3 w-3 bg-emerald-400 border-2 border-[#075e54] rounded-full"></div>
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-[15px] leading-tight text-white mb-0.5" style={{ textShadow: "0 1px 2px rgba(0,0,0,0.1)" }}>RH Manager</h4>
-                        <p className="text-[11px] text-white/90 font-medium tracking-wide">Business Account</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Chat Area */}
-                  <div className="flex-1 p-3 overflow-y-auto flex flex-col gap-3 relative bg-[url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png')] bg-cover">
-                    <div className="absolute inset-0 bg-white/40 mix-blend-overlay z-0"></div>
-
-                    <div className="bg-[#e1f3fb] text-[#54656f] text-[10px] px-3 py-1 rounded-lg uppercase tracking-wider self-center mb-1 shadow-sm font-semibold z-10 w-fit">
-                      Hoje
-                    </div>
-
-                    <div className="bg-white p-2.5 rounded-lg rounded-tl-none shadow-[0_1px_1px_rgba(0,0,0,0.1)] relative w-[88%] self-start group z-10">
-                      {/* Fake bubble tail */}
-                      <div className="absolute top-0 -left-2 w-2 h-3 bg-white" style={{ clipPath: "polygon(100% 0, 0 0, 100% 100%)" }}></div>
-                      <div className="text-[14px] text-[#111b21] leading-snug whitespace-pre-wrap font-sans">
-                        {(editorText || "Sua mensagem aparecerá aqui perfeitamente formatada como uma mensagem de WhatsApp.\n\nExperimente usar os atalhos de Inteligência Artificial para melhorar o tone.").split("\n").map((line, idx) => (
-                          <span key={`${line}-${idx}`}>
-                            {line}
-                            <br />
-                          </span>
-                        ))}
-                      </div>
-                      <div className="flex items-center justify-end gap-1 mt-1 opacity-60">
-                        <span className="text-[10px] text-[#667781] font-medium">10:42</span>
-                        <CheckCheck className="h-3 w-3 text-blue-500" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Send Action */}
-                  <div className="bg-[#f0f2f5] p-2 flex items-center justify-center z-10">
-                    <Button
-                      variant="primary"
-                      className="w-full h-11 rounded-xl text-sm shadow-md font-bold bg-[#00a884] hover:bg-[#008f6f] text-white flex items-center justify-center gap-2"
-                      onClick={() => {
-                        const recipients = sendCommunication({
-                          templateId: selectedTemplateId || undefined,
-                          conteudoFinal: editorText,
-                          segmentacao,
-                          gatilho: undefined
-                        });
-                        setLastRecipients(recipients);
-                        toast(`Mensagem enviada pelo canal de WhatsApp para ${recipients} pessoa(s)`, recipients > 0 ? "success" : "warning");
-                      }}
-                    >
-                      <Send className="h-4 w-4" />
-                      Disparar para {recipientPreviewCount} Colaboradores
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        <div className="flex flex-col lg:flex-row gap-4">
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50">
-                    <Zap className="h-3.5 w-3.5 text-amber-500" />
-                  </span>
-                  <CardTitle className="text-base font-semibold text-foreground">Automacoes por evento</CardTitle>
+              {showAutomations ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+            </button>
+            {showAutomations && (
+              <div className="p-3 pt-0 space-y-2">
+                <div className="grid gap-1.5 md:grid-cols-2">
+                  {state.automationRules.map((rule) => {
+                    const labels: Record<string, string> = {
+                      DOC_PENDENTE: "Doc. pendente", PIX_AUSENTE: "PIX ausente",
+                      ANIVERSARIO: "Aniversário", FERIAS_PROXIMAS: "Férias próximas",
+                      TREINAMENTO_VENCIDO: "Trein. vencido",
+                    };
+                    return (
+                      <label key={rule.id} className={cn("flex items-center justify-between rounded-lg border px-2.5 py-2 text-xs cursor-pointer transition-colors", rule.ativo ? "border-primary/40 bg-primary/5" : "border-border hover:bg-muted/40")}>
+                        <span className={cn("font-medium", rule.ativo ? "text-primary" : "text-foreground/80")}>{labels[rule.evento] ?? rule.evento}</span>
+                        <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary h-3.5 w-3.5" checked={rule.ativo} onChange={(e) => toggleAutomationRule(rule.evento, e.target.checked)} />
+                      </label>
+                    );
+                  })}
                 </div>
                 <Button
-                  variant="secondary"
-                  size="sm"
+                  variant="secondary" size="sm" className="w-full text-xs mt-1"
                   onClick={() => {
-                    const result = runCommunicationAutomations();
-                    setLastAutomationResult(result);
-                    toast(`Automações executadas: ${result.campanhas} campanha(s), ${result.destinatarios} destinatário(s)`, result.campanhas > 0 ? "success" : "info");
+                    const r = runCommunicationAutomations();
+                    setLastAutomationResult(r);
+                    toast(`${r.campanhas} campanha(s) gerada(s) para ${r.destinatarios} pessoa(s)`, r.campanhas > 0 ? "success" : "info");
                   }}
                 >
-                  Executar automacoes agora
+                  Executar automações agora
                 </Button>
               </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <p className="mt-1 text-xs text-muted-foreground mb-2">
-                Ultima execucao: {lastAutomationResult.campanhas} campanha(s),{" "}
-                {lastAutomationResult.destinatarios} destinatario(s)
-              </p>
-              <div className="grid gap-2 md:grid-cols-2">
-                {state.automationRules.map((rule) => {
-                  const eventLabel: Record<string, string> = {
-                    DOC_PENDENTE: "Documento pendente",
-                    PIX_AUSENTE: "Chave PIX ausente",
-                    ANIVERSARIO: "Aniversario do colaborador",
-                    FERIAS_PROXIMAS: "Ferias proximas",
-                    TREINAMENTO_VENCIDO: "Treinamento vencido"
-                  };
-                  return (
-                    <label
-                      key={rule.id}
-                      className="flex items-center justify-between rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground/90 hover:bg-muted/50 transition-colors"
-                    >
-                      <div>
-                        <span className="font-medium">{eventLabel[rule.evento] ?? rule.evento}</span>
-                        <span className="ml-2 text-[11px] text-muted-foreground/70">{rule.evento}</span>
+            )}
+          </div>
+
+          {/* ── COLLAPSIBLE: Logs ──────────────────────── */}
+          <div className="panel overflow-hidden">
+            <button
+              onClick={() => setShowLogs(p => !p)}
+              className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-xs font-bold text-foreground/80">
+                <History className="h-3.5 w-3.5 text-slate-500" />
+                Histórico de Disparos
+                <Badge variant="secondary" className="text-[8px] ml-1">{state.communicationLogs.length}</Badge>
+              </span>
+              {showLogs ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+            </button>
+            {showLogs && (
+              <div className="p-3 pt-0">
+                <ul className="max-h-56 space-y-1.5 overflow-auto">
+                  {campaignsWithDetails.map(({ campaign, recipients }) => (
+                    <li key={campaign.id} className="rounded-lg border border-border bg-background p-2 text-[10px]">
+                      <div className="flex justify-between items-center">
+                        <span className="font-bold text-foreground/80">{campaign.gatilho || "Manual"}</span>
+                        <span className="text-muted-foreground font-mono">{new Date(campaign.criadoEm).toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
-                      <input
-                        type="checkbox"
-                        className="rounded border-slate-300 text-primary focus:ring-primary"
-                        checked={rule.ativo}
-                        onChange={(event) => toggleAutomationRule(rule.evento, event.target.checked)}
-                      />
-                    </label>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        <aside className="space-y-4">
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-sm font-semibold text-foreground">Logs de disparos</CardTitle>
-                <span className="text-xs text-muted-foreground">{state.communicationLogs.length} registros</span>
-              </div>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <ul className="max-h-80 space-y-2 overflow-auto text-xs text-muted-foreground/90">
-                {campaignsWithDetails.map(({ campaign, recipients }) => (
-                  <li key={campaign.id} className="rounded-lg border border-border bg-background p-2">
-                    <p className="font-semibold text-foreground/90">
-                      {campaign.gatilho || "Disparo manual"}
-                      <span className="ml-2 text-[11px] font-normal text-muted-foreground/70">
-                        {new Date(campaign.criadoEm).toLocaleString("pt-BR")}
-                      </span>
-                    </p>
-                    <p>
-                      Destinatarios: {recipients.length}
-                    </p>
-                    <p>
-                      Status: {recipients.filter((log) => log.status === "ENVIADO").length} enviado(s),{" "}
-                      {recipients.filter((log) => log.status === "ENTREGUE").length} entregue(s),{" "}
-                      {recipients.filter((log) => log.status === "ERRO").length} erro(s)
-                    </p>
-                  </li>
-                ))}
-                {campaignsWithDetails.length === 0 && (
-                  <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-6 text-center">
-                    <History className="h-6 w-6 text-muted-foreground/40" />
-                    <p className="text-xs text-muted-foreground/70">Nenhum disparo registrado ainda.</p>
-                  </li>
-                )}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="inline-flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <Workflow className="h-4 w-4" />
-                  Conectores de tarefas (webhook)
-                </CardTitle>
-                <Button variant="ghost" size="sm" className="px-2 py-1 text-xs" onClick={() => { syncConnectorEvents(); toast("Eventos sincronizados.", "success"); }}>
-                  Sincronizar eventos
-                </Button>
-              </div>
-            </CardHeader>
-
-            <CardContent className="p-4 pt-0">
-              <div className="space-y-2 rounded-xl border border-border bg-muted/50 p-3">
-                <label className="text-xs text-muted-foreground">
-                  Nome
-                  <Input
-                    className="mt-1"
-                    placeholder="Conector Jira, Notion, etc"
-                    value={webhookDraft.nome}
-                    onChange={(event) =>
-                      setWebhookDraft((previous) => ({ ...previous, nome: event.target.value }))
-                    }
-                  />
-                </label>
-
-                <label className="text-xs text-muted-foreground">
-                  Endpoint
-                  <Input
-                    className="mt-1"
-                    placeholder="https://seu-app.com/webhook"
-                    value={webhookDraft.endpoint}
-                    onChange={(event) =>
-                      setWebhookDraft((previous) => ({ ...previous, endpoint: event.target.value }))
-                    }
-                  />
-                </label>
-
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground/90">
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary"
-                      checked={webhookDraft.ativo}
-                      onChange={(event) =>
-                        setWebhookDraft((previous) => ({ ...previous, ativo: event.target.checked }))
-                      }
-                    />
-                    Ativo
-                  </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary"
-                      checked={webhookDraft.aviso}
-                      onChange={(event) =>
-                        setWebhookDraft((previous) => ({ ...previous, aviso: event.target.checked }))
-                      }
-                    />
-                    AVISO_DISPARADO
-                  </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary"
-                      checked={webhookDraft.recrutamento}
-                      onChange={(event) =>
-                        setWebhookDraft((previous) => ({ ...previous, recrutamento: event.target.checked }))
-                      }
-                    />
-                    RECRUTAMENTO_ATRASADO
-                  </label>
-                  <label className="inline-flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      className="rounded border-slate-300 text-primary focus:ring-primary"
-                      checked={webhookDraft.treinamento}
-                      onChange={(event) =>
-                        setWebhookDraft((previous) => ({ ...previous, treinamento: event.target.checked }))
-                      }
-                    />
-                    TREINAMENTO_VENCIDO
-                  </label>
-                </div>
-
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="w-full"
-                  onClick={() => {
-                    const events = [
-                      webhookDraft.aviso ? "AVISO_DISPARADO" : null,
-                      webhookDraft.recrutamento ? "RECRUTAMENTO_ATRASADO" : null,
-                      webhookDraft.treinamento ? "TREINAMENTO_VENCIDO" : null
-                    ].filter(Boolean) as Array<
-                      "AVISO_DISPARADO" | "RECRUTAMENTO_ATRASADO" | "TREINAMENTO_VENCIDO"
-                    >;
-                    if (!webhookDraft.nome.trim()) {
-                      toast("Informe um nome para o conector.", "error");
-                      return;
-                    }
-                    if (!webhookDraft.endpoint.trim()) {
-                      toast("Informe o endpoint do webhook.", "error");
-                      return;
-                    }
-                    upsertWebhook({
-                      nome: webhookDraft.nome,
-                      endpoint: webhookDraft.endpoint,
-                      ativo: webhookDraft.ativo,
-                      eventos: events
-                    });
-                    setWebhookDraft({
-                      nome: "",
-                      endpoint: "",
-                      ativo: false,
-                      aviso: true,
-                      recrutamento: true,
-                      treinamento: false
-                    });
-                    toast("Conector salvo com sucesso.", "success");
-                  }}
-                >
-                  Salvar conector
-                </Button>
-              </div>
-
-              <ul className="mt-2 max-h-40 space-y-2 overflow-auto text-xs text-muted-foreground/90">
-                {state.connectorWebhooks.map((webhook) => (
-                  <li key={webhook.id} className="rounded-lg border border-border bg-background p-2">
-                    <p className="font-semibold text-foreground/90">{webhook.nome}</p>
-                    <p>{webhook.endpoint}</p>
-                    <p>
-                      {webhook.ativo ? "Ativo" : "Inativo"} · eventos: {webhook.eventos.join(", ")}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="p-4 pb-2">
-              <CardTitle className="text-sm font-semibold text-foreground">Registro de eventos do webhook</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 pt-0">
-              <ul className="mt-2 max-h-56 space-y-2 overflow-auto text-xs text-muted-foreground/90">
-                {[...state.connectorEvents]
-                  .reverse()
-                  .slice(0, 25)
-                  .map((event) => (
-                    <li key={event.id} className="rounded-lg border border-border bg-background p-2">
-                      <p className="font-semibold text-foreground/90">{event.evento}</p>
-                      <p>{event.payloadResumo}</p>
-                      <p>{new Date(event.criadoEm).toLocaleString("pt-BR")}</p>
+                      <p className="text-muted-foreground mt-0.5">
+                        {recipients.length} dest. · {recipients.filter(l => l.status === "ENVIADO").length} env. · {recipients.filter(l => l.status === "ENTREGUE").length} ent. · {recipients.filter(l => l.status === "ERRO").length} erro
+                      </p>
                     </li>
                   ))}
-                {state.connectorEvents.length === 0 && (
-                  <li className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-border py-6 text-center">
-                    <Zap className="h-6 w-6 text-muted-foreground/40" />
-                    <p className="text-xs text-muted-foreground/70">Nenhum evento sincronizado.</p>
-                  </li>
+                  {campaignsWithDetails.length === 0 && (
+                    <li className="text-center py-6 text-xs text-muted-foreground">Nenhum disparo registrado.</li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+
+          {/* ── COLLAPSIBLE: Webhooks ─────────────────── */}
+          <div className="panel overflow-hidden">
+            <button
+              onClick={() => setShowWebhooks(p => !p)}
+              className="w-full flex items-center justify-between p-3 hover:bg-muted/30 transition-colors"
+            >
+              <span className="flex items-center gap-2 text-xs font-bold text-foreground/80">
+                <Workflow className="h-3.5 w-3.5 text-purple-500" />
+                Conectores (Webhook)
+                <Badge variant="secondary" className="text-[8px] ml-1">{state.connectorWebhooks.length}</Badge>
+              </span>
+              {showWebhooks ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+            </button>
+            {showWebhooks && (
+              <div className="p-3 pt-0 space-y-3">
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">Nome</label>
+                    <Input className="h-7 text-[10px]" placeholder="Jira, Notion…" value={webhookDraft.nome} onChange={(e) => setWebhookDraft(p => ({ ...p, nome: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-muted-foreground uppercase block mb-0.5">Endpoint</label>
+                    <Input className="h-7 text-[10px]" placeholder="https://…" value={webhookDraft.endpoint} onChange={(e) => setWebhookDraft(p => ({ ...p, endpoint: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-3 text-[10px] text-muted-foreground">
+                  {[
+                    { key: "ativo", label: "Ativo" },
+                    { key: "aviso", label: "AVISO" },
+                    { key: "recrutamento", label: "RECRUTAMENTO" },
+                    { key: "treinamento", label: "TREINAMENTO" },
+                  ].map(({ key, label }) => (
+                    <label key={key} className="inline-flex items-center gap-1 cursor-pointer">
+                      <input type="checkbox" className="rounded border-slate-300 text-primary focus:ring-primary h-3 w-3"
+                        checked={(webhookDraft as any)[key]}
+                        onChange={(e) => setWebhookDraft(p => ({ ...p, [key]: e.target.checked }))}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+                <Button variant="secondary" size="sm" className="w-full text-xs" onClick={() => {
+                  const events = [
+                    webhookDraft.aviso ? "AVISO_DISPARADO" : null,
+                    webhookDraft.recrutamento ? "RECRUTAMENTO_ATRASADO" : null,
+                    webhookDraft.treinamento ? "TREINAMENTO_VENCIDO" : null,
+                  ].filter(Boolean) as Array<"AVISO_DISPARADO" | "RECRUTAMENTO_ATRASADO" | "TREINAMENTO_VENCIDO">;
+                  if (!webhookDraft.nome.trim()) { toast("Informe um nome.", "error"); return; }
+                  if (!webhookDraft.endpoint.trim()) { toast("Informe o endpoint.", "error"); return; }
+                  upsertWebhook({ nome: webhookDraft.nome, endpoint: webhookDraft.endpoint, ativo: webhookDraft.ativo, eventos: events });
+                  setWebhookDraft({ nome: "", endpoint: "", ativo: false, aviso: true, recrutamento: true, treinamento: false });
+                  toast("Conector salvo!", "success");
+                }}>
+                  Salvar conector
+                </Button>
+
+                {state.connectorWebhooks.length > 0 && (
+                  <ul className="space-y-1 mt-1 max-h-24 overflow-auto">
+                    {state.connectorWebhooks.map((w) => (
+                      <li key={w.id} className="rounded border border-border bg-background p-1.5 text-[10px] flex justify-between items-center">
+                        <span className="font-semibold text-foreground/80">{w.nome}</span>
+                        <span className="text-muted-foreground">{w.ativo ? "Ativo" : "Inativo"}</span>
+                      </li>
+                    ))}
+                  </ul>
                 )}
-              </ul>
-            </CardContent>
-          </Card>
-        </aside>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
