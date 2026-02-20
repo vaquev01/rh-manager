@@ -104,7 +104,7 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
         Pular para conteudo principal
       </a>
       <header className="px-5 pt-4 md:px-8 md:pt-6">
-        <div className="panel mb-4 overflow-hidden">
+        <div className="panel mb-4">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/80 px-4 py-3 md:px-6">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-muted-foreground/70">People Ops Multi-Empresa</p>

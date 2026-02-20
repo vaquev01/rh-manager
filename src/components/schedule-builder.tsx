@@ -364,7 +364,7 @@ export function ScheduleBuilder() {
         </div>
 
         {/* Type Filter - Segmented Control */}
-        <div className="px-4 pb-4">
+        <div className="px-3 pb-3">
           <div className="flex bg-slate-200/50 p-1 rounded-lg">
             <button
               onClick={() => setSelectedType("ALL")}
@@ -397,18 +397,18 @@ export function ScheduleBuilder() {
         </div>
 
         {/* Shift selector */}
-        <div className="border-b px-3 py-3 bg-muted/10">
-          <label className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2 block">
+        <div className="border-b px-3 py-2 bg-muted/10">
+          <label className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5 block">
             Turno ao escalar
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-1.5">
             {SHIFTS.map((shift, idx) => (
               <Button
                 key={shift.id}
                 variant={selectedShiftIdx === idx ? "primary" : "outline"}
                 size="sm"
                 className={cn(
-                  "h-auto flex-col items-start px-2 py-1.5 text-left transition-all",
+                  "h-auto flex-col items-start px-2 py-1 text-left transition-all",
                   selectedShiftIdx === idx ? "border-primary bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary" : "text-muted-foreground"
                 )}
                 onClick={() => setSelectedShiftIdx(idx)}
@@ -607,8 +607,21 @@ export function ScheduleBuilder() {
             <table className="w-full text-xs border-collapse relative">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-muted/50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left text-[11px] font-bold uppercase tracking-wider text-muted-foreground min-w-[200px] border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
-                    Funcao / Cargo
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-4 py-3 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] min-w-[200px]">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Funcao / Cargo</span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 text-primary hover:bg-primary/10"
+                        onClick={() => {
+                          const nome = prompt("Nome do novo cargo:");
+                          if (nome) addRole(nome);
+                        }}
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </th>
                   {weekDates.map((d) => {
                     const isToday = d === date;
@@ -621,7 +634,7 @@ export function ScheduleBuilder() {
                         onDrop={(e) => handleDayDrop(e, d)}
                         onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "px-2 py-3 text-center min-w-[160px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-muted/50 relative",
+                          "px-2 py-3 text-center min-w-[130px] border-r last:border-r-0 transition-all cursor-grab active:cursor-grabbing hover:bg-muted/50 relative",
                           isToday ? "bg-primary/5" : "bg-background",
                           draggingDay === d && "opacity-50 dashed-border",
                           targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
@@ -822,29 +835,6 @@ export function ScheduleBuilder() {
                     </tr>
                   );
                 })}
-
-                {/* Add Role Row */}
-                <tr>
-                  <td className="sticky left-0 z-10 bg-background px-4 py-3 border-r border-b-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full border-dashed text-xs h-8"
-                      onClick={() => {
-                        const nome = prompt("Nome do novo cargo:");
-                        if (nome) addRole(nome);
-                      }}
-                    >
-                      <Plus className="h-3.5 w-3.5 mr-2" />
-                      Adicionar Cargo
-                    </Button>
-                  </td>
-                  <td colSpan={7} className="bg-muted/30 border-b-0 p-2">
-                    <div className="flex items-center justify-center h-full text-xs text-muted-foreground/40 border-dashed border border-border rounded-lg mx-2">
-                      +
-                    </div>
-                  </td>
-                </tr>
               </tbody>
             </table>
           </div>
