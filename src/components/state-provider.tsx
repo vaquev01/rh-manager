@@ -946,8 +946,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
           .findIndex(
             (closure) =>
               closure.date === date &&
-              !closure.reabertoEm &&
-              (closure.companyId ?? "") === (filters.companyId ?? "")
+              !closure.reabertoEm
           );
 
         if (closureIdx < 0) {
