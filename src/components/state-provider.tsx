@@ -947,10 +947,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
             (closure) =>
               closure.date === date &&
               !closure.reabertoEm &&
-              (closure.companyId ?? "") === (filters.companyId ?? "") &&
-              (closure.unitId ?? "") === (filters.unitId ?? "") &&
-              (closure.teamId ?? "") === (filters.teamId ?? "") &&
-              (closure.cargoId ?? "") === (filters.cargoId ?? "")
+              (closure.companyId ?? "") === (filters.companyId ?? "")
           );
 
         if (closureIdx < 0) {

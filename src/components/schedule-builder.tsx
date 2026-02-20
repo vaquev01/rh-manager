@@ -608,9 +608,9 @@ export function ScheduleBuilder() {
             <table className="w-full text-left border-collapse min-w-[700px] table-fixed">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-muted/50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-2 xl:px-3 py-2 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] w-[140px] xl:w-[170px]">
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-2 xl:px-3 py-2 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] w-[120px] xl:w-[150px]">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Funcao / Cargo</span>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-tight">Função/Cargo</span>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -635,7 +635,7 @@ export function ScheduleBuilder() {
                         onDrop={(e) => handleDayDrop(e, d)}
                         onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "w-[calc((100%-140px)/7)] xl:w-[calc((100%-170px)/7)] border-b border-border/60 bg-slate-50/80 dark:bg-slate-900/80 py-2 px-1 xl:px-2 text-center transition-colors align-middle",
+                          "w-[calc((100%-120px)/7)] xl:w-[calc((100%-150px)/7)] border-b border-border/60 bg-slate-50/80 dark:bg-slate-900/80 py-2 px-1 xl:px-2 text-center transition-colors align-middle",
                           isToday ? "bg-primary/5" : "bg-background",
                           draggingDay === d && "opacity-50 dashed-border",
                           targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
@@ -665,7 +665,7 @@ export function ScheduleBuilder() {
                   return (
                     <tr key={role.id} className="bg-background hover:bg-muted/30 transition-colors">
                       {/* Role header cell */}
-                      <td className="sticky left-0 z-10 bg-background px-3 py-3 align-top border-r group-hover:bg-muted/30 shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)]">
+                      <td className="sticky left-0 z-10 bg-background px-3 py-3 align-top border-r group-hover:bg-muted/30 shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] w-[120px] xl:w-[150px]">
                         <div className="flex flex-col gap-2">
                           <div>
                             <p className="font-semibold text-foreground text-sm flex items-center gap-2 group/role">
