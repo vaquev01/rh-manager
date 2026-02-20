@@ -10,7 +10,7 @@ import { useToast } from "@/components/toast";
 import { asDateLabel } from "@/lib/date";
 import { money } from "@/lib/format";
 import { CheckCircle2, Clock3, Copy, CreditCard, Download, Lock, TrendingUp, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef } from "react";
 import { AdditionalDay } from "@/lib/types";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 
@@ -30,6 +30,8 @@ export function PixSidebar() {
         setHoursSource,
         setGlobalStandardHours,
         setGlobalAdditional,
+        addIndividualAdditional,
+        removeIndividualAdditional,
         validateHours,
         closePaymentsDay,
         downloadPixCsv,
@@ -123,18 +125,28 @@ export function PixSidebar() {
         toast("Relatório copiado!", "success");
     };
 
+    const handlePrintPix = () => {
+        window.print();
+    };
+
     return (
-        <div className="space-y-4 h-full flex flex-col">
-            <Card className="flex-1 flex flex-col shadow-sm border-border">
-                <CardHeader className="p-4 pb-2 shrink-0">
+        <div className="space-y-4 h-full flex flex-col relative print-mode-wrapper">
+            <Card className="flex-1 flex flex-col shadow-sm border-border min-h-0 printable-card">
+                <CardHeader className="p-4 pb-2 shrink-0 hide-on-print">
                     <CardTitle className="text-xs font-bold uppercase tracking-wide flex items-center gap-2 text-muted-foreground">
                         <CreditCard className="h-3.5 w-3.5" />
                         Calculadora do Dia
                     </CardTitle>
                 </CardHeader>
                 <CardContent className="p-4 pt-0 flex-1 flex flex-col gap-4 overflow-y-auto">
+                    {/* Print Header Visible Only When Printing */}
+                    <div className="hidden show-on-print mb-4 border-b pb-4">
+                        <h2 className="text-lg font-bold">Resumo Diário de Pagamentos (PIX)</h2>
+                        <p className="text-sm text-muted-foreground">Data: {asDateLabel(date)}</p>
+                    </div>
+
                     {/* Totals */}
-                    <div>
+                    <div className="hide-on-print">
                         <div className="flex items-baseline justify-between mb-2">
                             <span className="text-2xl font-bold tracking-tight text-slate-900">{money(totalCost)}</span>
                             <span className="text-xs text-muted-foreground">{filteredLines.length} pessoas</span>
@@ -208,10 +220,10 @@ export function PixSidebar() {
                         </div>
                     )}
 
-                    <Separator />
+                    <Separator className="hide-on-print" />
 
                     {/* Controls */}
-                    <div className="space-y-3">
+                    <div className="space-y-3 hide-on-print">
                         <div className="grid grid-cols-2 gap-2">
                             <Button
                                 variant={paymentContext.config.mode === "CUSTO" ? "primary" : "outline"}
@@ -305,15 +317,20 @@ export function PixSidebar() {
                         </div>
                     </div>
 
-                    <Separator />
+                    <Separator className="hide-on-print" />
 
                     {/* Pix List */}
-                    <div className="flex-1 min-h-0 flex flex-col">
+                    <div className="flex-1 min-h-[300px] flex flex-col">
                         <div className="flex items-center justify-between mb-2">
-                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Resumo PIX</h4>
-                            <Button variant="ghost" size="icon" className="h-5 w-5" onClick={handleCopyReport} title="Copiar Relatório">
-                                <Copy className="h-3 w-3 text-muted-foreground/70" />
-                            </Button>
+                            <h4 className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Resumo PIX {!paymentContext.locked && "- Somente após Validar"}</h4>
+                            <div className="flex gap-1 hide-on-print">
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyReport} title="Copiar Relatório em Texto">
+                                    <Copy className="h-3 w-3 text-muted-foreground/70" />
+                                </Button>
+                                <Button variant="ghost" size="icon" className="h-6 w-6 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={handlePrintPix} title="Gerar Imagem Visual">
+                                    <Download className="h-3.5 w-3.5" />
+                                </Button>
+                            </div>
                         </div>
 
                         {visiblePixSummary.length === 0 ? (
@@ -322,48 +339,122 @@ export function PixSidebar() {
                             </div>
                         ) : (
                             <ul className="flex-1 overflow-y-auto space-y-1.5 pr-1">
-                                {visiblePixSummary.map(pix => (
-                                    <li key={pix.personId} className="flex justify-between items-center bg-muted/50 p-2 rounded border border-border/50">
-                                        <div className="min-w-0 flex-1 mr-2">
-                                            <div className="text-xs font-semibold text-foreground/90 truncate">{pix.nome}</div>
-                                            <div className="text-[9px] text-muted-foreground font-mono truncate">{pix.chavePix}</div>
-                                        </div>
-                                        <div className="text-xs font-bold text-emerald-600 dark:text-emerald-400">{money(pix.valor)}</div>
-                                    </li>
-                                ))}
+                                {visiblePixSummary.map(pix => {
+                                    const additionals = state.additionalDays.filter(a => a.personId === pix.personId && a.date === date);
+
+                                    return (
+                                        <li key={pix.personId} className="bg-muted/30 p-2.5 rounded border border-border/50 group printable-list-item print-bg-transparent print-border-b">
+                                            <div className="flex justify-between items-start mb-1">
+                                                <div className="min-w-0 flex-1 mr-2">
+                                                    <div className="text-xs font-semibold text-foreground/90 truncate">{pix.nome}</div>
+                                                    <div className="text-[10px] text-muted-foreground font-mono truncate">{pix.chavePix || "Sem PIX"}</div>
+                                                </div>
+                                                <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{money(pix.valor)}</div>
+                                            </div>
+
+                                            {/* Additionals View & Add Button */}
+                                            <div className="mt-2 hide-on-print">
+                                                {additionals.length > 0 && (
+                                                    <div className="space-y-1 mt-2 border-t border-border/50 pt-1.5 mb-2">
+                                                        {additionals.map(a => (
+                                                            <div key={a.id} className="flex items-center justify-between text-[10px]">
+                                                                <span className="text-muted-foreground flex items-center gap-1">
+                                                                    <div className="h-1 w-1 rounded-full bg-emerald-500"></div>
+                                                                    {a.tipo.toLowerCase()} {a.descricao ? `(${a.descricao})` : ""}
+                                                                </span>
+                                                                <div className="flex items-center gap-1">
+                                                                    <span className="font-semibold text-emerald-600">+{money(a.valor)}</span>
+                                                                    <button
+                                                                        onClick={() => removeIndividualAdditional(a.id)}
+                                                                        disabled={paymentContext.locked}
+                                                                        className="text-red-400 hover:text-red-600 ml-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+
+                                                {/* Add quick additional */}
+                                                {!paymentContext.locked && (
+                                                    <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity mt-1">
+                                                        <Input
+                                                            id={`add-val-${pix.personId}`}
+                                                            type="number"
+                                                            placeholder="R$"
+                                                            className="h-6 text-[10px] w-16"
+                                                        />
+                                                        <Input
+                                                            id={`add-desc-${pix.personId}`}
+                                                            type="text"
+                                                            placeholder="Motivo..."
+                                                            className="h-6 text-[10px] flex-1"
+                                                        />
+                                                        <Button
+                                                            size="sm"
+                                                            variant="secondary"
+                                                            className="h-6 text-[10px] px-2"
+                                                            onClick={async () => {
+                                                                const valInput = document.getElementById(`add-val-${pix.personId}`) as HTMLInputElement;
+                                                                const descInput = document.getElementById(`add-desc-${pix.personId}`) as HTMLInputElement;
+
+                                                                if (valInput && Number(valInput.value) > 0) {
+                                                                    addIndividualAdditional(
+                                                                        pix.personId,
+                                                                        {
+                                                                            tipo: "OUTRO",
+                                                                            valor: Number(valInput.value),
+                                                                            descricao: descInput?.value || "Adicional extra",
+                                                                            pagavelViaPix: true
+                                                                        }
+                                                                    );
+                                                                    valInput.value = "";
+                                                                    if (descInput) descInput.value = "";
+                                                                    toast(`Adicionado a ${pix.nome.split(" ")[0]}`, "success");
+                                                                }
+                                                            }}
+                                                        >
+                                                            Add Extra
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </li>
+                                    );
+                                })}
                             </ul>
                         )}
                     </div>
 
-                    <div className="space-y-2 mt-auto pt-2">
+                    <div className="space-y-2 mt-auto pt-2 hide-on-print">
                         <div className="flex gap-2">
                             {!showCloseConfirm ? (
                                 <Button
-                                    className="flex-1 h-9 text-xs"
-                                    variant="outline"
+                                    className="flex-1 h-9 text-xs font-bold transition-all shadow-sm bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white"
                                     disabled={paymentContext.locked || !canClose}
                                     onClick={() => setShowCloseConfirm(true)}
                                 >
-                                    <Lock className="mr-1.5 h-3.5 w-3.5" /> Fechar Dia
+                                    <Lock className="mr-1.5 h-3.5 w-3.5" /> Travar e Fechar Dia
                                 </Button>
                             ) : (
                                 <Button
-                                    className="flex-1 h-9 text-xs"
-                                    variant="danger"
+                                    className="flex-1 h-9 text-xs shadow-sm bg-red-600 hover:bg-red-700 text-white"
                                     onClick={() => {
                                         closePaymentsDay();
                                         setShowCloseConfirm(false);
-                                        toast("Dia fechado com sucesso", "success");
+                                        toast("Dia fechado com sucesso. Histórico salvo!", "success");
                                     }}
                                 >
-                                    Confirmar
+                                    Confirmar Fechamento
                                 </Button>
                             )}
 
                             <Button
-                                variant="secondary"
+                                variant="outline"
                                 size="icon"
-                                className="h-9 w-9 shrink-0"
+                                className="h-9 w-9 shrink-0 border-emerald-200 bg-emerald-50 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800"
                                 title="Validar Horas"
                                 disabled={paymentContext.locked}
                                 onClick={() => validateHours()}

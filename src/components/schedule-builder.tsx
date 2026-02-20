@@ -583,7 +583,7 @@ export function ScheduleBuilder() {
           </div>
 
           {/* Stats pills */}
-          <div className="flex items-center gap-3 text-xs">
+          <div className="flex items-center gap-2 text-[10px] xl:text-xs">
             <Badge variant="outline" className="h-7 px-2.5 bg-muted/50">
               {weekStats.totalAssigned} / {weekStats.totalNeeded} escalados
             </Badge>
@@ -605,10 +605,10 @@ export function ScheduleBuilder() {
         <Card className="flex-1 overflow-hidden flex flex-col">
           {/* Scrollable grid area */}
           <div className="flex-1 overflow-auto rounded-b-xl custom-scrollbar relative">
-            <table className="w-full text-left border-collapse min-w-[700px]">
+            <table className="w-full text-left border-collapse min-w-[700px] table-fixed">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-muted/50 border-b shadow-sm">
-                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-3 py-3 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] min-w-[140px] max-w-[180px]">
+                  <th className="sticky left-0 z-30 bg-muted/95 backdrop-blur px-2 xl:px-3 py-2 text-left border-r shadow-[4px_0_24px_-8px_rgba(0,0,0,0.1)] w-[140px] xl:w-[170px]">
                     <div className="flex items-center justify-between">
                       <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Funcao / Cargo</span>
                       <Button
@@ -635,16 +635,16 @@ export function ScheduleBuilder() {
                         onDrop={(e) => handleDayDrop(e, d)}
                         onDragLeave={() => setTargetDay(null)}
                         className={cn(
-                          "w-[90px] sm:w-[110px] border-b border-border/60 bg-slate-50/80 dark:bg-slate-900/80 py-3 px-2 md:px-3 text-center transition-colors",
+                          "w-[calc((100%-140px)/7)] xl:w-[calc((100%-170px)/7)] border-b border-border/60 bg-slate-50/80 dark:bg-slate-900/80 py-2 px-1 xl:px-2 text-center transition-colors align-middle",
                           isToday ? "bg-primary/5" : "bg-background",
                           draggingDay === d && "opacity-50 dashed-border",
                           targetDay === d && "bg-primary/10 ring-2 ring-primary ring-inset z-10"
                         )}
                       >
-                        <div className={cn("text-[10px] uppercase tracking-wider font-semibold mb-0.5 pointer-events-none", isToday ? "text-primary" : "text-muted-foreground")}>
+                        <div className={cn("text-[9px] xl:text-[10px] uppercase tracking-wider font-semibold mb-0.5 pointer-events-none", isToday ? "text-primary" : "text-muted-foreground")}>
                           {dayNameLong(d)}
                         </div>
-                        <div className={cn("text-sm pointer-events-none", isToday ? "font-bold text-primary" : "font-medium text-foreground")}>
+                        <div className={cn("text-xs xl:text-sm pointer-events-none leading-none", isToday ? "font-bold text-primary" : "font-medium text-foreground")}>
                           {shortDate(d)}
                         </div>
 
