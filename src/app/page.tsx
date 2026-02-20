@@ -16,7 +16,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Right Sidebar: Pix & Calculator */}
-        <aside className="w-[260px] xl:w-[280px] shrink-0 h-full">
+        <aside className="w-[230px] xl:w-[250px] shrink-0 h-full">
           <PixSidebar />
         </aside>
       </div>

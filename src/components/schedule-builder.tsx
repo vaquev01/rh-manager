@@ -352,7 +352,7 @@ export function ScheduleBuilder() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 h-full">
       {/* ── LEFT: People Pool ── */}
-      <Card className="flex w-full lg:w-[180px] xl:w-[220px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
+      <Card className="flex w-full lg:w-[160px] xl:w-[200px] shrink-0 flex-col h-full border-border bg-muted/50 shadow-none">
         <div className="px-3 py-2">
           <h3 className="flex items-center gap-1.5 text-xs font-bold text-foreground mb-1 mt-0.5">
             <Users className="h-3.5 w-3.5 text-primary" />
@@ -770,22 +770,22 @@ export function ScheduleBuilder() {
                                     onDragStart={(e) => handleChipDragStart(e, sched.id, sched.personId)}
                                     onDragEnd={handleDragEnd}
                                     className={cn(
-                                      "group flex items-center gap-2 rounded-lg border bg-background pl-2 pr-1 py-1.5 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing",
+                                      "group flex items-center gap-1.5 rounded-lg border bg-background pl-1.5 pr-1 py-1 shadow-sm transition-all hover:shadow-md hover:border-primary/30 cursor-grab active:cursor-grabbing",
                                       isMe && "opacity-30 scale-95 grayscale"
                                     )}
                                   >
-                                    <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200 text-[9px] font-bold text-muted-foreground/90 border border-white shadow-sm">
+                                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-50 text-[8px] font-bold text-muted-foreground/90 border border-white shadow-sm">
                                       {(person?.nome ?? "?").split(" ").map((n) => n[0]).join("").slice(0, 2)}
                                     </div>
 
                                     <div className="min-w-0 flex-1">
                                       <div className="flex flex-col pr-1 gap-0.5 min-w-0">
-                                        <p className="text-[10px] font-semibold text-foreground/90 leading-tight whitespace-normal break-words">
+                                        <p className="text-[10px] sm:text-[11px] font-semibold text-foreground/90 leading-none whitespace-normal break-normal">
                                           {person?.nome ?? sched.personId}
                                         </p>
                                         {person?.type && (
                                           <span className={cn(
-                                            "w-max text-[8px] font-bold px-1 rounded-sm uppercase tracking-wider",
+                                            "w-max text-[8px] font-bold px-1 rounded-sm uppercase tracking-wider mt-0.5",
                                             person.type === "FIXO" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
                                           )}>
                                             {person.type}
