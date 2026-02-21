@@ -1,18 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
+import { compare } from "bcrypt";
 
 /**
- * B People — Auth API
+ * B People — Auth Login API (Phase 16: real Prisma)
  * POST /api/auth/login
- * 
- * In production, this will validate against DB and return JWT.
- * Currently validates against mock users.
+ *
+ * Note: Primary login uses NextAuth at /api/auth/[...nextauth].
+ * This route is kept as a compatibility layer / direct REST login endpoint.
  */
-
-const USERS = [
-    { email: "admin@wardogs.com", senha: "wardogs", role: "ADMIN", tenant: "wardogs", nome: "Admin Wardogs" },
-    { email: "gerente@wardogs.com", senha: "wardogs", role: "GERENTE", tenant: "wardogs", nome: "Gerente Wardogs" },
-    { email: "rh@bpeople.com", senha: "bpeople", role: "RH", tenant: "bpeople", nome: "RH B People" },
-];
 
 export async function POST(request: NextRequest) {
     try {
@@ -26,42 +22,50 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const user = USERS.find(
-            (u) => u.email.toLowerCase() === email.toLowerCase() && u.senha === senha
-        );
+        const user = await prisma.user.findFirst({
+            where: { email: { equals: email, mode: "insensitive" } },
+            include: { tenant: true },
+        });
 
-        if (!user) {
-            return NextResponse.json(
-                { success: false, error: "Credenciais inválidas" },
-                { status: 401 }
-            );
+        if (!user || !user.senhaHash) {
+            return NextResponse.json({ success: false, error: "Credenciais inválidas" }, { status: 401 });
         }
 
-        // In production: generate JWT, set httpOnly cookie
+        const valid = await compare(senha, user.senhaHash);
+        if (!valid) {
+            return NextResponse.json({ success: false, error: "Credenciais inválidas" }, { status: 401 });
+        }
+
+        // Update last login timestamp
+        await prisma.user.update({
+            where: { id: user.id },
+            data: { ultimoLogin: new Date() },
+        });
+
         const response = NextResponse.json({
             success: true,
             data: {
+                id: user.id,
                 email: user.email,
                 nome: user.nome,
                 role: user.role,
-                tenant: user.tenant,
+                tenantId: user.tenantId,
+                tenant: user.tenant.nome,
             },
         });
 
-        // Set auth cookie (for middleware)
+        // Set auth cookie for middleware compatibility
         response.cookies.set("bpeople_auth", "1", {
-            httpOnly: false, // needs client-side access for now
+            httpOnly: false,
             secure: process.env.NODE_ENV === "production",
             sameSite: "lax",
-            maxAge: 604800, // 7 days
+            maxAge: 60 * 60 * 24 * 30, // 30 days (matches NextAuth JWT)
             path: "/",
         });
 
         return response;
-    } catch {
-        return NextResponse.json(
-            { success: false, error: "Erro interno" },
-            { status: 500 }
-        );
+    } catch (err: any) {
+        console.error("POST /api/auth/login error:", err);
+        return NextResponse.json({ success: false, error: "Erro interno" }, { status: 500 });
     }
 }
