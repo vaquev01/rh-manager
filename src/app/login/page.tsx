@@ -16,20 +16,23 @@ export default function LoginPage() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError("");
         setLoading(true);
 
-        setTimeout(() => {
-            const ok = login(email, senha);
+        try {
+            const ok = await login(email, senha);
             if (ok) {
                 router.push("/");
             } else {
                 setError("E-mail ou senha incorretos.");
             }
+        } catch (err) {
+            setError("Ocorreu um erro ao tentar fazer login.");
+        } finally {
             setLoading(false);
-        }, 400);
+        }
     };
 
     return (
