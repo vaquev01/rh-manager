@@ -425,6 +425,112 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     setState(createInitialState());
   }, []);
 
+  // ── Real-data hydration from Prisma API ──────────────────────────────────
+  useEffect(() => {
+    let cancelled = false;
+
+    async function hydrate() {
+      try {
+        const [peopleRes, orgRes] = await Promise.all([
+          fetch("/api/people?limit=200"),
+          fetch("/api/org"),
+        ]);
+
+        if (!peopleRes.ok || !orgRes.ok) return; // unauthenticated or error — keep mock state
+
+        const [peopleJson, orgJson] = await Promise.all([
+          peopleRes.json(),
+          orgRes.json(),
+        ]);
+
+        if (cancelled) return;
+
+        const apiPeople: any[] = peopleJson.data ?? [];
+        const apiCompanies: any[] = orgJson.data ?? [];
+
+        if (apiPeople.length === 0 && apiCompanies.length === 0) return; // empty DB — keep demo data
+
+        // Map API people to local Person type
+        const mappedPeople = apiPeople.map((p: any) => ({
+          id: p.id,
+          nome: p.nome ?? "",
+          email: p.email ?? "",
+          telefone: p.telefone ?? "",
+          cpf: p.cpf ?? "",
+          type: p.tipo === "FREELA" ? "FREELA" : "FIXO",
+          status: p.status ?? "ATIVO",
+          companyId: p.unit?.company?.id ?? p.companyId ?? "",
+          unitId: p.unitId ?? "",
+          teamId: p.teamId ?? null,
+          cargoId: p.cargoId ?? "",
+          cargo: p.cargo?.nome ?? "",
+          valorHora: p.valorHora ?? 0,
+          pix: p.pix ?? "",
+          foto: p.foto ?? null,
+          dataAdmissao: p.dataAdmissao ? p.dataAdmissao.split("T")[0] : null,
+          dataNascimento: p.dataNascimento ? p.dataNascimento.split("T")[0] : null,
+          createdAt: p.criadoEm ?? new Date().toISOString(),
+          updatedAt: p.atualizadoEm ?? new Date().toISOString(),
+          // Keep all existing fields that the API doesn't manage
+          shifts: [],
+          additionals: [],
+          paymentHistory: [],
+          documents: [],
+          observations: [],
+          skills: [],
+        }));
+
+        // Map API companies/units/teams
+        const mappedCompanies = apiCompanies.map((c: any) => ({
+          id: c.id,
+          groupId: c.groupId ?? "",
+          nome: c.nome ?? "",
+          cnpj: c.cnpj ?? "",
+          segmento: c.segmento ?? "",
+          ativo: c.ativo ?? true,
+        }));
+
+        const mappedUnits = apiCompanies.flatMap((c: any) =>
+          (c.units ?? []).map((u: any) => ({
+            id: u.id,
+            companyId: c.id,
+            nome: u.nome ?? "",
+            codigo: u.codigo ?? "",
+            ativo: u.ativo ?? true,
+          }))
+        );
+
+        const mappedTeams = apiCompanies.flatMap((c: any) =>
+          (c.units ?? []).flatMap((u: any) =>
+            (u.teams ?? []).map((t: any) => ({
+              id: t.id,
+              unitId: u.id,
+              nome: t.nome ?? "",
+              departamento: t.departamento ?? "",
+              ativo: t.ativo ?? true,
+            }))
+          )
+        );
+
+        setState((prev) => ({
+          ...prev,
+          people: mappedPeople.length > 0 ? (mappedPeople as any) : prev.people,
+          companies: mappedCompanies.length > 0 ? (mappedCompanies as any) : prev.companies,
+          units: mappedUnits.length > 0 ? (mappedUnits as any) : prev.units,
+          teams: mappedTeams.length > 0 ? (mappedTeams as any) : prev.teams,
+          version: prev.version + 1,
+          updatedAt: new Date().toISOString(),
+        }) as any);
+      } catch {
+        // silently keep mock state on any fetch error
+      }
+    }
+
+    hydrate();
+    return () => { cancelled = true; };
+  }, []);
+  // ── end hydration ──────────────────────────────────────────────────────────
+
   useEffect(() => {
     if (!isValidAppState(state)) {
       return;
