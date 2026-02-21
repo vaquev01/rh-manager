@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut, ShieldCheck } from "lucide-react";
+import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut, ShieldCheck, CalendarDays } from "lucide-react";
 
 import {
   Select,
@@ -20,8 +20,13 @@ import { NotificationCenter } from "@/components/notification-center";
 const NAV_ITEMS = [
   {
     href: "/",
-    label: "Dashboard",
+    label: "Panorama RH",
     icon: LayoutGrid
+  },
+  {
+    href: "/escala",
+    label: "Escala",
+    icon: CalendarDays
   },
   {
     href: "/equipe",
