@@ -9,6 +9,7 @@ import { PageSkeleton } from "@/components/loading-skeleton";
 import { AppFrame } from "@/components/app-frame";
 import { AppStateProvider } from "@/components/state-provider";
 import { ToastProvider } from "@/components/toast";
+import { ReactQueryProvider } from "@/lib/react-query-provider";
 
 function AuthGuardedShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -46,8 +47,10 @@ function AuthGuardedShell({ children }: { children: ReactNode }) {
 
 export function ClientShell({ children }: { children: ReactNode }) {
   return (
-    <AuthProvider>
-      <AuthGuardedShell>{children}</AuthGuardedShell>
-    </AuthProvider>
+    <ReactQueryProvider>
+      <AuthProvider>
+        <AuthGuardedShell>{children}</AuthGuardedShell>
+      </AuthProvider>
+    </ReactQueryProvider>
   );
 }

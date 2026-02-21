@@ -15,10 +15,18 @@
     "check": "npm run lint && npm run typecheck && npm run build"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.995.0",
+    "@aws-sdk/s3-request-presigner": "^3.995.0",
+    "@prisma/client": "^5.22.0",
     "@radix-ui/react-separator": "^1.1.8",
     "@radix-ui/react-tabs": "^1.1.13",
+    "@sentry/nextjs": "^10.39.0",
+    "@supabase/supabase-js": "^2.97.0",
+    "@tanstack/react-query": "^5.90.21",
+    "@tanstack/react-query-devtools": "^5.91.3",
     "lucide-react": "0.525.0",
     "next": "14.2.35",
+    "posthog-js": "^1.352.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",
     "recharts": "^3.7.0",
@@ -33,7 +41,9 @@
     "eslint": "8.57.1",
     "eslint-config-next": "14.2.32",
     "postcss": "8.5.3",
+    "prisma": "^5.22.0",
     "tailwindcss": "3.4.17",
+    "ts-node": "^10.9.2",
     "typescript": "5.8.2"
   }
 }
