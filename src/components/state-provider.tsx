@@ -179,6 +179,15 @@ interface AppStateContextValue {
   addPerson: (person: Omit<Person, "id" | "createdAt" | "updatedAt">) => void;
   upsertDocument: (doc: Omit<PersonDocument, "id"> & { id?: string }) => void;
   removeDocument: (docId: string) => void;
+  addCompany: (nome: string, cnpj: string) => void;
+  updateCompany: (id: string, patch: Partial<{ nome: string; cnpj: string }>) => void;
+  removeCompany: (id: string) => void;
+  addUnit: (companyId: string, nome: string, codigo: string) => void;
+  updateUnit: (id: string, patch: Partial<{ nome: string; codigo: string }>) => void;
+  removeUnit: (id: string) => void;
+  addTeam: (unitId: string, nome: string, departamento: string) => void;
+  updateTeam: (id: string, patch: Partial<{ nome: string; departamento: string }>) => void;
+  removeTeam: (id: string) => void;
 }
 
 const AppStateContext = createContext<AppStateContextValue | null>(null);
@@ -2303,6 +2312,67 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const addCompany = useCallback((nome: string, cnpj: string) => {
+    setState((prev) => {
+      const nova: any = { id: "comp-" + Date.now(), nome, cnpj };
+      return appendAudit({ ...prev, companies: [...prev.companies, nova] }, createAuditEntry({ acao: "CRIAR_EMPRESA", after: nova }));
+    });
+  }, []);
+
+  const updateCompany = useCallback((id: string, patch: Partial<{ nome: string; cnpj: string }>) => {
+    setState((prev) => {
+      const companies = prev.companies.map(c => c.id === id ? { ...c, ...patch } : c);
+      return appendAudit({ ...prev, companies }, createAuditEntry({ acao: "EDITAR_EMPRESA", after: { id, patch } }));
+    });
+  }, []);
+
+  const removeCompany = useCallback((id: string) => {
+    setState((prev) => {
+      return appendAudit({ ...prev, companies: prev.companies.filter(c => c.id !== id) }, createAuditEntry({ acao: "REMOVER_EMPRESA", before: { id } }));
+    });
+  }, []);
+
+  const addUnit = useCallback((companyId: string, nome: string, codigo: string) => {
+    setState((prev) => {
+      const nova: any = { id: "unt-" + Date.now(), companyId, nome, codigo };
+      return appendAudit({ ...prev, units: [...prev.units, nova] }, createAuditEntry({ acao: "CRIAR_UNIDADE", companyId, after: nova }));
+    });
+  }, []);
+
+  const updateUnit = useCallback((id: string, patch: Partial<{ nome: string; codigo: string }>) => {
+    setState((prev) => {
+      const units = prev.units.map(u => u.id === id ? { ...u, ...patch } : u);
+      return appendAudit({ ...prev, units }, createAuditEntry({ acao: "EDITAR_UNIDADE", after: { id, patch } }));
+    });
+  }, []);
+
+  const removeUnit = useCallback((id: string) => {
+    setState((prev) => {
+      return appendAudit({ ...prev, units: prev.units.filter(u => u.id !== id) }, createAuditEntry({ acao: "REMOVER_UNIDADE", before: { id } }));
+    });
+  }, []);
+
+  const addTeam = useCallback((unitId: string, nome: string, departamento: string) => {
+    setState((prev) => {
+      const unit = prev.units.find(u => u.id === unitId);
+      const nova: any = { id: "tm-" + Date.now(), unitId, nome, departamento, createdAt: nowIso(), updatedAt: nowIso() };
+      return appendAudit({ ...prev, teams: [...prev.teams, nova] }, createAuditEntry({ acao: "CRIAR_TIME", companyId: unit?.companyId, unitId, after: nova }));
+    });
+  }, []);
+
+  const updateTeam = useCallback((id: string, patch: Partial<{ nome: string; departamento: string }>) => {
+    setState((prev) => {
+      const teams = prev.teams.map(t => t.id === id ? { ...t, ...patch } : t);
+      return appendAudit({ ...prev, teams }, createAuditEntry({ acao: "EDITAR_TIME", after: { id, patch } }));
+    });
+  }, []);
+
+  const removeTeam = useCallback((id: string) => {
+    setState((prev) => {
+      return appendAudit({ ...prev, teams: prev.teams.filter(t => t.id !== id) }, createAuditEntry({ acao: "REMOVER_TIME", before: { id } }));
+    });
+  }, []);
+
   const value = useMemo<AppStateContextValue>(
     () => ({
       state,
@@ -2357,7 +2427,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeRole,
       addPerson,
       upsertDocument,
-      removeDocument
+      removeDocument,
+      addCompany, updateCompany, removeCompany,
+      addUnit, updateUnit, removeUnit,
+      addTeam, updateTeam, removeTeam
     }),
     [
       addIndividualAdditional,
@@ -2407,7 +2480,10 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       removeRole,
       addPerson,
       upsertDocument,
-      removeDocument
+      removeDocument,
+      addCompany, updateCompany, removeCompany,
+      addUnit, updateUnit, removeUnit,
+      addTeam, updateTeam, removeTeam
     ]
   );
 

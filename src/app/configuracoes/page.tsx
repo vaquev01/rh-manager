@@ -1,13 +1,15 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Building2, KeyRound, ListChecks, ShieldCheck, Waypoints, Info } from "lucide-react";
+import { Building2, KeyRound, ListChecks, ShieldCheck, Waypoints, Info, Plus } from "lucide-react";
 
 import { useAppState } from "@/components/state-provider";
 import { ROLE_LABEL } from "@/lib/constants";
 import { PermissionAction, Team, Unit } from "@/lib/types";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -98,10 +100,11 @@ export default function ConfiguracoesPage() {
             </CardHeader>
             <CardContent className="p-6">
               <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm">
-                <div className="flex items-center gap-2 mb-4">
+                <div className="flex items-center justify-between mb-4">
                   <Badge variant="outline" className="bg-background px-3 py-1 text-sm font-bold text-foreground/90 shadow-sm">
                     Grupo: {state.grupo.nome}
                   </Badge>
+                  <AddCompanyModal />
                 </div>
                 <div className="grid gap-4 md:grid-cols-2">
                   {state.companies.map((company) => (
@@ -125,12 +128,14 @@ export default function ConfiguracoesPage() {
                                       {team.nome}
                                     </Badge>
                                   ))}
-                                  {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-muted-foreground/70 italic">Nenhum time</span>}
+                                  {(teamsByUnit.get(unit.id) ?? []).length === 0 && <span className="text-muted-foreground/70 italic text-xs mt-1">Nenhum time</span>}
+                                  <AddTeamModal unitId={unit.id} />
                                 </div>
                               </div>
                             </li>
                           ))}
                         </ul>
+                        <AddUnitModal companyId={company.id} />
                       </div>
                     </article>
                   ))}
@@ -452,7 +457,81 @@ export default function ConfiguracoesPage() {
             </CardContent>
           </Card>
         </div>
-      </main >
-    </div >
+      </main>
+    </div>
   );
 }
+
+function AddCompanyModal() {
+  const { addCompany } = useAppState();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button variant="outline" size="sm" className="gap-2" onClick={() => setOpen(true)}><Plus className="w-4 h-4" /> Nova Empresa</Button>
+      <Dialog open={open} onOpenChange={setOpen} title="Nova Empresa">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          addCompany(fd.get("nome") as string, fd.get("cnpj") as string);
+          setOpen(false);
+        }} className="space-y-4">
+          <Input required name="nome" placeholder="Nome da Empresa" />
+          <Input required name="cnpj" placeholder="CNPJ" />
+          <DialogFooter>
+            <Button type="submit">Salvar Empresa</Button>
+          </DialogFooter>
+        </form>
+      </Dialog>
+    </>
+  );
+}
+
+function AddUnitModal({ companyId }: { companyId: string }) {
+  const { addUnit } = useAppState();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Button variant="ghost" size="sm" className="gap-2 w-full justify-start mt-3 text-muted-foreground/70 hover:text-foreground" onClick={() => setOpen(true)}><Plus className="w-4 h-4" /> Adicionar Unidade</Button>
+      <Dialog open={open} onOpenChange={setOpen} title="Nova Unidade">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          addUnit(companyId, fd.get("nome") as string, fd.get("codigo") as string);
+          setOpen(false);
+        }} className="space-y-4">
+          <Input required name="nome" placeholder="Nome da Unidade" />
+          <Input required name="codigo" placeholder="Código (Ex: SP01)" />
+          <DialogFooter>
+            <Button type="submit">Salvar Unidade</Button>
+          </DialogFooter>
+        </form>
+      </Dialog>
+    </>
+  );
+}
+
+function AddTeamModal({ unitId }: { unitId: string }) {
+  const { addTeam } = useAppState();
+  const [open, setOpen] = useState(false);
+
+  return (
+    <>
+      <Badge variant="outline" className="cursor-pointer border-dashed border-border text-muted-foreground hover:bg-muted/50" onClick={() => setOpen(true)}><Plus className="w-3 h-3 mr-1" /> Time</Badge>
+      <Dialog open={open} onOpenChange={setOpen} title="Novo Time">
+        <form onSubmit={(e) => {
+          e.preventDefault();
+          const fd = new FormData(e.currentTarget);
+          addTeam(unitId, fd.get("nome") as string, fd.get("departamento") as string);
+          setOpen(false);
+        }} className="space-y-4">
+          <Input required name="nome" placeholder="Nome do Time" />
+          <Input required name="departamento" placeholder="Departamento" />
+          <DialogFooter><Button type="submit">Salvar Time</Button></DialogFooter>
+        </form>
+      </Dialog>
+    </>
+  );
+}
+
