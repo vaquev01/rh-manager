@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut, ShieldCheck, CalendarDays } from "lucide-react";
+import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut, ShieldCheck, CalendarDays, Sparkles } from "lucide-react";
 
 import {
   Select,
@@ -47,6 +47,12 @@ const NAV_ITEMS = [
     href: "/desenvolvimento",
     label: "Desenvolvimento",
     icon: GraduationCap
+  },
+  {
+    href: "/agente",
+    label: "Agente IA",
+    icon: Sparkles,
+    badge: "IA",
   },
   {
     href: "/configuracoes",
@@ -192,6 +198,11 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
+                  {(item as any).badge && (
+                    <span className="ml-0.5 rounded-full bg-violet-600 px-1.5 py-0.5 text-[9px] font-bold text-white leading-none">
+                      {(item as any).badge}
+                    </span>
+                  )}
                 </Link>
               );
             })}

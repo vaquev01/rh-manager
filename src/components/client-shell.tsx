@@ -10,6 +10,7 @@ import { AppFrame } from "@/components/app-frame";
 import { AppStateProvider } from "@/components/state-provider";
 import { ToastProvider } from "@/components/toast";
 import { ReactQueryProvider } from "@/lib/react-query-provider";
+import { AgentWidget } from "@/components/agent/agent-widget";
 
 function AuthGuardedShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -39,6 +40,7 @@ function AuthGuardedShell({ children }: { children: ReactNode }) {
       <ToastProvider>
         <ErrorBoundary>
           <AppFrame>{children}</AppFrame>
+          <AgentWidget />
         </ErrorBoundary>
       </ToastProvider>
     </AppStateProvider>
