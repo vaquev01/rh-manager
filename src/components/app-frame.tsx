@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
-import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut } from "lucide-react";
+import { LayoutGrid, Megaphone, Briefcase, GraduationCap, Settings, RotateCcw, Moon, Sun, Users, LogOut, ShieldCheck } from "lucide-react";
 
 import {
   Select,
@@ -150,6 +150,16 @@ export function AppFrame({ children }: { children: React.ReactNode }) {
               >
                 {dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
               </button>
+              {user?.role === "ADMIN" && (
+                <Link
+                  href="/admin"
+                  className="button ghost inline-flex items-center gap-1.5 px-2 py-1 text-xs font-semibold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 rounded"
+                  title="Super Admin Backoffice"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  Admin
+                </Link>
+              )}
               <NotificationCenter />
               <button
                 className="button ghost inline-flex items-center gap-1.5 px-2 py-1 text-xs text-muted-foreground hover:text-foreground"

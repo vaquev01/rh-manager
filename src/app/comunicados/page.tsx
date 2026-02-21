@@ -6,6 +6,7 @@ import { Bot, FileText, History, MessageCircle, Send, Sparkles, Workflow, Zap, C
 import { useToast } from "@/components/toast";
 import { useAppState } from "@/components/state-provider";
 import { cn } from "@/lib/utils";
+import { PaywallGuard } from "@/components/paywall-guard";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -262,17 +263,25 @@ export default function ComunicadosPage() {
                   placeholder="Digite sua mensagem aqui…"
                 />
               </div>
-              <div className="flex flex-col gap-1.5 md:w-32">
-                <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
-                  <Bot className="h-3 w-3" /> Apoio IA
-                </span>
-                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("shorten", editorText))}>✂️ Encurtar</button>
-                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("firm", editorText))}>💪 Mais firme</button>
-                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("friendly", editorText))}>😊 Amigável</button>
-                <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("bullets", editorText))}>📋 Bullets</button>
-                <button className="text-[10px] font-bold px-2 py-1.5 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 hover:bg-amber-100 text-amber-700 dark:text-amber-400 transition-colors text-left flex items-center gap-1" onClick={() => setEditorText(aiTransform("versions", editorText))}>
-                  <Sparkles className="h-3 w-3" /> 3 versões
-                </button>
+              <div className="flex flex-col gap-1.5 md:w-32 relative">
+                <PaywallGuard
+                  featureName="Assistente OpenAI"
+                  requiredPlan="professional"
+                  fallbackType="modal"
+                >
+                  <div className="flex flex-col gap-1.5">
+                    <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide flex items-center gap-1">
+                      <Bot className="h-3 w-3" /> Apoio IA
+                    </span>
+                    <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("shorten", editorText))}>✂️ Encurtar</button>
+                    <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("firm", editorText))}>💪 Mais firme</button>
+                    <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("friendly", editorText))}>😊 Amigável</button>
+                    <button className="text-[10px] font-semibold px-2 py-1.5 rounded-lg border border-border bg-background hover:bg-muted/50 text-foreground/80 transition-colors text-left" onClick={() => setEditorText(aiTransform("bullets", editorText))}>📋 Bullets</button>
+                    <button className="text-[10px] font-bold px-2 py-1.5 rounded-lg border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-800 hover:bg-amber-100 text-amber-700 dark:text-amber-400 transition-colors text-left flex items-center gap-1" onClick={() => setEditorText(aiTransform("versions", editorText))}>
+                      <Sparkles className="h-3 w-3" /> 3 versões
+                    </button>
+                  </div>
+                </PaywallGuard>
               </div>
             </div>
 

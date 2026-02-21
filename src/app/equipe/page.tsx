@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sheet } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Person, PersonDocument } from "@/lib/types";
+import { BulkImporter } from "@/components/bulk-importer";
 
 function formatDateBr(isoString?: string) {
     if (!isoString) return "N/A";
@@ -27,6 +28,7 @@ export default function EquipePage() {
     const [selectedPersonId, setSelectedPersonId] = useState<string | null>(null);
     const [isSheetOpen, setIsSheetOpen] = useState(false);
     const [isCreating, setIsCreating] = useState(false);
+    const [isBulkOpen, setIsBulkOpen] = useState(false);
 
     // Forms state
     const [formData, setFormData] = useState<Partial<Person>>({});
@@ -57,6 +59,26 @@ export default function EquipePage() {
         });
         setSelectedPersonId(null);
         setIsSheetOpen(true);
+    };
+
+    const handleBulkImport = (data: any[]) => {
+        // Map the imported rows to Person objects
+        data.forEach(row => {
+            const newPerson: Omit<Person, "id" | "createdAt" | "updatedAt"> = {
+                nome: row.Nome || row.nome || "Sem Nome",
+                contatoTelefone: row.Telefone || row.telefone,
+                type: (row.Tipo || row.tipo)?.toUpperCase() === "FREELA" ? "FREELA" : "FIXO",
+                status: "ATIVO",
+                cargoId: state.roles.find(r => r.nome.toLowerCase() === (row.Cargo || row.cargo)?.toLowerCase())?.id || state.roles[0]?.id || "cargo-vazio",
+                companyId: filters.companyId || state.companies[0]?.id || "empresa-1",
+                unitId: filters.unitId || state.units[0]?.id || "unidade-1",
+                teamId: "null",
+                pixKey: row.Pix || row.pix,
+                salario: Number(row.ValorHora || row.valorHora) || undefined,
+                performance: { dia: "VERDE" },
+            };
+            addPerson(newPerson);
+        });
     };
 
     const handleEditPerson = (id: string) => {
