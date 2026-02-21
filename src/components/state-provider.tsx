@@ -2324,14 +2324,14 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const addPerson = useCallback((personInfo: Omit<Person, "id" | "createdAt" | "updatedAt">) => {
+    const tempId = `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setState((previous) => {
       const newPerson: Person = {
         ...personInfo,
-        id: `p-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        id: tempId,
         createdAt: nowIso(),
         updatedAt: nowIso(),
       };
-
       const audit = createAuditEntry({
         acao: "CRIAR_PESSOA",
         before: undefined,
@@ -2339,15 +2339,39 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         companyId: personInfo.companyId,
         unitId: personInfo.unitId
       });
-
-      return appendAudit(
-        {
-          ...previous,
-          people: [...previous.people, newPerson]
-        },
-        audit
-      );
+      return appendAudit({ ...previous, people: [...previous.people, newPerson] }, audit);
     });
+    // Persist to DB (fire-and-forget)
+    const pi = personInfo as any;
+    fetch("/api/people", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        nome: pi.nome,
+        email: pi.email ?? pi.contatoEmail,
+        telefone: pi.contatoTelefone ?? pi.telefone,
+        cpf: pi.cpf,
+        tipo: pi.type,
+        unitId: pi.unitId,
+        teamId: pi.teamId === "null" ? undefined : pi.teamId,
+        cargoId: pi.cargoId,
+        valorHora: pi.salario ?? pi.valorHora ?? 0,
+        pix: pi.pixKey ?? pi.pix,
+        dataAdmissao: pi.dataAdmissao,
+        dataNascimento: pi.dataNascimento,
+      }),
+    }).then(async (res) => {
+      if (res.ok) {
+        const json = await res.json();
+        const dbId = json.data?.id;
+        if (dbId && dbId !== tempId) {
+          setState((prev) => ({
+            ...prev,
+            people: prev.people.map((p) => p.id === tempId ? { ...p, id: dbId } : p),
+          }));
+        }
+      }
+    }).catch(() => { /* no-op: user sees the optimistic state */ });
   }, []);
 
   const upsertDocument = useCallback((docInfo: Omit<PersonDocument, "id"> & { id?: string }) => {
@@ -2418,65 +2442,64 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  // ── Company CRUD (optimistic + DB persist) ─────────────────────────────────
   const addCompany = useCallback((nome: string, cnpj: string) => {
+    const tempId = "comp-" + Date.now();
     setState((prev) => {
-      const nova: any = { id: "comp-" + Date.now(), nome, cnpj };
+      const nova: any = { id: tempId, nome, cnpj };
       return appendAudit({ ...prev, companies: [...prev.companies, nova] }, createAuditEntry({ acao: "CRIAR_EMPRESA", after: nova }));
     });
+    fetch("/api/org", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "company", nome, cnpj }) })
+      .then(async (res) => { if (res.ok) { const j = await res.json(); if (j.data?.id && j.data.id !== tempId) setState((p) => ({ ...p, companies: p.companies.map((c) => c.id === tempId ? { ...c, id: j.data.id } : c) })); } })
+      .catch(() => { });
   }, []);
 
   const updateCompany = useCallback((id: string, patch: Partial<{ nome: string; cnpj: string }>) => {
-    setState((prev) => {
-      const companies = prev.companies.map(c => c.id === id ? { ...c, ...patch } : c);
-      return appendAudit({ ...prev, companies }, createAuditEntry({ acao: "EDITAR_EMPRESA", after: { id, patch } }));
-    });
+    setState((prev) => { const companies = prev.companies.map(c => c.id === id ? { ...c, ...patch } : c); return appendAudit({ ...prev, companies }, createAuditEntry({ acao: "EDITAR_EMPRESA", after: { id, patch } })); });
+    fetch("/api/org", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "company", id, ...patch }) }).catch(() => { });
   }, []);
 
   const removeCompany = useCallback((id: string) => {
-    setState((prev) => {
-      return appendAudit({ ...prev, companies: prev.companies.filter(c => c.id !== id) }, createAuditEntry({ acao: "REMOVER_EMPRESA", before: { id } }));
-    });
+    setState((prev) => appendAudit({ ...prev, companies: prev.companies.filter(c => c.id !== id) }, createAuditEntry({ acao: "REMOVER_EMPRESA", before: { id } })));
+    fetch("/api/org", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "company", id }) }).catch(() => { });
   }, []);
 
+  // ── Unit CRUD (optimistic + DB persist) ────────────────────────────────────
   const addUnit = useCallback((companyId: string, nome: string, codigo: string) => {
-    setState((prev) => {
-      const nova: any = { id: "unt-" + Date.now(), companyId, nome, codigo };
-      return appendAudit({ ...prev, units: [...prev.units, nova] }, createAuditEntry({ acao: "CRIAR_UNIDADE", companyId, after: nova }));
-    });
+    const tempId = "unt-" + Date.now();
+    setState((prev) => { const nova: any = { id: tempId, companyId, nome, codigo }; return appendAudit({ ...prev, units: [...prev.units, nova] }, createAuditEntry({ acao: "CRIAR_UNIDADE", companyId, after: nova })); });
+    fetch("/api/org", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "unit", nome, companyId }) })
+      .then(async (res) => { if (res.ok) { const j = await res.json(); if (j.data?.id && j.data.id !== tempId) setState((p) => ({ ...p, units: p.units.map((u) => u.id === tempId ? { ...u, id: j.data.id } : u) })); } })
+      .catch(() => { });
   }, []);
 
   const updateUnit = useCallback((id: string, patch: Partial<{ nome: string; codigo: string }>) => {
-    setState((prev) => {
-      const units = prev.units.map(u => u.id === id ? { ...u, ...patch } : u);
-      return appendAudit({ ...prev, units }, createAuditEntry({ acao: "EDITAR_UNIDADE", after: { id, patch } }));
-    });
+    setState((prev) => { const units = prev.units.map(u => u.id === id ? { ...u, ...patch } : u); return appendAudit({ ...prev, units }, createAuditEntry({ acao: "EDITAR_UNIDADE", after: { id, patch } })); });
+    fetch("/api/org", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "unit", id, nome: patch.nome }) }).catch(() => { });
   }, []);
 
   const removeUnit = useCallback((id: string) => {
-    setState((prev) => {
-      return appendAudit({ ...prev, units: prev.units.filter(u => u.id !== id) }, createAuditEntry({ acao: "REMOVER_UNIDADE", before: { id } }));
-    });
+    setState((prev) => appendAudit({ ...prev, units: prev.units.filter(u => u.id !== id) }, createAuditEntry({ acao: "REMOVER_UNIDADE", before: { id } })));
+    fetch("/api/org", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "unit", id }) }).catch(() => { });
   }, []);
 
+  // ── Team CRUD (optimistic + DB persist) ────────────────────────────────────
   const addTeam = useCallback((unitId: string, nome: string, departamento: string) => {
-    setState((prev) => {
-      const unit = prev.units.find(u => u.id === unitId);
-      const nova: any = { id: "tm-" + Date.now(), unitId, nome, departamento, createdAt: nowIso(), updatedAt: nowIso() };
-      return appendAudit({ ...prev, teams: [...prev.teams, nova] }, createAuditEntry({ acao: "CRIAR_TIME", companyId: unit?.companyId, unitId, after: nova }));
-    });
+    const tempId = "tm-" + Date.now();
+    setState((prev) => { const unit = prev.units.find(u => u.id === unitId); const nova: any = { id: tempId, unitId, nome, departamento, createdAt: nowIso(), updatedAt: nowIso() }; return appendAudit({ ...prev, teams: [...prev.teams, nova] }, createAuditEntry({ acao: "CRIAR_TIME", companyId: unit?.companyId, unitId, after: nova })); });
+    fetch("/api/org", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "team", nome, unitId }) })
+      .then(async (res) => { if (res.ok) { const j = await res.json(); if (j.data?.id && j.data.id !== tempId) setState((p) => ({ ...p, teams: p.teams.map((t) => t.id === tempId ? { ...t, id: j.data.id } : t) })); } })
+      .catch(() => { });
   }, []);
 
   const updateTeam = useCallback((id: string, patch: Partial<{ nome: string; departamento: string }>) => {
-    setState((prev) => {
-      const teams = prev.teams.map(t => t.id === id ? { ...t, ...patch } : t);
-      return appendAudit({ ...prev, teams }, createAuditEntry({ acao: "EDITAR_TIME", after: { id, patch } }));
-    });
+    setState((prev) => { const teams = prev.teams.map(t => t.id === id ? { ...t, ...patch } : t); return appendAudit({ ...prev, teams }, createAuditEntry({ acao: "EDITAR_TIME", after: { id, patch } })); });
+    fetch("/api/org", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "team", id, nome: patch.nome }) }).catch(() => { });
   }, []);
 
   const removeTeam = useCallback((id: string) => {
-    setState((prev) => {
-      return appendAudit({ ...prev, teams: prev.teams.filter(t => t.id !== id) }, createAuditEntry({ acao: "REMOVER_TIME", before: { id } }));
-    });
+    setState((prev) => appendAudit({ ...prev, teams: prev.teams.filter(t => t.id !== id) }, createAuditEntry({ acao: "REMOVER_TIME", before: { id } })));
+    fetch("/api/org", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ type: "team", id }) }).catch(() => { });
   }, []);
 
   const value = useMemo<AppStateContextValue>(

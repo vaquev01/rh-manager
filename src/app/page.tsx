@@ -1,42 +1,50 @@
 "use client";
 
 import { useAppState } from "@/components/state-provider";
+import { useLiveMetrics } from "@/hooks/use-live-metrics";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, AlertTriangle, Briefcase, GraduationCap, TrendingUp, UserCheck, ShieldAlert, Activity } from "lucide-react";
+import { Users, AlertTriangle, Briefcase, GraduationCap, TrendingUp, UserCheck, ShieldAlert, Activity, DollarSign, TrendingDown } from "lucide-react";
 import Link from "next/link";
 import { useMemo } from "react";
 import { PieChart, Pie, Cell, Tooltip as RechartsTooltip, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend } from "recharts";
 
 export default function GeneralDashboardPage() {
     const { state } = useAppState();
+    const { data: liveMetrics, loading: metricsLoading } = useLiveMetrics();
 
     const metrics = useMemo(() => {
-        const totalPeople = state.people.filter(p => p.status !== "AFASTADO").length;
-        const activeFreelas = state.people.filter(p => p.type === "FREELA" && p.status === "ATIVO").length;
-
-        // Simulating alerts from schedule/payments (Mock for now since payments logic is inside Escala)
-        const pendingPayments = 4; // Placeholder
-
-        // Performance overview
-        const lowPerformance = state.people.filter(p => p.performance.dia === "VERMELHO").length;
+        // Use real DB data if available, else derive from hydrated state
+        const totalPeople = metricsLoading
+            ? state.people.filter(p => p.status === "ATIVO" || p.status === "FERIAS").length
+            : liveMetrics.headcount.total;
+        const activeFreelas = metricsLoading
+            ? state.people.filter(p => p.type === "FREELA" && p.status === "ATIVO").length
+            : (liveMetrics.byTipo.find(t => t.tipo === "FREELA")?.count ?? 0);
+        const afastados = metricsLoading
+            ? state.people.filter(p => p.status === "AFASTADO").length
+            : liveMetrics.headcount.afastado;
+        const lowPerformance = state.people.filter(p => p.performance?.dia === "VERMELHO").length;
 
         return {
             totalPeople,
             activeFreelas,
-            pendingPayments,
+            pendingPayments: afastados,
             lowPerformance,
             totalUnits: state.units.length,
-            totalTeams: state.teams.length
+            totalTeams: state.teams.length,
+            burnRate: metricsLoading ? 0 : liveMetrics.burnRateMonthly,
+            openVacancies: metricsLoading ? 0 : liveMetrics.openVacancies,
+            recentHires: metricsLoading ? 0 : liveMetrics.recentHires,
+            turnoverPct: metricsLoading ? 0 : liveMetrics.turnoverPct,
         };
-    }, [state]);
+    }, [state, liveMetrics, metricsLoading]);
 
-    // Financial & Historical Mock Data for the Command Center
     const financialData = useMemo(() => [
-        { name: "Folha CLT", value: 35000, color: "#10b981" }, // emerald-500
-        { name: "Freelancers (Pix)", value: 8500, color: "#3b82f6" }, // blue-500
-        { name: "Orçamento Restante", value: 6500, color: "#e2e8f0" } // slate-200
-    ], []);
+        { name: "Folha CLT", value: Math.round(metrics.burnRate * 0.8), color: "#10b981" },
+        { name: "Freelancers (Pix)", value: Math.round(metrics.burnRate * 0.2), color: "#3b82f6" },
+        { name: "Orçamento Restante", value: Math.max(0, 120000 - metrics.burnRate), color: "#e2e8f0" },
+    ], [metrics.burnRate]);
 
     const hiringData = useMemo(() => [
         { month: "Jan", admissoes: 4, desligamentos: 1 },
@@ -44,15 +52,14 @@ export default function GeneralDashboardPage() {
         { month: "Mar", admissoes: 5, desligamentos: 1 },
         { month: "Abr", admissoes: 2, desligamentos: 3 },
         { month: "Mai", admissoes: 6, desligamentos: 0 },
-        { month: "Jun", admissoes: 4, desligamentos: 1 },
-    ], []);
+        { month: "Jun", admissoes: metrics.recentHires, desligamentos: liveMetrics.headcount.desligado },
+    ], [metrics.recentHires, liveMetrics]);
 
-    // Mock Activity Feed
     const recentActivities = [
-        { id: 1, text: "Maria Silva aprovou o plantão de João (12h)", time: "Há 15 min", color: "bg-blue-500" },
-        { id: 2, text: "Vaga de Atendente Fechada", time: "Há 42 min", color: "bg-emerald-500" },
-        { id: 3, text: "Alerta: Orçamento extra estourado (+R$400)", time: "Há 2 horas", color: "bg-amber-500" },
-        { id: 4, text: "Novo contrato gerado para Freelancer", time: "Há 3 horas", color: "bg-indigo-500" },
+        { id: 1, text: `Headcount atual: ${metrics.totalPeople} colaboradores ativos`, time: "Agora", color: "bg-emerald-500" },
+        { id: 2, text: `${metrics.openVacancies} vagas abertas aguardando preenchimento`, time: "Agora", color: "bg-blue-500" },
+        { id: 3, text: `${metrics.recentHires} admissões nos últimos 90 dias`, time: "Últimos 90 dias", color: "bg-indigo-500" },
+        { id: 4, text: `Burn rate estimado: R$ ${metrics.burnRate.toLocaleString("pt-BR")} / mês`, time: "Estimativa", color: "bg-amber-500" },
     ];
 
     return (
@@ -72,52 +79,56 @@ export default function GeneralDashboardPage() {
 
                     <Card className="hover:border-emerald-500/50 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Headcount Ativo</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Headcount Total</CardTitle>
                             <Users className="h-4 w-4 text-emerald-600" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{metrics.totalPeople}</div>
+                            <div className="text-2xl font-bold">{metricsLoading ? "—" : metrics.totalPeople}</div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                {metrics.activeFreelas} freelancers hoje
+                                {metrics.activeFreelas} freelancers ativos
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card className="hover:border-amber-500/50 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Alertas de Pagamento</CardTitle>
-                            <AlertTriangle className="h-4 w-4 text-amber-500" />
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Burn Rate Mensal</CardTitle>
+                            <DollarSign className="h-4 w-4 text-amber-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-amber-600 dark:text-amber-500">{metrics.pendingPayments}</div>
+                            <div className="text-2xl font-bold text-amber-600 dark:text-amber-500">
+                                {metricsLoading ? "—" : `R$ ${(metrics.burnRate / 1000).toFixed(0)}k`}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                pagamentos pendentes
+                                estimativa mês atual
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card className="hover:border-rose-500/50 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Atenção Crítica</CardTitle>
-                            <ShieldAlert className="h-4 w-4 text-rose-500" />
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Afastados</CardTitle>
+                            <TrendingDown className="h-4 w-4 text-rose-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold text-rose-600 dark:text-rose-500">{metrics.lowPerformance}</div>
+                            <div className="text-2xl font-bold text-rose-600 dark:text-rose-500">
+                                {metricsLoading ? "—" : liveMetrics.headcount.afastado + liveMetrics.headcount.ferias}
+                            </div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                funcionários com sinal vermelho
+                                em férias ou afastamento
                             </p>
                         </CardContent>
                     </Card>
 
                     <Card className="hover:border-blue-500/50 transition-colors">
                         <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium text-muted-foreground">Saúde do Recrutamento</CardTitle>
+                            <CardTitle className="text-sm font-medium text-muted-foreground">Vagas Abertas</CardTitle>
                             <Briefcase className="h-4 w-4 text-blue-500" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">2</div>
+                            <div className="text-2xl font-bold">{metricsLoading ? "—" : metrics.openVacancies}</div>
                             <p className="text-xs text-muted-foreground mt-1">
-                                vagas em SLA estourado
+                                {metrics.recentHires} admissões em 90 dias
                             </p>
                         </CardContent>
                     </Card>
