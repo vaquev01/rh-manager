@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Plus, Search, Filter, MoreHorizontal, UserCog, Award, Mail, FileText, CheckCircle2, Clock, Briefcase } from "lucide-react";
 import { useAppState } from "@/components/state-provider";
-import { AppFrame } from "@/components/app-frame";
+
 import { ROLE_LABEL } from "@/lib/constants";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -152,7 +152,7 @@ export default function EquipePage() {
     };
 
     return (
-        <AppFrame>
+        <>
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
                 <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
@@ -479,6 +479,6 @@ export default function EquipePage() {
                     </Tabs>
                 </div>
             </Sheet>
-        </AppFrame>
+        </>
     );
 }

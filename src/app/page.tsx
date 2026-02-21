@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppState } from "@/components/state-provider";
-import { AppFrame } from "@/components/app-frame";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Users, AlertTriangle, Briefcase, GraduationCap, TrendingUp, UserCheck, ShieldAlert } from "lucide-react";
 import Link from "next/link";
@@ -31,7 +31,7 @@ export default function GeneralDashboardPage() {
     }, [state]);
 
     return (
-        <AppFrame>
+        <>
             <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 space-y-6">
 
                 {/* Header */}
@@ -150,6 +150,6 @@ export default function GeneralDashboardPage() {
                 </div>
 
             </div>
-        </AppFrame>
+        </>
     );
 }
