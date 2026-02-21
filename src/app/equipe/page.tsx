@@ -14,6 +14,7 @@ import { Sheet } from "@/components/ui/sheet";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Person, PersonDocument } from "@/lib/types";
 import { BulkImporter } from "@/components/bulk-importer";
+import { OrganogramaBoard } from "@/components/organograma-board";
 
 function formatDateBr(isoString?: string) {
     if (!isoString) return "N/A";
@@ -178,81 +179,93 @@ export default function EquipePage() {
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredPeople.map((person) => {
-                        const docs = getPersonDocuments(person.id);
-                        const pendentes = docs.filter(d => d.status === "PENDENTE").length;
+                <Tabs defaultValue="diretorio" className="w-full">
+                    <TabsList className="grid w-full sm:w-[500px] grid-cols-2 mb-8">
+                        <TabsTrigger value="diretorio">Diretório (Cartões)</TabsTrigger>
+                        <TabsTrigger value="organograma">Organograma Visual</TabsTrigger>
+                    </TabsList>
 
-                        return (
-                            <Card
-                                key={person.id}
-                                className="group relative overflow-hidden transition-all hover:shadow-md cursor-pointer border-border/50 bg-card hover:border-primary/20"
-                                onClick={() => handleEditPerson(person.id)}
-                            >
-                                <div className="absolute right-4 top-4">
-                                    <Badge variant={person.status === "ATIVO" ? "default" : "secondary"}>
-                                        {person.status}
-                                    </Badge>
-                                </div>
+                    <TabsContent value="diretorio" className="mt-0">
+                        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {filteredPeople.map((person) => {
+                                const docs = getPersonDocuments(person.id);
+                                const pendentes = docs.filter(d => d.status === "PENDENTE").length;
 
-                                <div className="p-5">
-                                    <div className="flex items-center gap-4">
-                                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
-                                            {person.nome.charAt(0).toUpperCase()}
+                                return (
+                                    <Card
+                                        key={person.id}
+                                        className="group relative overflow-hidden transition-all hover:shadow-md cursor-pointer border-border/50 bg-card hover:border-primary/20"
+                                        onClick={() => handleEditPerson(person.id)}
+                                    >
+                                        <div className="absolute right-4 top-4">
+                                            <Badge variant={person.status === "ATIVO" ? "default" : "secondary"}>
+                                                {person.status}
+                                            </Badge>
                                         </div>
-                                        <div>
-                                            <h3 className="font-semibold text-foreground line-clamp-1">{person.nome}</h3>
-                                            <p className="text-sm text-muted-foreground">{getCargoName(person.cargoId)}</p>
-                                        </div>
-                                    </div>
 
-                                    <div className="mt-5 space-y-2 text-sm text-muted-foreground">
-                                        <div className="flex items-center gap-2">
-                                            <Briefcase className="h-4 w-4 opacity-70" />
-                                            <span className="line-clamp-1">{getUnitName(person.unitId)}</span>
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            <Award className="h-4 w-4 opacity-70" />
-                                            <span>{person.type === "FIXO" ? "Contrato Fixo" : "Freelancer"}</span>
-                                        </div>
-                                    </div>
-                                </div>
+                                        <div className="p-5">
+                                            <div className="flex items-center gap-4">
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-lg font-semibold text-primary">
+                                                    {person.nome.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-semibold text-foreground line-clamp-1">{person.nome}</h3>
+                                                    <p className="text-sm text-muted-foreground">{getCargoName(person.cargoId)}</p>
+                                                </div>
+                                            </div>
 
-                                <div className="border-t bg-muted/20 px-5 py-3 flex items-center justify-between text-xs font-medium">
-                                    {pendentes > 0 ? (
-                                        <span className="flex items-center gap-1.5 text-destructive">
-                                            <Clock className="h-3.5 w-3.5" />
-                                            {pendentes} doc{pendentes > 1 ? 's' : ''} pendente{pendentes > 1 ? 's' : ''}
-                                        </span>
-                                    ) : (
-                                        <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
-                                            <CheckCircle2 className="h-3.5 w-3.5" />
-                                            Tudo OK
-                                        </span>
-                                    )}
-                                    <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                </div>
-                            </Card>
-                        );
-                    })}
-                </div>
+                                            <div className="mt-5 space-y-2 text-sm text-muted-foreground">
+                                                <div className="flex items-center gap-2">
+                                                    <Briefcase className="h-4 w-4 opacity-70" />
+                                                    <span className="line-clamp-1">{getUnitName(person.unitId)}</span>
+                                                </div>
+                                                <div className="flex items-center gap-2">
+                                                    <Award className="h-4 w-4 opacity-70" />
+                                                    <span>{person.type === "FIXO" ? "Contrato Fixo" : "Freelancer"}</span>
+                                                </div>
+                                            </div>
+                                        </div>
 
-                {filteredPeople.length === 0 && (
-                    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
-                        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
-                            <UserCog className="h-6 w-6 text-muted-foreground" />
+                                        <div className="border-t bg-muted/20 px-5 py-3 flex items-center justify-between text-xs font-medium">
+                                            {pendentes > 0 ? (
+                                                <span className="flex items-center gap-1.5 text-destructive">
+                                                    <Clock className="h-3.5 w-3.5" />
+                                                    {pendentes} doc{pendentes > 1 ? 's' : ''} pendente{pendentes > 1 ? 's' : ''}
+                                                </span>
+                                            ) : (
+                                                <span className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                                                    <CheckCircle2 className="h-3.5 w-3.5" />
+                                                    Tudo OK
+                                                </span>
+                                            )}
+                                            <Button variant="ghost" size="icon" className="h-6 w-6 rounded-full">
+                                                <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    </Card>
+                                );
+                            })}
                         </div>
-                        <h3 className="mt-4 text-sm font-semibold text-foreground">Nenhum colaborador</h3>
-                        <p className="mt-1 text-sm text-muted-foreground max-w-sm">
-                            Não encontramos ninguém com os filtros atuais ou sua busca.
-                        </p>
-                        <Button variant="outline" className="mt-4" onClick={() => { setSearch(""); resetFilters(); }}>
-                            Limpar Filtros
-                        </Button>
-                    </div>
-                )}
+
+                        {filteredPeople.length === 0 && (
+                            <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
+                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                                    <UserCog className="h-6 w-6 text-muted-foreground" />
+                                </div>
+                                <h3 className="mt-4 text-sm font-semibold text-foreground">Nenhum colaborador</h3>
+                                <p className="mt-1 text-sm text-muted-foreground max-w-sm">
+                                    Não encontramos ninguém com os filtros atuais ou sua busca.
+                                </p>
+                                <Button variant="outline" className="mt-4" onClick={() => { setSearch(""); resetFilters(); }}>
+                                </Button>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="organograma" className="mt-0">
+                        <OrganogramaBoard />
+                    </TabsContent>
+                </Tabs>
             </div>
 
             <Sheet
