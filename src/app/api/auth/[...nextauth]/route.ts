@@ -4,7 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma"; // Assuming a prisma client instance here
 import { compare } from "bcrypt";
 
-export const authOptions: NextAuthOptions = {
+const authOptions: NextAuthOptions = {
     adapter: PrismaAdapter(prisma) as any, // Type assertion for compatibility if needed
     providers: [
         CredentialsProvider({
@@ -71,5 +71,4 @@ export const authOptions: NextAuthOptions = {
 };
 
 const handler = NextAuth(authOptions);
-
 export { handler as GET, handler as POST };
